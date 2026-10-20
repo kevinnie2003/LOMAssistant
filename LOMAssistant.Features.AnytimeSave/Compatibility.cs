@@ -15,6 +15,7 @@ public partial class AnytimeSave
 	private static readonly HashSet<string> AcceptedIds = new HashSet<string>(StringComparer.Ordinal)
 	{
 		"CA3DF8712A594A7636DA70D24105C88C0EE0920F49669F122B379CE17A640B6E", // MortalAnytimeSave 原版，游戏 1.0.6000.3
+		"82C718B84503409D5D32218A90AE862DC1C3C2888270BE585E239C07A488E64E", // 本 Mod 2.1.1 的契约（游戏 1.0.6000.5 之前），游戏更新后存档继续可读
 	};
 
 	/// <summary>把游戏里存读档用到的方法和类型结构跟内置契约比对，有改动就停用，返回原因；通过返回 null。</summary>
