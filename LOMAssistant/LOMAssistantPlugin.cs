@@ -174,6 +174,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			SkipReadToggle.Ensure(base.gameObject);
 			TryPatchAll(typeof(StatLimitPatch));
 			TryPatchAll(typeof(TitlePatch));
+			TryPatchAll(typeof(MoodLockPatch));
 			ConfigManager.BreakStatLimit.OnValueChanged += _ => StatLimitPatch.Apply();
 			StatLimitPatch.Apply();
 			FastStartup.Install(this);

@@ -22,6 +22,7 @@ public partial class StoryReviewPanel
 		public Func<string> Extra; // 数值后面的小字，如加成、心上人是谁、等级上限
 		public bool NoValue; // 数值没有意义（功法已练满、锻造未开发等），显示「—」不显示 0
 		public int Of; // 大于 0 时数值写成「当前/Of」，如本层点数 2/5
+		public GameStat LockStat; // 有值时这一行多一个锁按钮（心相用）
 	}
 
 	private string _statsSearch = "";
@@ -235,14 +236,17 @@ public partial class StoryReviewPanel
 			GUILayout.EndHorizontal();
 			return;
 		}
+		// 心相锁住时，游戏自己的变化被拦，这里手动加减、输入数值照常可用
+		bool locked = row.LockStat != null && LOMAssistant.Features.Extras.MoodLockPatch.IsLocked;
+		bool wasEnabled = GUI.enabled;
 		if (GUILayout.Button("-" + row.Step, StepButton(), GUILayout.Width(S(58)), Ctl()))
 		{
-			row.Set(value - row.Step);
+			SetManual(row, value - row.Step);
 			_statInputs.Remove(row.Id);
 		}
 		if (GUILayout.Button("+" + row.Step, StepButton(), GUILayout.Width(S(58)), Ctl()))
 		{
-			row.Set(value + row.Step);
+			SetManual(row, value + row.Step);
 			_statInputs.Remove(row.Id);
 		}
 		if (!_statInputs.TryGetValue(row.Id, out string input))
@@ -260,15 +264,42 @@ public partial class StoryReviewPanel
 			_statInputs.Remove(row.Id);
 		}
 		bool changed = _statInputs.ContainsKey(row.Id) && int.TryParse(typed, out int target);
-		GUI.enabled = changed;
+		GUI.enabled = wasEnabled && changed;
 		if (GUILayout.Button("设定", changed ? _primary : _button, GUILayout.Width(S(50)), Ctl()) && int.TryParse(typed, out target))
 		{
-			row.Set(target);
+			SetManual(row, target);
 			_statInputs.Remove(row.Id);
 			GUIUtility.keyboardControl = 0;
 		}
-		GUI.enabled = true;
+		GUI.enabled = wasEnabled;
+		if (row.LockStat != null)
+		{
+			// 锁：点一下锁住心相（数值固定不变），再点解锁；重启、读档都会自动解锁
+			// 锁上：朱砂红底 + 白色合上的锁；没锁：浅色底 + 深色开着的锁
+			Color oldContent = GUI.contentColor;
+			GUI.contentColor = locked ? Color.white : Ink;
+			bool clicked = GUILayout.Button(LOMAssistant.Features.Extras.MoodLockPatch.Icon(locked), locked ? _primary : _button, GUILayout.Width(S(36)), Ctl());
+			GUI.contentColor = oldContent;
+			if (clicked)
+			{
+				LOMAssistant.Features.Extras.MoodLockPatch.Toggle(row.LockStat);
+				_statInputs.Remove(row.Id);
+			}
+			Hover(GUILayoutUtility.GetLastRect(), locked ? "心相已锁定，游戏里的变化不会影响它（这里仍可手动加减）。点击解锁；重启游戏、读档会自动解锁" : "点击锁定心相：锁定后数值固定不变");
+		}
 		GUILayout.EndHorizontal();
+	}
+
+	private static void SetManual(StatRow row, int value)
+	{
+		if (row.LockStat != null)
+		{
+			LOMAssistant.Features.Extras.MoodLockPatch.Manual(() => row.Set(value));
+		}
+		else
+		{
+			row.Set(value);
+		}
 	}
 
 	private GUIStyle _stepButton;
@@ -583,6 +614,7 @@ public partial class StoryReviewPanel
 			|| type == GameStatType.稱號 || type == GameStatType.娘化;
 		return new StatRow
 		{
+			LockStat = type == GameStatType.心理衛生 ? s : null,
 			Id = "stat:" + (int)type,
 			Name = Localized(s.GetLocaleKey(), OwnNames.TryGetValue(type, out string own) ? own : TextConverter.ToSimplified(type.ToString())),
 			Get = () => s.FinalValue,
