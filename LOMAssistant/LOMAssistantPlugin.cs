@@ -146,6 +146,8 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(DuelCheatPatch));
 			TryPatchAll(typeof(BattleCheatPatch));
 			TryPatchAll(typeof(DuelPacePatch));
+			TryPatchAll(typeof(SkillShrinkPatch));
+			SkillListScanner.Ensure(base.gameObject);
 			TryPatchAll(typeof(FlowSpeedup.UniverseJsonPatch));
 			TryPatchAll(typeof(FlowSpeedup.FlagIndexPatch));
 			TryPatchAll(typeof(FlowSpeedup.LogPatch));

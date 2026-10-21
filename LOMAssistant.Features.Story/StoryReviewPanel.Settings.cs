@@ -120,6 +120,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.EnableSkipAction, "养成「空过」按钮"),
 				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
 				Row(ConfigManager.EnableBattleWin, "团战直接获胜按钮"),
+				Row(ConfigManager.EnableCombatSkillShrink, "技能表全显示"),
 			}),
 			("其他", new List<SettingRow>
 			{
