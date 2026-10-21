@@ -229,6 +229,7 @@ public class LuaParser
 	{
 		string[] array = blockContent.Split(new string[3] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 		bool isConditional = false;
+		int branchIndex = 0;
 		string[] array2 = array;
 		foreach (string text in array2)
 		{
@@ -236,6 +237,11 @@ public class LuaParser
 			if (text2.StartsWith("if") || text2.StartsWith("elseif"))
 			{
 				isConditional = true;
+				branchIndex++;
+			}
+			else if (text2 == "else")
+			{
+				branchIndex++;
 			}
 			else if (text2.StartsWith("end"))
 			{
@@ -243,7 +249,7 @@ public class LuaParser
 			}
 			foreach (Match item in regex.Matches(text))
 			{
-				actionList.Add(new Action(actionType, item.Value.Trim(), isConditional));
+				actionList.Add(new Action(actionType, item.Value.Trim(), isConditional, branchIndex));
 			}
 		}
 	}
@@ -293,6 +299,7 @@ public class LuaParser
 		string[] array = DataHelper.LoadLuaScript(luaScriptName).Split(new string[3] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 		List<Action> list = new List<Action>();
 		bool isConditional = false;
+		int branchIndex = 0;
 		string[] array2 = array;
 		for (int i = 0; i < array2.Length; i++)
 		{
@@ -300,6 +307,11 @@ public class LuaParser
 			if (text.StartsWith("if") || text.StartsWith("elseif"))
 			{
 				isConditional = true;
+				branchIndex++;
+			}
+			else if (text == "else")
+			{
+				branchIndex++;
 			}
 			else if (text.StartsWith("end"))
 			{
@@ -307,11 +319,11 @@ public class LuaParser
 			}
 			foreach (Match item in modifyRegex.Matches(text))
 			{
-				list.Add(new Action(ActionType.ModifyAction, item.Value, isConditional));
+				list.Add(new Action(ActionType.ModifyAction, item.Value, isConditional, branchIndex));
 			}
 			foreach (Match item2 in battleScenesRegex.Matches(text))
 			{
-				list.Add(new Action(ActionType.BattleScene, item2.Value, isConditional));
+				list.Add(new Action(ActionType.BattleScene, item2.Value, isConditional, branchIndex));
 			}
 		}
 		luaModification[luaScriptName] = list;
@@ -326,19 +338,28 @@ public class LuaParser
 			where !string.IsNullOrEmpty(description)
 			select description).Distinct().ToList();
 		List<string> list2 = (from action in actions
-			where action.IsConditional
-			select action.Description into description
-			where !string.IsNullOrEmpty(description)
-			select description).Distinct().ToList();
+			where action.IsConditional && !string.IsNullOrEmpty(action.Description)
+			group action.Description by action.BranchIndex into g
+			select string.Join("、", g.Distinct())).ToList();
 		List<string> list3 = new List<string>();
 		if (list.Count > 0)
 		{
-			list3.Add(string.Join("|", list));
+			list3.Add(string.Join("、", list));
 		}
-		if (list2.Count > 0)
+		if (list2.Count == 1)
 		{
-			list3.Add("后续: " + string.Join(" 或 ", list2));
+			list3.Add("后续: " + list2[0]);
 		}
-		return string.Join(" | ", list3);
+		else if (list2.Count > 1)
+		{
+			const string circled = "①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳";
+			List<string> numbered = new List<string>();
+			for (int i = 0; i < list2.Count; i++)
+			{
+				numbered.Add((i < circled.Length ? circled[i].ToString() : (i + 1) + ".") + list2[i]);
+			}
+			list3.Add("后续: " + string.Join(" ", numbered));
+		}
+		return string.Join("；", list3);
 	}
 }

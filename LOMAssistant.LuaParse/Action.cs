@@ -10,15 +10,18 @@ public class Action
 
 	public bool IsConditional { get; set; }
 
+	public int BranchIndex { get; set; }
+
 	public string Content { get; set; }
 
 	public string Description { get; private set; }
 
-	public Action(ActionType type, string content, bool isConditional = false)
+	public Action(ActionType type, string content, bool isConditional = false, int branchIndex = 0)
 	{
 		Type = type;
 		Content = content;
 		IsConditional = isConditional;
+		BranchIndex = branchIndex;
 		Description = ParseAction();
 	}
 

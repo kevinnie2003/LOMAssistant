@@ -173,7 +173,7 @@ internal static class OptionInfoPatch
 				string text = TextConverter.ToSimplified(LuaParser.Description(value));
 				if (jumps.Length > 0)
 				{
-					text = text.IsNullOrWhiteSpace() ? jumps : text + " | " + jumps;
+					text = text.IsNullOrWhiteSpace() ? jumps : text + "；" + jumps;
 				}
 				if (!text.IsNullOrWhiteSpace())
 				{
