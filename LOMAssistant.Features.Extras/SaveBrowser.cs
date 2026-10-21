@@ -53,6 +53,8 @@ public class SaveBrowser : MonoBehaviour
 		public string Caption = ""; // 自动存档的类别、「当前进度」
 		public GameSave Data;
 		public bool Latest;
+		public bool LastSaved; // 这次游戏里最后保存的手动存档
+		public bool LastLoaded; // 这次游戏里最后读取的手动存档
 		public bool CanNote;
 		public bool CanDelete;
 		public bool Compact;
@@ -102,6 +104,78 @@ public class SaveBrowser : MonoBehaviour
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(SaveGamePanel), "OnPanelOpen")]
 	public static void SaveGamePanel_OnPanelOpen_Postfix(SaveGamePanel __instance) => Open(__instance, load: false);
+
+	// 记住最后读取的手动栏位（栏位名全是数字：001、002…），存在存档目录的一个小文件里，重启游戏也还在；
+	// 上次保存的不用记，直接看存档里的保存时间
+	private const string LastLoadedFile = "LOMAssistant_LastLoaded.txt";
+	private static string _lastLoaded;
+	private static bool _lastLoadedRead;
+
+	private static bool IsManualSlot(string slot) => !string.IsNullOrEmpty(slot) && slot.All(char.IsDigit);
+
+	private static string LastLoadedPath()
+	{
+		if (SaveSystem.Instance == null)
+		{
+			return null;
+		}
+		string dat = Traverse.Create(SaveSystem.Instance).Method("GetSaveDataFile", new[] { typeof(string) }).GetValue<string>("001");
+		string dir = string.IsNullOrEmpty(dat) ? null : System.IO.Path.GetDirectoryName(dat);
+		return dir == null ? null : System.IO.Path.Combine(dir, LastLoadedFile);
+	}
+
+	private static string LastLoadedSlot()
+	{
+		if (!_lastLoadedRead)
+		{
+			try
+			{
+				string path = LastLoadedPath();
+				if (path != null)
+				{
+					_lastLoadedRead = true;
+					if (System.IO.File.Exists(path))
+					{
+						string slot = System.IO.File.ReadAllText(path).Trim();
+						if (IsManualSlot(slot))
+						{
+							_lastLoaded = slot;
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				FileLogger.LogError("存档界面：读取上次读取的存档失败: " + e.Message);
+			}
+		}
+		return _lastLoaded;
+	}
+
+	// 游戏读档时先 SetSlot 再读取
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(SaveSystem), "SetSlot")]
+	public static void SaveSystem_SetSlot_Postfix(string slot)
+	{
+		if (!IsManualSlot(slot) || slot == _lastLoaded)
+		{
+			return;
+		}
+		_lastLoaded = slot;
+		_lastLoadedRead = true;
+		try
+		{
+			string path = LastLoadedPath();
+			if (path != null)
+			{
+				System.IO.File.WriteAllText(path, slot);
+			}
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogError("存档界面：保存上次读取的存档失败: " + e.Message);
+		}
+	}
 
 	// 删除、存档以后游戏会刷新原来的栏位，新界面跟着刷新
 	[HarmonyPostfix]
@@ -422,6 +496,23 @@ public class SaveBrowser : MonoBehaviour
 			{
 				entries = _isLoad ? (_tab == 0 ? ManualEntries(includeEmpty: false) : AutoEntries()) : ManualEntries(includeEmpty: true);
 			}
+			if (!_isLoad || _tab == 0)
+			{
+				// 上次保存：手动存档里保存时间最新的那个（存档文件里带保存时间，重启游戏也还在）
+				string saved = entries.Where(e => e.Data != null && e.Caption != NewGame).OrderByDescending(e => e.Data.TimeTick).FirstOrDefault()?.Slot;
+				string loaded = LastLoadedSlot();
+				if (string.IsNullOrEmpty(loaded))
+				{
+					// 从没记录过（第一次用、或继续游戏进来的）：当前栏位就是读取的那个
+					loaded = SaveSystem.Instance.CurrentSlot;
+				}
+				foreach (Entry e in entries)
+				{
+					bool real = e.Data != null && e.Caption != NewGame;
+					e.LastSaved = real && !string.IsNullOrEmpty(saved) && e.Slot == saved;
+					e.LastLoaded = real && !string.IsNullOrEmpty(loaded) && e.Slot == loaded;
+				}
+			}
 			foreach (Transform child in _listContent)
 			{
 				Destroy(child.gameObject);
@@ -648,6 +739,18 @@ public class SaveBrowser : MonoBehaviour
 		Button button = rt.gameObject.AddComponent<Button>();
 		button.transition = Selectable.Transition.None;
 		button.onClick.AddListener(() => Act(e));
+		if (e.LastSaved || e.LastLoaded)
+		{
+			// 上次保存、上次读取的存档：固定的底色，不随鼠标和选中移动，选中时的淡金底叠在它上面
+			RectTransform mark = NewRect("LastMark", rt);
+			mark.anchorMin = Vector2.zero;
+			mark.anchorMax = Vector2.one;
+			mark.offsetMin = Vector2.zero;
+			mark.offsetMax = Vector2.zero;
+			Image markImage = mark.gameObject.AddComponent<Image>();
+			markImage.color = new Color(Gold.r, Gold.g, Gold.b, 0.16f);
+			markImage.raycastTarget = false;
+		}
 		RectTransform accent = NewRect("Accent", rt);
 		Place(accent, 0f, 8f, 3f, height - 16f);
 		Image accentImage = accent.gameObject.AddComponent<Image>();
@@ -689,7 +792,8 @@ public class SaveBrowser : MonoBehaviour
 			date.text = e.Data == null ? "空栏位" : GameDate(e.Data);
 			Text time = NewText(rt, "Time", _serif, 20, Dim, TextAnchor.UpperLeft);
 			Place(time.rectTransform, x, 50f, 400f, 28f);
-			time.text = e.Data == null ? "" : SavedAt(e.Data) + (e.Caption == "当前进度" ? "　" + e.Label : "");
+			time.supportRichText = true;
+			time.text = e.Data == null ? "" : SavedAt(e.Data) + (e.Caption == "当前进度" ? "　" + e.Label : "") + (e.LastSaved ? "　<color=#C9A26A>上次保存</color>" : "") + (e.LastLoaded ? "　<color=#C9A26A>上次读取</color>" : "");
 			if (e.Data != null)
 			{
 				string note = e.CanNote ? SaveNotePatch.GetNote(e.Slot) : "";
