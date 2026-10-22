@@ -56,6 +56,7 @@ public static class ConfigManager
 	public static ConfigElement<bool> ShowBranchChecks;
 
 	public static ConfigElement<bool> EnableEventPicker;
+	public static ConfigElement<bool> EnableNoJealousyEvent;
 	public static ConfigElement<bool> EnableMapHints;
 	public static ConfigElement<float> MapHintsOpacity;
 
@@ -318,6 +319,7 @@ public static class ConfigManager
 		EnableMapHints = new ConfigElement<bool>("EnableMapHints", "养成地图事件提示：鼠标停在建筑上列出这里的主线、支线、随机事件和触发条件；有现在就能触发、这一局还没走过的主线或支线的建筑一直亮着。true=开，false=关", defaultValue: true);
 		MapHintsOpacity = new ConfigElement<float>("MapHintsOpacity", "养成地图事件提示框的底色不透明度（0.3～1，1=不透明）。调低能透过提示框看到地图，文字不变", 0.8f);
 		EnableEventPicker = new ConfigElement<bool>("EnableEventPicker", "随机事件自选：剧情走到随机事件（工作、闲逛等）时先停下，列出满足条件的事件选一个，也可以选随机。true=开，false=关", defaultValue: false);
+		EnableNoJealousyEvent = new ConfigElement<bool>("EnableNoJealousyEvent", "取消修罗场事件：原版「大战前夕」会按顺序播完每个已攻略女角的剧情，播完时若同时攻略了 2 人以上，就点亮旗标「启动修罗场事件」进入修罗场（对峙、战斗、清空各女角攻略任务）。打开后不再点亮这个旗标，修罗场不触发，剧情就停在各女角的「大战前夕」——结缘 0～8 人、各条线路都成立。另有兜底：万一仍走到清算那一段，不置旗标「发生修罗场事件」、不清空攻略任务。注意：后者也参与第八章节的结局分支，打开后结局走向会和原版不同，改后重启生效", defaultValue: false);
 		EnableFastDuelRounds = new ConfigElement<bool>("EnableFastDuelRounds", "决斗回合之间的等待缩短：身上状态（buff）多时回合间不再干等几秒，效果和结算不变。默认开；只有怀疑它导致问题时才关。true=开，false=关", defaultValue: true);
 		EnableDuelActionForecast = new ConfigElement<bool>("EnableDuelActionForecast", "决斗中显示敌方本回合预选的行动；敌方意图较高时可能根据你的出招临场应变。默认关。true=开，false=关", defaultValue: false);
 		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表全显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列）。true=开，false=关", defaultValue: true);

@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace LOMAssistant;
 
-[BepInPlugin("LOMAssistant", "咖啡伴侣", "2.7.3")]
+[BepInPlugin("LOMAssistant", "咖啡伴侣", "2.8.0")]
 public class LOMAssistantPlugin : BaseUnityPlugin
 {
 	private Harmony _harmony;
@@ -176,6 +176,11 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(EventPickerPatch));
 			TryPatchAll(typeof(OneClickUnlockPatch));
 			EventPicker.Ensure(base.gameObject);
+			if (ConfigManager.EnableNoJealousyEvent.Value)
+			{
+				TryPatchAll(typeof(LOMAssistant.Features.Story.NoJealousyEventPatch));
+				LogInfo("取消修罗场事件补丁已应用。");
+			}
 			UiHider.Ensure(base.gameObject);
 			SkipReadToggle.Ensure(base.gameObject);
 			MapEventHints.Ensure(base.gameObject);
