@@ -35,6 +35,12 @@ public static class NoJealousyEventPatch
 	private static readonly Regex Arm = new Regex(
 		"statmodifymanager\\.SetFlag\\(\\s*\"M70059\"\\s*,\\s*1\\s*\\)", RegexOptions.Compiled);
 
+	// ch7_5_6_2 末尾同一段：把「開啟陪小師妹/陪葉雲裳/陪上官螢/陪龍湘/陪小蘭」
+	// （M70060～M70064）清零。这些标记决定 M7006_0X 任务是否触发各自的陪女角剧本，
+	// 清掉就没有单人剧情了，所以一并拦下。
+	private static readonly Regex CompanionReset = new Regex(
+		"statmodifymanager\\.SetFlag\\(\\s*\"M7006[0-4]\"\\s*,\\s*0\\s*\\)", RegexOptions.Compiled);
+
 	// ch7_5_6_3_2：置「發生修羅場事件」
 	private static readonly Regex FlagSet = new Regex(
 		"statmodifymanager\\.SetFlag\\(\\s*\"M70054\"\\s*,\\s*1\\s*\\)", RegexOptions.Compiled);
@@ -57,7 +63,8 @@ public static class NoJealousyEventPatch
 			return;
 		}
 		// 只有含这几个名字的剧本才需要处理，先做便宜的排除
-		bool hasArm = luaString.IndexOf("M70059", StringComparison.Ordinal) >= 0;
+		bool hasArm = luaString.IndexOf("M70059", StringComparison.Ordinal) >= 0
+			|| luaString.IndexOf("M7006", StringComparison.Ordinal) >= 0;
 		bool hasCleanup = luaString.IndexOf("M70054", StringComparison.Ordinal) >= 0
 			|| luaString.IndexOf("M7005_", StringComparison.Ordinal) >= 0;
 		if (!hasArm && !hasCleanup)
@@ -70,6 +77,12 @@ public static class NoJealousyEventPatch
 			if (Arm.IsMatch(luaString))
 			{
 				luaString = Arm.Replace(luaString, "-- [咖啡伴侣] 已取消修罗场：不点亮 M70059");
+				_armed++;
+				changed = true;
+			}
+			if (CompanionReset.IsMatch(luaString))
+			{
+				luaString = CompanionReset.Replace(luaString, "-- [咖啡伴侣] 已取消修罗场：保留「開啟陪…」标记");
 				_armed++;
 				changed = true;
 			}
