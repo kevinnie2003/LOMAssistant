@@ -234,5 +234,5 @@ internal static class GamepadCursor
 [HarmonyLib.HarmonyPatch(typeof(Mortal.Core.PlayerInputController), "OnControlsChanged")]
 public static class GamepadControlsChangedGate
 {
-	private static bool Prefix() => !LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape;
+	private static bool Prefix() => !LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape && !LOMAssistant.BranchAhead.OwnsEscape;
 }

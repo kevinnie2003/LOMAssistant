@@ -60,6 +60,12 @@ public static class ConfigManager
 	public static ConfigElement<bool> ForceUnmetEvents;
 
 	public static ConfigElement<bool> ForceUnmetOptions;
+
+	public static ConfigElement<bool> EnableBranchAhead;
+	public static ConfigElement<bool> BranchAheadAutoSnapshot;
+	public static ConfigElement<int> BranchAheadSnapshots;
+	public static ConfigElement<bool> BranchAheadHint;
+	public static ConfigElement<bool> BranchAheadStopSkip;
 	public static ConfigElement<bool> EnableMapHints;
 	public static ConfigElement<bool> ShowItemUses;
 	public static ConfigElement<bool> MapHintsNowOnly;
@@ -402,6 +408,11 @@ public static class ConfigManager
 		EnableEventPicker = new ConfigElement<bool>("EnableEventPicker", "随机事件自选：剧情走到随机事件（工作、闲逛等）时先停下，列出满足条件的事件选一个，也可以选随机。true=开，false=关", defaultValue: false);
 		ForceUnmetEvents = new ConfigElement<bool>("ForceUnmetEvents", "随机事件自选里也列出出现条件没满足的事件，点了无视条件直接触发（不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
 		ForceUnmetOptions = new ConfigElement<bool>("ForceUnmetOptions", "条件不满足就不出现的选项也列出来（红字标「条件没满足」，悬停看条件），点了直接选；锁住的选项条件改不到时给「强行解锁」（都不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
+		EnableBranchAhead = new ConfigElement<bool>("EnableBranchAhead", "判定前选分支：剧情走到属性、好感、旗标的分支判断（条件里没有随机值的那种）时先停下，列出每一支的条件和当前值、这一支后面的对白看过没，选一支就把数值改成走那一条路；不想改就按空格、点窗口外面或按 Esc 照现在这样判定。true=开，false=关", defaultValue: false);
+		BranchAheadAutoSnapshot = new ConfigElement<bool>("BranchAheadAutoSnapshot", "判定前选分支：停下等你选的时候顺手存一个随时存档（备注「【分支判定】判定前 · 判定名」）。看完一支想走另一支，从「随时存档」读回来就行，不用从头再走一遍；只清自己存的这几张，你自己的存档一张都不动。true=开，false=关", defaultValue: true);
+		BranchAheadSnapshots = new ConfigElement<int>("BranchAheadSnapshots", "判定前选分支：判定前自动存档保留几张（1～10）。留 1 张就只能退回最近这一处判定，留 2 张以上连续过两处判定时也退得回去。只清理本 Mod 自己存的那几张", 2);
+		BranchAheadHint = new ConfigElement<bool>("BranchAheadHint", "判定前选分支：一处判定所有支都已经满足、换别的支也没有别的对白或去处时，不弹窗，只在屏幕下方说一句「已满足 · 改了只少一句」。true=说，false=什么都不说", defaultValue: true);
+		BranchAheadStopSkip = new ConfigElement<bool>("BranchAheadStopSkip", "判定前选分支：正按着 Ctrl（或按了 F2 一键快进）时撞上判定窗，先把快进停住，看清了再决定；松开再按 Ctrl 才会继续快进。true=停，false=让快进把窗口带过去", defaultValue: true);
 		EnableDuelActionForecast = new ConfigElement<bool>("EnableDuelActionForecast", "决斗中显示敌方本回合预选的行动；敌方意图较高时可能根据你的出招临场应变。默认关。true=开，false=关", defaultValue: false);
 		DuelForecastX = new ConfigElement<float>("DuelForecastX", "决斗敌方行动预测窗口的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
 		DuelForecastY = new ConfigElement<float>("DuelForecastY", "决斗敌方行动预测窗口的纵向位置（占屏幕高度的比例，-1=默认居中）。拖动窗口会自动保存", -1f);

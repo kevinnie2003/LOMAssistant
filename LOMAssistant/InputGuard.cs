@@ -176,22 +176,24 @@ public class InputGuard : MonoBehaviour
 		InputDevice device = context.control != null ? context.control.device : null;
 		if (device is Keyboard keyboard)
 		{
-			// 活侠传拓展窗口开着时，Esc 用来关窗口，不打开游戏的暂停菜单
-			if (context.control == keyboard.escapeKey && LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape)
+			// 活侠传拓展窗口、判定前选分支的窗口开着时，Esc 用来关窗口，不打开游戏的暂停菜单
+			if (context.control == keyboard.escapeKey
+				&& (LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape || BranchAhead.OwnsEscape))
 			{
 				return true;
 			}
 			return BlockKeyboard;
 		}
 		// 咖啡伴侣窗口开着时手柄归窗口用（移动指针、点击、切页、B 关窗口），不交给游戏
-		if (device is Gamepad && LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape)
+		if (device is Gamepad && (LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape || BranchAhead.OwnsEscape))
 		{
 			return true;
 		}
 		if (device is UnityEngine.InputSystem.Pointer)
 		{
 			// 右键用来关咖啡伴侣窗口，鼠标不在窗口上时也不交给游戏
-			if (device is Mouse mouse && context.control == mouse.rightButton && LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape)
+			if (device is Mouse mouse && context.control == mouse.rightButton
+				&& (LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape || BranchAhead.OwnsEscape))
 			{
 				return true;
 			}
@@ -338,12 +340,13 @@ public static class InputGuardActionGate
 	}
 }
 
-/// <summary>剧情对话框（Fungus）用旧式 Input 判断点击推进，同样要挡。</summary>
+/// <summary>剧情对话框（Fungus）用旧式 Input 判断点击推进，同样要挡；判定前选分支的窗口开着时，Esc 也不让它读。</summary>
 [HarmonyPatch(typeof(Fungus.DialogInput), "Update")]
 public static class InputGuardDialogGate
 {
 	private static readonly MethodInfo MouseDown = AccessTools.Method(typeof(Input), nameof(Input.GetMouseButtonDown), new[] { typeof(int) });
 	private static readonly MethodInfo ButtonDown = AccessTools.Method(typeof(Input), nameof(Input.GetButtonDown), new[] { typeof(string) });
+	private static readonly MethodInfo KeyDown = AccessTools.Method(typeof(Input), nameof(Input.GetKeyDown), new[] { typeof(KeyCode) });
 
 	private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
 	{
@@ -357,18 +360,26 @@ public static class InputGuardDialogGate
 			{
 				instruction.operand = AccessTools.Method(typeof(InputGuardDialogGate), nameof(GetButtonDown));
 			}
+			else if (instruction.Calls(KeyDown))
+			{
+				instruction.operand = AccessTools.Method(typeof(InputGuardDialogGate), nameof(GetKeyDown));
+			}
 			yield return instruction;
 		}
 	}
 
 	private static bool GetMouseButtonDown(int button) => !InputGuard.BlockPointer && Input.GetMouseButtonDown(button);
 
-	private static bool GetButtonDown(string button) => !InputGuard.BlockKeyboard && Input.GetButtonDown(button);
+	// 判定前选分支的窗口开着时，Esc 只关窗口：不让 Fungus 的 Cancel 顺手把这段剧情掐掉
+	private static bool GetButtonDown(string button) => !InputGuard.BlockKeyboard && !(BranchAhead.OwnsEscape && button == "Cancel") && Input.GetButtonDown(button);
+
+	private static bool GetKeyDown(KeyCode key) => !(BranchAhead.OwnsEscape && key == KeyCode.Escape) && Input.GetKeyDown(key);
 }
 
-/// <summary>在 Mod 的输入框里打字时，方向键 / 回车不让游戏的 UI 导航处理；咖啡伴侣窗口开着时，手柄也不让游戏的界面跟着动。</summary>
+/// <summary>在 Mod 的输入框里打字时，方向键 / 回车不让游戏的 UI 导航处理；咖啡伴侣窗口、判定前选分支的窗口开着时，手柄也不让游戏的界面跟着动。</summary>
 [HarmonyPatch(typeof(InputSystemUIInputModule), "ProcessNavigation")]
 public static class InputGuardNavigationGate
 {
-	private static bool Prefix() => !InputGuard.BlockKeyboard && !(Gamepad.current != null && LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape);
+	private static bool Prefix() => !InputGuard.BlockKeyboard
+		&& !(Gamepad.current != null && (LOMAssistant.Features.Story.StoryReviewPanel.OwnsEscape || BranchAhead.OwnsEscape));
 }

@@ -94,6 +94,8 @@
 
   <img src="media/event-picker.webp" width="480" alt="随机事件自选：列出可触发的事件、概率和变化">
 
+- **判定前选分支**（默认关）：走到属性、好感、旗标的分支判断（「修养 ≥ 60」这种）时先停下，列出每一支的条件和当前值、这一支接到哪段剧情、后面的对白看过没。选一支就把数值改成走那一条路——包括把已经满足的支压到不满足，好走另一支、或走「以上都不满足」那一支。不想改就直接按空格、点窗口外面、或按 Esc，照现在的数值接着往下走。正按着 Ctrl 快进时撞上这个窗口，会先把快进停住（设置页可关）。条件里带随机值的判断仍由上面的随机事件自选处理（那里能算出每条的几率）。
+
 - **地图建筑事件提示**：养成地图上鼠标停在建筑上，列出这里的主线、支线（能不能触发、条件）和随机事件的概率；有能触发、还没走过的任务的建筑会一直亮着。设置页打开「地图提示只列能触发的」后，只列现在进去就会触发的，其余只写个数。点进建筑后，鼠标停在挑柴、修练这些选项上，列出选这一项会抽的随机事件、概率和没看过的；外出列表里的移动、行商也一样。
 - **物品用途**（默认关，可能剧透任务名）：背包和商店的物品说明后面列出使用效果，以及哪些剧情会判定或收走它。设置页「物品说明里写用途」。
 - **剧情分支小窗**（默认关，可能剧透）：分支判断时在屏幕左侧列出各分支条件，满足为绿、不满足为红。
@@ -218,6 +220,8 @@ DOTNET=/path/to/dotnet ./Installer/build-installer.sh
 
 - **[活侠传助手](https://mod.3dmgame.com/mod/256420)**：爱死（3DM：wowowo4567）。本项目的基础，源码由其发布的插件反编译而来后再修改。它又整合自 [骰子大师](https://mod.3dmgame.com/mod/210536)（Gmhaxx）、[多功能 Mod](https://mod.3dmgame.com/mod/210629)（Jim97）、[任意位置存档](https://mod.3dmgame.com/mod/210679)（NothingNullNull）。
 - **部分功能思路**：参考 [赵活系统](https://github.com/Toufff/zhaohuo-system)（Toufff，MIT 许可）。
+- **判定前选分支的思路**：参考 [MortalStoryWorkbench](https://github.com/xiaozhanshang/MortalStoryWorkbench)（剧情随行，xiaozhanshang，MIT 许可）——「判定之前就把每一支摆给玩家看」和只读剧本索引的做法来自它。
+- **判定前选分支的代码由 AI 编写**：实现代码（`LOMAssistant/BranchAhead.cs` 及其在 `EventPicker`、`ConfigManager`、`InputGuard` 里的接点）由 DeepSeek-V4.1 Flash 通过 WorkBuddy 编写，F1-ZX 提需求、定行为、做取舍并逐轮实机验证。反向改数（把已经满足的一支压到不满足）的写法参考 [赵活系统](https://github.com/Toufff/zhaohuo-system)（Toufff，MIT 许可）的条件求解，停下等玩家的做法沿用本项目已有的 `__lom_wait_switch`。
 - **存档备注显示**：移植自 [LOM_SaveSlotExpander](https://gitlab.com/ame-chan/lom_saveslotexpander)（ame-chan，MIT 许可）。
 - **AI 陪玩的思路**：参考 [江湖夜话](https://github.com/Cpjjason/jianghu-yehua)（Cpjjason）。它也是《活侠传》的 AI Mod，能和游戏里的人物私下闲谈，人物会送东西、指点武功、记得聊过的事（[B 站介绍视频](https://www.bilibili.com/video/BV1s2nC6pE83/)）。
 - **AI 陪玩的人设**：部分性格和小习惯参考了类脑社区夏呆呆的同人角色卡《活侠传》。

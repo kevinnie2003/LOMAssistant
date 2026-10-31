@@ -34,7 +34,7 @@ internal static class SwitchRandom
 
 	internal static string RuleKey(string name, int branch) => "Switch:" + name + "#" + branch;
 
-	private static SwitchResultData Find(string name)
+	internal static SwitchResultData Find(string name)
 	{
 		foreach (SwitchResultConfig config in DataHelper.SwitchConfigs())
 		{

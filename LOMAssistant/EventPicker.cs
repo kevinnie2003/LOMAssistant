@@ -241,14 +241,21 @@ public class EventPicker : MonoBehaviour
 				_switch = null;
 				return false;
 			}
-			if (_instance == null || !ConfigManager.EnableEventPicker.Value || AnytimeSave.Replaying || AnytimeSave.Restoring)
+			if (_instance == null || AnytimeSave.Replaying || AnytimeSave.Restoring)
 			{
 				return false;
+			}
+			// 随机事件自选关着时，条件型的判断仍然交给 BranchAhead（两个开关各管各的）
+			if (!ConfigManager.EnableEventPicker.Value)
+			{
+				return BranchAhead.Wait(name, script);
 			}
 			List<SwitchRandom.Arm> arms = SwitchRandom.Arms(name);
 			if (arms == null || arms.Count < 2)
 			{
-				return false;
+				// 条件里没有随机值的判断（「修养 ≥ 60」这种）算不出概率，但那正是最需要看清每一支、
+				// 提前把数值改到想走的那一条的时候：交给 BranchAhead 列出每支的条件和当前值。
+				return BranchAhead.Wait(name, script);
 			}
 			Choices.Clear();
 			foreach (SwitchRandom.Arm arm in arms)
@@ -618,6 +625,7 @@ internal static class EventPickerPatch
 			return;
 		}
 		EventPicker.ScriptLoaded();
+		BranchAhead.ScriptLoaded();
 		EventPicker.Bind(__instance.Interpreter);
 		if (AnytimeSave.Instance == null)
 		{

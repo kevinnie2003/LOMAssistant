@@ -101,6 +101,59 @@ internal static class ConditionSolver
 		return null;
 	}
 
+	/// <summary>
+	/// 让一组条件不成立要写的值：「且」破一项就够（挑最好改的），「或」每一项都得破。做不到返回 null。
+	/// 「走另一支」就是把它前面那些支按这个改到不满足——判定是从第一支起取第一个满足的。
+	/// </summary>
+	internal static List<Write> Break(ConditionResultItem item)
+	{
+		var parts = item.GetFieldValue<List<StatCompareItem>>("_items").Select(BreakCompare).ToList();
+		if (parts.Count == 0) return null;
+		if (item.GetFieldValue<LogicOperatorType>("_logicOp") == LogicOperatorType.OR)
+		{
+			// 「或」只要还有一项成立整组就成立，所以每一项都得破
+			if (parts.Any(p => p == null)) return null;
+			var writes = new List<Write>();
+			foreach (Write w in parts.SelectMany(p => p))
+			{
+				Write same = writes.Find(x => x.Target == w.Target);
+				if (same == null) writes.Add(w);
+				else if (same.Value != w.Value) return null;
+			}
+			return writes;
+		}
+		// 「且」破一项就整组不成立：挑要写最少的那个
+		return parts.Where(p => p != null).OrderBy(p => p.Count).FirstOrDefault();
+	}
+
+	private static List<Write> BreakCompare(StatCompareItem c)
+	{
+		var g1 = c.GetFieldValue<StatGroupVariable>("_value1");
+		var g2 = c.GetFieldValue<StatGroupVariable>("_value2");
+		var op = c.GetFieldValue<StatCompareType>("_compareOp");
+		int? a = Eval(g1), b = Eval(g2);
+		if (a == null || b == null) return null;
+		if (!GameStatUtils.StatCompare(a.Value, b.Value, op)) return new List<Write>(); // 本来就不满足
+		if (IsConstant(g2)) return Toward(g1, a.Value, BreakTarget(b.Value, op));
+		if (IsConstant(g1)) return Toward(g2, b.Value, BreakTarget(a.Value, Mirror(op)));
+		return null;
+	}
+
+	/// <summary>要把比较式改到不成立，左边那个数该取什么（刚好越界的一个）。</summary>
+	private static int? BreakTarget(int bound, StatCompareType op)
+	{
+		switch (op)
+		{
+			case StatCompareType.Equal: return bound == int.MaxValue ? bound - 1 : bound + 1;
+			case StatCompareType.NotEqual: return bound;
+			case StatCompareType.Less: return bound;             // a ≥ b 就不成立
+			case StatCompareType.LessEqual: return bound + 1;    // a > b
+			case StatCompareType.Greater: return bound;          // a ≤ b
+			case StatCompareType.GreaterEqual: return bound - 1; // a < b
+			default: return null;
+		}
+	}
+
 	/// <summary>把一组值（单个值或几个值相加）改到 target：相加时差额放在其中一个上，往上加优先放在还是 0 的那个，往下减放在最大的。</summary>
 	private static List<Write> Toward(StatGroupVariable group, int current, int? target)
 	{
