@@ -116,6 +116,7 @@ public static class DataHelper
 
 	private static SwitchResultConfig[] _switchConfigs;
 	private static ConditionResultConfig _conditionConfig;
+	private static int _switchSearchedFrame = -1, _conditionSearchedFrame = -1;
 
 	/// <summary>
 	/// 分支判断表。挂在剧情场景的 CheckPointManager 上，离开剧情场景（养成地图）就拿不到；
@@ -128,8 +129,10 @@ public static class DataHelper
 		{
 			_switchConfigs = instance.GetFieldValue<SwitchResultConfig[]>("_switchList");
 		}
-		else if (_switchConfigs == null || _switchConfigs.Length == 0)
+		else if ((_switchConfigs == null || _switchConfigs.Length == 0) && _switchSearchedFrame != Time.frameCount)
 		{
+			// 全内存搜一遍很慢：养成地图上找不到时，反查要对几千个检查点各查一次，同一帧里只搜一次
+			_switchSearchedFrame = Time.frameCount;
 			_switchConfigs = Resources.FindObjectsOfTypeAll<SwitchResultConfig>();
 		}
 		return _switchConfigs ?? new SwitchResultConfig[0];
@@ -227,8 +230,9 @@ public static class DataHelper
 		{
 			_conditionConfig = instance.GetFieldValue<ConditionResultConfig>("_condition");
 		}
-		else if (_conditionConfig == null)
+		else if (_conditionConfig == null && _conditionSearchedFrame != Time.frameCount)
 		{
+			_conditionSearchedFrame = Time.frameCount;
 			ConditionResultConfig[] found = Resources.FindObjectsOfTypeAll<ConditionResultConfig>();
 			_conditionConfig = found.Length > 0 ? found[0] : null;
 		}
@@ -240,18 +244,55 @@ public static class DataHelper
 	{
 		if (isSwitch)
 		{
-			foreach (SwitchResultConfig config in SwitchConfigs())
-			{
-				SwitchResultData data = config?.GetData(key);
-				if (data != null) return data.GetFieldValue<bool>("_useCount") ? new List<ConditionResultItem>() : data.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>();
-			}
+			SwitchResultData data = SwitchData(key);
+			if (data != null) return data.GetFieldValue<bool>("_useCount") ? new List<ConditionResultItem>() : data.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>();
 		}
 		else
 		{
-			ConditionResultData data = ConditionConfig()?.List?.Find(x => x != null && x.name == key);
+			ConditionResultData data = ConditionData(key);
 			if (data != null) return data.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>();
 		}
 		return new List<ConditionResultItem>();
+	}
+
+	// 游戏按名字逐个比对查检查点（每次都取 Unity 对象的 name），反查时几千个检查点这样查要好几秒；按名字建一次表
+	private static Dictionary<string, SwitchResultData> _switchByName;
+	private static Dictionary<string, ConditionResultData> _conditionByName;
+	private static SwitchResultConfig[] _switchIndexed;
+	private static ConditionResultConfig _conditionIndexed;
+
+	private static SwitchResultData SwitchData(string key)
+	{
+		SwitchResultConfig[] configs = SwitchConfigs();
+		if (_switchByName == null || !ReferenceEquals(_switchIndexed, configs))
+		{
+			_switchByName = new Dictionary<string, SwitchResultData>(StringComparer.Ordinal);
+			foreach (SwitchResultConfig config in configs)
+			{
+				foreach (SwitchResultData data in config?.List ?? new List<SwitchResultData>())
+				{
+					// 和游戏的 GetData 一样，同名的取第一个
+					if (data != null && !_switchByName.ContainsKey(data.name)) _switchByName[data.name] = data;
+				}
+			}
+			_switchIndexed = configs;
+		}
+		return key != null && _switchByName.TryGetValue(key, out SwitchResultData found) ? found : null;
+	}
+
+	private static ConditionResultData ConditionData(string key)
+	{
+		ConditionResultConfig config = ConditionConfig();
+		if (_conditionByName == null || !ReferenceEquals(_conditionIndexed, config))
+		{
+			_conditionByName = new Dictionary<string, ConditionResultData>(StringComparer.Ordinal);
+			foreach (ConditionResultData data in config?.List ?? new List<ConditionResultData>())
+			{
+				if (data != null && !_conditionByName.ContainsKey(data.name)) _conditionByName[data.name] = data;
+			}
+			_conditionIndexed = config;
+		}
+		return key != null && _conditionByName.TryGetValue(key, out ConditionResultData found) ? found : null;
 	}
 
 	internal static bool CheckpointsAvailable => ConditionConfig() != null && SwitchConfigs().Length > 0;
@@ -260,7 +301,7 @@ public static class DataHelper
 	{
 		if (isSwitch)
 		{
-			var data = SwitchConfigs().Select(c => c?.GetData(key)).FirstOrDefault(d => d != null);
+			var data = SwitchData(key);
 			if (data != null && data.GetFieldValue<bool>("_useCount"))
 				return (data.GetFieldValue<List<ValueCompareItem>>("_countItems") ?? new List<ValueCompareItem>()).Select(item =>
 					"执行次数 " + GetCompareOperator(item.GetFieldValue<StatCompareType>("_compareOp")) + item.GetFieldValue<int>("_value")).ToList();

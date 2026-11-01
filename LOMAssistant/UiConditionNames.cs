@@ -55,10 +55,16 @@ internal static class UiConditionNames
 	private static readonly Regex BareCondition = new Regex(
 		@"(?<time>(?:目前时间|目前時間)(?:\s+需)?\s*(?:>=|<=|!=|=|>|<|≥|≤|≠)\s*)(?<id>[A-Za-z][A-Za-z0-9_]*)(?=$|\s|[<；）)])|(?<=^|\s|；|（|\(|>)(?<id>[A-Za-z][A-Za-z0-9_]*)(?=\s*(?:需)?(?:>=|<=|!=|=|>|<|≥|≤|≠))");
 
+	private static readonly char[] Comparisons = { '=', '<', '>', '≥', '≤', '≠' };
+	private static readonly Dictionary<string, string> Described = new Dictionary<string, string>();
+
+	// 界面上每段文字画之前都会经过这里（ForDisplay）：没有比较符号的直接原样返回，算过的记下来，不每帧跑正则
 	public static string Describe(string text)
 	{
-		if (string.IsNullOrEmpty(text)) return text;
-		return BareCondition.Replace(text, match =>
+		if (string.IsNullOrEmpty(text) || text.IndexOfAny(Comparisons) < 0) return text;
+		if (Described.TryGetValue(text, out string done)) return done;
+		if (Described.Count >= 20000) Described.Clear();
+		return Described[text] = BareCondition.Replace(text, match =>
 		{
 			string id = match.Groups["id"].Value;
 			string time = match.Groups["time"].Value;

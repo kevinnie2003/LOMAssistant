@@ -92,7 +92,10 @@ public static class StoryUsage
 		Items.Clear();
 		Relations.Clear();
 		Stats.Clear();
+		Parsed.Clear();
+		ClauseRefs.Clear();
 		Dictionary<string, string> itemNames = ItemNames();
+		long names = timer.ElapsedMilliseconds;
 		var seen = new HashSet<string>(StringComparer.Ordinal);
 		foreach (StoryScript script in StoryScripts.All)
 		{
@@ -139,10 +142,13 @@ public static class StoryUsage
 				var conditions = DataHelper.CheckpointConditions(checkpoint, isSwitch);
 				if (conditions.Count > 0)
 				{
+					// 条件表里的文字就是 ConditionTemplate 写出来的，有就直接用，不再逐条现算
+					List<string> book = isSwitch ? ConditionBook.Switches.TryGetValue(checkpoint, out List<string> written) ? written : null
+						: ConditionBook.Conditions.TryGetValue(checkpoint, out string one) ? new List<string> { one } : null;
 					for (int i = 0; i < conditions.Count; i++)
 					{
 						var template = new StoryUse { Script = script.Name, Mission = mission, Path = path, Arm = isSwitch ? new StoryStep { Kind = StoryStep.Branch, Key = checkpoint, Arm = i + 1 } : null };
-						AddConditions(conditions[i], isSwitch ? "分支判定" : "选项条件", template, itemNames, seen);
+						AddConditions(conditions[i], isSwitch ? "分支判定" : "选项条件", template, itemNames, seen, book != null && book.Count == conditions.Count ? book[i] : null);
 					}
 					continue;
 				}
@@ -159,6 +165,7 @@ public static class StoryUsage
 				}
 			}
 		}
+		long scripts = timer.ElapsedMilliseconds;
 		// 任务的触发条件（地图上什么时候出现）
 		foreach (StoryMission mission in StoryAtlas.Missions)
 		{
@@ -167,18 +174,38 @@ public static class StoryUsage
 				AddConditions(condition, "触发条件", new StoryUse { Script = mission.StartScript, Mission = mission }, itemNames, seen);
 			}
 		}
-		FileLogger.Log($"[剧情回顾] 旗标、物品反查：{Flags.Count} 面旗标、{Items.Count} 件物品、{Stats.Count} 项数值，用时 {timer.ElapsedMilliseconds} 毫秒");
+		FileLogger.Log($"[剧情回顾] 旗标、物品反查：{Flags.Count} 面旗标、{Items.Count} 件物品、{Stats.Count} 项数值，用时 {timer.ElapsedMilliseconds} 毫秒（物品名 {names}，剧本 {scripts - names}，任务条件 {timer.ElapsedMilliseconds - scripts}；条件 {Parsed.Count} 条）");
 	}
 
+	// 同一个条件在很多剧本、很多处都会用到：文字和引用的旗标、物品只算一次（每次重建反查时清空）
+	private static readonly Dictionary<ConditionResultItem, (string Text, string Shown, List<(Dictionary<string, List<StoryUse>> Index, string Key)> Refs)> Parsed
+		= new Dictionary<ConditionResultItem, (string, string, List<(Dictionary<string, List<StoryUse>>, string)>)>();
+	// 同一段条件文字拆出来的数值引用也只拆一次
+	private static readonly Dictionary<string, List<(Dictionary<string, List<StoryUse>> Index, string Key, string Shown)>> ClauseRefs
+		= new Dictionary<string, List<(Dictionary<string, List<StoryUse>>, string, string)>>(StringComparer.Ordinal);
+
 	// 物品、旗标、好感按原始引用建索引；显示名、资源名或译名不同也不会漏掉，且不执行条件。
-	private static void AddConditions(ConditionResultItem condition, string kind, StoryUse template, Dictionary<string, string> itemNames, HashSet<string> seen)
+	private static void AddConditions(ConditionResultItem condition, string kind, StoryUse template, Dictionary<string, string> itemNames, HashSet<string> seen, string known = null)
 	{
 		if (condition == null) return;
-		string text;
-		try { text = DataHelper.ConditionTemplate(condition); }
-		catch { text = ""; }
-		AddConditions(text, kind, template, itemNames, seen, references: false);
-		StoryUse use = Copy(template, kind, Readable(text));
+		if (!Parsed.TryGetValue(condition, out var parsed))
+		{
+			string text = known;
+			if (text == null)
+			{
+				try { text = DataHelper.ConditionTemplate(condition); }
+				catch { text = ""; }
+			}
+			Parsed[condition] = parsed = (text, Readable(text), References(condition));
+		}
+		AddConditions(parsed.Text, kind, template, itemNames, seen, references: false);
+		StoryUse use = Copy(template, kind, parsed.Shown);
+		foreach (var (index, key) in parsed.Refs) Add(index, key, use, seen);
+	}
+
+	private static List<(Dictionary<string, List<StoryUse>> Index, string Key)> References(ConditionResultItem condition)
+	{
+		var refs = new List<(Dictionary<string, List<StoryUse>>, string)>();
 		var visited = new HashSet<object>();
 		void Condition(ConditionResultItem item)
 		{
@@ -201,11 +228,11 @@ public static class StoryUsage
 				{
 					case StatCheckType.旗標:
 						var flag = value.GetFieldValue<FlagData>("_flag");
-						if (flag != null) Add(Flags, flag.name, use, seen);
+						if (flag != null) refs.Add((Flags, flag.name));
 						break;
 					case StatCheckType.好感度:
 						var relation = value.GetFieldValue<RelationshipStat>("_relationship");
-						if (relation != null) Add(Relations, RelationshipName(relation), use, seen);
+						if (relation != null) refs.Add((Relations, RelationshipName(relation)));
 						break;
 					case StatCheckType.書籍:
 					case StatCheckType.秘笈等級:
@@ -225,10 +252,11 @@ public static class StoryUsage
 						foreach (var part in nested?.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>()) Condition(part);
 						break;
 				}
-				if (item != null) Add(Items, ItemKey(item.ItemType, item.Id), use, seen);
+				if (item != null) refs.Add((Items, ItemKey(item.ItemType, item.Id)));
 			}
 		}
 		Condition(condition);
+		return refs;
 	}
 
 	// 一段条件文字里每个用到旗标、物品的小条件各记一处（同一处同一个旗标只记一次）
@@ -238,6 +266,20 @@ public static class StoryUsage
 		{
 			return;
 		}
+		string memo = (references ? "1" : "0") + text;
+		if (!ClauseRefs.TryGetValue(memo, out var found))
+		{
+			ClauseRefs[memo] = found = ParseClauses(text, itemNames, references);
+		}
+		foreach (var (index, key, shown) in found)
+		{
+			Add(index, key, Copy(template, kind, shown), seen);
+		}
+	}
+
+	private static List<(Dictionary<string, List<StoryUse>> Index, string Key, string Shown)> ParseClauses(string text, Dictionary<string, string> itemNames, bool references)
+	{
+		var found = new List<(Dictionary<string, List<StoryUse>>, string, string)>();
 		foreach (string raw in Clauses.Split(text))
 		{
 			string clause = raw.Trim();
@@ -249,11 +291,11 @@ public static class StoryUsage
 			if (references) foreach (Match m in FlagInCondition.Matches(clause))
 			{
 				string id = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Value;
-				Add(Flags, id, Copy(template, kind, shown), seen);
+				found.Add((Flags, id, shown));
 			}
 			if (references) foreach (Match m in RelationInCondition.Matches(clause))
 			{
-				Add(Relations, TextConverter.ToSimplified(m.Groups[1].Value), Copy(template, kind, shown), seen);
+				found.Add((Relations, TextConverter.ToSimplified(m.Groups[1].Value), shown));
 			}
 			foreach (Match m in StatInCondition.Matches(clause))
 			{
@@ -264,16 +306,17 @@ public static class StoryUsage
 				{
 					continue;
 				}
-				Add(Stats, name, Copy(template, kind, shown), seen);
+				found.Add((Stats, name, shown));
 			}
 			if (references) foreach (Match m in ItemInCondition.Matches(clause))
 			{
 				if (itemNames.TryGetValue(m.Groups[1].Value + "_" + m.Groups[2].Value, out string key))
 				{
-					Add(Items, key, Copy(template, kind, shown), seen);
+					found.Add((Items, key, shown));
 				}
 			}
 		}
+		return found;
 	}
 
 	// Mod 自带条件文字里的「旗标M20062〔名字〕」写成和运行时一样的「名字 (M20062)」

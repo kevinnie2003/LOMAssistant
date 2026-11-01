@@ -694,7 +694,7 @@ public static class StoryAtlas
 			{
 				string time = !check.GetFieldValue<bool>("_dayCheck") ? "any" : mission.From != null
 					? mission.From + ":" + mission.To : "monthly:" + (int)check.GetFieldValue<MonthStageType>("_periodStage");
-				mission.FlowGroup = Uri.EscapeDataString(series.name) + "|" + (int)check.Position + "|" + time + "|" + check.GetFieldValue<bool>("_beforeMain");
+				mission.FlowGroup = Uri.EscapeDataString(series.name) + "|" + (int)check.Position + "|" + time + "|" + check.BeforeMainMission;
 			}
 			Missions.Add(mission);
 		}
