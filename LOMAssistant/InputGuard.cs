@@ -133,7 +133,7 @@ public class InputGuard : MonoBehaviour
 		{
 			foreach (KeyValuePair<string, Region> r in Regions)
 			{
-				if (r.Key != "Branch" && Time.frameCount - r.Value.Frame <= 2)
+			if (r.Key != "Branch" && r.Key != "Memo" && Time.frameCount - r.Value.Frame <= 2)
 				{
 					return true;
 				}

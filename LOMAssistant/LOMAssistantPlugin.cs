@@ -54,6 +54,10 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 		{
 			LOMAssistant.Features.Story.StoryReviewPanel.ToggleStats();
 		}
+		if (InputGuard.HotkeyDown(ConfigManager.MemoKey.Value))
+		{
+			LOMAssistant.Features.Memo.MemoPanel.Toggle();
+		}
 		LOMAssistant.Features.Extras.SkipActionPatch.CheckHotkey();
 	}
 
@@ -199,6 +203,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			LOMAssistant.Features.Story.DeadlineReminder.Ensure(base.gameObject);
 			LOMAssistant.Features.Story.StoryJumpNote.Ensure(base.gameObject);
 			PositionOptionHints.Ensure(base.gameObject);
+		LOMAssistant.Features.Memo.MemoPanel.Ensure(base.gameObject);
 			TryPatchAll(typeof(MapEventHints));
 			TryPatchAll(typeof(StatLimitPatch));
 			TryPatchAll(typeof(TitlePatch));

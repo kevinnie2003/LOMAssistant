@@ -120,6 +120,17 @@ public static class ConfigManager
 
 	public static ConfigElement<float> DuelForecastHeight;
 
+	public static ConfigElement<bool> MemoFloat;
+	public static ConfigElement<KeyCode> MemoKey;
+	public static ConfigElement<bool> MemoNotify;
+	public static ConfigElement<int> MemoAhead;
+	public static ConfigElement<float> MemoOpacity;
+	public static ConfigElement<float> MemoX;
+	public static ConfigElement<float> MemoY;
+	public static ConfigElement<float> MemoWidth;
+	public static ConfigElement<float> MemoHeight;
+	public static ConfigElement<bool> MemoCollapsed;
+
 	public static ConfigElement<bool> EnableSkillColumns;
 
 	public static ConfigElement<float> BranchPanelX;
@@ -440,6 +451,16 @@ public static class ConfigManager
 		DuelForecastY = new ConfigElement<float>("DuelForecastY", "决斗敌方行动预测窗口的纵向位置（占屏幕高度的比例，-1=默认居中）。拖动窗口会自动保存", -1f);
 		DuelForecastWidth = new ConfigElement<float>("DuelForecastWidth", "决斗敌方行动预测窗口的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
 		DuelForecastHeight = new ConfigElement<float>("DuelForecastHeight", "决斗敌方行动预测窗口的高度（占屏幕高度的比例，-1=按内容自适应）。调整窗口大小会自动保存", -1f);
+		MemoFloat = new ConfigElement<bool>("MemoFloat", "备忘录悬浮窗：浮在游戏画面上，实时盯着选好的条件（数值、好感、功法、锻造、炼丹等），可以拖标题栏移动、拖右下角缩放、调底部滑条改透明度。true=开（默认），false=关", defaultValue: true);
+		MemoKey = new ConfigElement<KeyCode>("MemoKey", "打开/隐藏备忘录悬浮窗的热键", KeyCode.F10);
+		MemoNotify = new ConfigElement<bool>("MemoNotify", "备忘录提示：条件达成、回落、快到期或过期时，在悬浮窗顶部提示一次。true=开（默认），false=关", defaultValue: true);
+		MemoAhead = new ConfigElement<int>("MemoAhead", "备忘录提前几旬提示快到期（0=到期和过期才提示）", 3);
+		MemoOpacity = new ConfigElement<float>("MemoOpacity", "备忘录悬浮窗背景的不透明度（0.2～1，1=不透明）。调低能透过窗口看到游戏画面，文字和按钮不变。拖动窗口底部滑条会自动保存", 0.9f);
+		MemoX = new ConfigElement<float>("MemoX", "备忘录悬浮窗的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
+		MemoY = new ConfigElement<float>("MemoY", "备忘录悬浮窗的纵向位置（占屏幕高度的比例，-1=默认右上）。拖动窗口会自动保存", -1f);
+		MemoWidth = new ConfigElement<float>("MemoWidth", "备忘录悬浮窗的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
+		MemoHeight = new ConfigElement<float>("MemoHeight", "备忘录悬浮窗的高度（占屏幕高度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
+		MemoCollapsed = new ConfigElement<bool>("MemoCollapsed", "备忘录悬浮窗是否收起成标题栏（在窗口里点，自动记录）", defaultValue: false);
 		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表全显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列）。true=开，false=关", defaultValue: true);
 		EnableOneClickUnlock = new ConfigElement<bool>("EnableOneClickUnlock", "被锁住的选项旁显示「一键设置」：把没满足的解锁条件（属性、好感、旗标）改到满足，选项当场解锁。true=开，false=关", defaultValue: true);
 		FlagNoticeSeconds = new ConfigElement<float>("FlagNoticeSeconds", "剧情旗标变化提示在屏幕上停留几秒（按真实时间，开倍速也一样；原版 1 秒）。0=按游戏原样", 4f);
