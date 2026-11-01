@@ -48,6 +48,7 @@ public static class DataHelper
 	private static string FormatConditionValName(StatGroupVariable variable)
 	{
 		string name = variable.name;
+		if (UiConditionNames.Descriptions.TryGetValue(TextConverter.ToSimplified(name), out string description)) return description;
 		if (name.StartsWith("标记_") || name.StartsWith("旗标_") || name.StartsWith("標記_") || name.StartsWith("旗標_") || IsEnglishAlphanumeric(name))
 		{
 			string text = name;
@@ -161,6 +162,63 @@ public static class DataHelper
 		return string.Join(" " + GetLogicOperator(condition.GetFieldValue<LogicOperatorType>("_logicOp")) + " ", list.ToArray());
 	}
 
+	/// <summary>路线旁的条件摘要：按原始类型跳过时间和行动次数，不从显示文字反推条件，也不执行判定。</summary>
+	internal static string ConditionSummary(IEnumerable<ConditionResultItem> conditions, Func<string, string> format)
+	{
+		StatValueReference Single(StatGroupVariable group)
+		{
+			var values = group?.GetFieldValue<List<StatValueReference>>("_value");
+			var type = group != null ? group.GetFieldValue<StatGroupType>("_groupType") : default;
+			return values?.Count == 1 && (type == StatGroupType.Sum || type == StatGroupType.Max || type == StatGroupType.Min || type == StatGroupType.Multiply) ? values[0] : null;
+		}
+		int? Constant(StatValueReference value) => value?.CheckType == StatCheckType.常數
+			? value.GetFieldValue<int>("_constant") * (value.GetFieldValue<bool>("_negative") ? -1 : 1) : (int?)null;
+		bool Routine(StatCompareItem item)
+		{
+			var value = Single(item.GetFieldValue<StatGroupVariable>("_value1"));
+			if (value?.CheckType == StatCheckType.遊戲時間) return true;
+			var type = value?.CheckType == StatCheckType.角色數值 ? value.GetFieldValue<GameStat>("_stat")?.StatType : null;
+			return type == GameStatType.行動次數 || type == GameStatType.額外行動次數_1 || type == GameStatType.額外行動次數_2 || type == GameStatType.額外行動次數_3;
+		}
+		string Operand(StatGroupVariable group)
+		{
+			if (group == null) return "";
+			var value = Single(group);
+			int? number = Constant(value);
+			if (number != null) return number.Value.ToString();
+			var flag = value?.CheckType == StatCheckType.旗標 ? value.GetFieldValue<FlagData>("_flag") : null;
+			string name = flag != null ? GetFlagName(flag) : "";
+			if (name.Length == 0) name = FormatConditionValName(group);
+			return (value != null && value.GetFieldValue<bool>("_negative") ? "-" : "") + format(name);
+		}
+		string Describe(StatCompareItem item)
+		{
+			var left = item.GetFieldValue<StatGroupVariable>("_value1");
+			var right = item.GetFieldValue<StatGroupVariable>("_value2");
+			var op = item.GetFieldValue<StatCompareType>("_compareOp");
+			var value = Single(left);
+			var flag = value?.CheckType == StatCheckType.旗標 && !value.GetFieldValue<bool>("_negative") ? value.GetFieldValue<FlagData>("_flag") : null;
+			int? number = Constant(Single(right));
+			// 编号选项来自旗标原始备注；编号和比较方式来自资料，不解析译文中的「需=」等字样。
+			if (flag != null && op == StatCompareType.Equal && number >= 0)
+			{
+				var pick = System.Text.RegularExpressions.Regex.Match(flag.DevNote ?? "", @"(?:^|\s)" + number.Value + @"[.．、:：]\s*([^\s\r\n]+)");
+				if (pick.Success) return Operand(left) + "：" + format(TextConverter.ToSimplified(pick.Groups[1].Value));
+			}
+			return Operand(left) + GetCompareOperator(op) + Operand(right);
+		}
+		foreach (ConditionResultItem condition in conditions)
+		{
+			var items = condition?.GetFieldValue<List<StatCompareItem>>("_items")?.Where(item => item != null).ToList();
+			var first = items?.FirstOrDefault(item => !Routine(item));
+			if (first == null) continue;
+			// OR 组不能只留其中一项；否则摘要会把可选条件写成必需条件。
+			return condition.GetFieldValue<LogicOperatorType>("_logicOp") == LogicOperatorType.OR
+				? string.Join(format(" 或 "), items.Select(Describe).ToArray()) : Describe(first);
+		}
+		return "";
+	}
+
 	/// <summary>条件检查表，取法同 SwitchConfigs。</summary>
 	private static ConditionResultConfig ConditionConfig()
 	{
@@ -175,6 +233,42 @@ public static class DataHelper
 			_conditionConfig = found.Length > 0 ? found[0] : null;
 		}
 		return _conditionConfig;
+	}
+
+	/// <summary>只取检查点的条件资料，不调用 Check/Execute，也不读取随机值。</summary>
+	internal static List<ConditionResultItem> CheckpointConditions(string key, bool isSwitch)
+	{
+		if (isSwitch)
+		{
+			foreach (SwitchResultConfig config in SwitchConfigs())
+			{
+				SwitchResultData data = config?.GetData(key);
+				if (data != null) return data.GetFieldValue<bool>("_useCount") ? new List<ConditionResultItem>() : data.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>();
+			}
+		}
+		else
+		{
+			ConditionResultData data = ConditionConfig()?.List?.Find(x => x != null && x.name == key);
+			if (data != null) return data.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>();
+		}
+		return new List<ConditionResultItem>();
+	}
+
+	internal static bool CheckpointsAvailable => ConditionConfig() != null && SwitchConfigs().Length > 0;
+
+	internal static List<string> CheckpointTemplates(string key, bool isSwitch)
+	{
+		if (isSwitch)
+		{
+			var data = SwitchConfigs().Select(c => c?.GetData(key)).FirstOrDefault(d => d != null);
+			if (data != null && data.GetFieldValue<bool>("_useCount"))
+				return (data.GetFieldValue<List<ValueCompareItem>>("_countItems") ?? new List<ValueCompareItem>()).Select(item =>
+					"执行次数 " + GetCompareOperator(item.GetFieldValue<StatCompareType>("_compareOp")) + item.GetFieldValue<int>("_value")).ToList();
+		}
+		var items = CheckpointConditions(key, isSwitch);
+		if (items.Count > 0) return items.Select(item => item == null ? "" : ConditionTemplate(item)).ToList();
+		if (isSwitch) return ConditionBook.Switches.TryGetValue(key, out var arms) ? arms : new List<string>();
+		return ConditionBook.Conditions.TryGetValue(key, out string text) ? new List<string> { text } : new List<string>();
 	}
 
 	/// <summary>分支判断第 branch 支的条件文字（0 = 以上都不满足），找不到时返回空。</summary>
@@ -320,7 +414,7 @@ public static class DataHelper
 		{
 			return false;
 		}
-		string fieldValue2 = byKey.GetFieldValue<string>("_desc");
+		string fieldValue2 = UiQuestNames.Description(byKey.Key, byKey.GetFieldValue<string>("_desc"));
 		fieldValue2 = (fieldValue2.IsNullOrWhiteSpace() ? byKey.name : fieldValue2);
 		// 用界面翻译已有的分隔符，让编号和完整任务名分别查表。
 		item = fieldValue + " · " + fieldValue2;

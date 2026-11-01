@@ -33,6 +33,7 @@ public static class StoryUsage
 	private static readonly Dictionary<string, List<StoryUse>> Flags = new Dictionary<string, List<StoryUse>>(StringComparer.Ordinal);
 	private static readonly Dictionary<string, List<StoryUse>> Items = new Dictionary<string, List<StoryUse>>(StringComparer.Ordinal);
 	private static int _builtVersion = -1;
+	private static bool _builtCheckpoints;
 
 	// 条件里的旗标：运行时写的「名字 (M20062) 需=1」、Mod 自带的「旗标M20062〔名字〕 需=1」、没有说明的「A10001 需=1」
 	private static readonly Regex FlagInCondition = new Regex(@"旗标([A-Za-z][A-Za-z0-9_]*)|\(([A-Za-z][A-Za-z0-9_]*)\)(?= 需| *$)|(?<=^|\s)([A-Z][A-Za-z]*\d[A-Za-z0-9_]*)(?= 需)");
@@ -75,9 +76,10 @@ public static class StoryUsage
 		{
 			return false;
 		}
-		if (_builtVersion != StoryAtlas.Version)
+		if (_builtVersion != StoryAtlas.Version || _builtCheckpoints != DataHelper.CheckpointsAvailable)
 		{
 			_builtVersion = StoryAtlas.Version;
+			_builtCheckpoints = DataHelper.CheckpointsAvailable;
 			Build();
 		}
 		return true;
@@ -134,6 +136,17 @@ public static class StoryUsage
 			}
 			foreach (var (path, checkpoint, isSwitch) in script.Checks)
 			{
+				var conditions = DataHelper.CheckpointConditions(checkpoint, isSwitch);
+				if (conditions.Count > 0)
+				{
+					for (int i = 0; i < conditions.Count; i++)
+					{
+						var template = new StoryUse { Script = script.Name, Mission = mission, Path = path, Arm = isSwitch ? new StoryStep { Kind = StoryStep.Branch, Key = checkpoint, Arm = i + 1 } : null };
+						AddConditions(conditions[i], isSwitch ? "分支判定" : "选项条件", template, itemNames, seen);
+					}
+					continue;
+				}
+				// 场景资料尚未载入时保留文字本回退；就绪后重建，改用原始引用。
 				IEnumerable<string> texts = isSwitch
 					? ConditionBook.Switches.TryGetValue(checkpoint, out List<string> arms) ? arms : Enumerable.Empty<string>()
 					: ConditionBook.Conditions.TryGetValue(checkpoint, out string single) ? new[] { single } : Enumerable.Empty<string>();
@@ -151,23 +164,75 @@ public static class StoryUsage
 		{
 			foreach (ConditionResultItem condition in mission.Conditions)
 			{
-				string text;
-				try
-				{
-					text = condition == null ? "" : DataHelper.ConditionTemplate(condition);
-				}
-				catch
-				{
-					continue;
-				}
-				AddConditions(text, "触发条件", new StoryUse { Script = mission.StartScript, Mission = mission }, itemNames, seen);
+				AddConditions(condition, "触发条件", new StoryUse { Script = mission.StartScript, Mission = mission }, itemNames, seen);
 			}
 		}
 		FileLogger.Log($"[剧情回顾] 旗标、物品反查：{Flags.Count} 面旗标、{Items.Count} 件物品、{Stats.Count} 项数值，用时 {timer.ElapsedMilliseconds} 毫秒");
 	}
 
+	// 物品、旗标、好感按原始引用建索引；显示名、资源名或译名不同也不会漏掉，且不执行条件。
+	private static void AddConditions(ConditionResultItem condition, string kind, StoryUse template, Dictionary<string, string> itemNames, HashSet<string> seen)
+	{
+		if (condition == null) return;
+		string text;
+		try { text = DataHelper.ConditionTemplate(condition); }
+		catch { text = ""; }
+		AddConditions(text, kind, template, itemNames, seen, references: false);
+		StoryUse use = Copy(template, kind, Readable(text));
+		var visited = new HashSet<object>();
+		void Condition(ConditionResultItem item)
+		{
+			if (item == null || !visited.Add(item)) return;
+			foreach (StatCompareItem compare in item.GetFieldValue<List<StatCompareItem>>("_items") ?? new List<StatCompareItem>())
+			{
+				if (compare == null) continue;
+				Variable(compare.GetFieldValue<StatGroupVariable>("_value1"));
+				Variable(compare.GetFieldValue<StatGroupVariable>("_value2"));
+			}
+		}
+		void Variable(StatGroupVariable group)
+		{
+			if (group == null || !visited.Add(group)) return;
+			foreach (StatValueReference value in group.GetFieldValue<List<StatValueReference>>("_value") ?? new List<StatValueReference>())
+			{
+				if (value == null) continue;
+				ItemData item = null;
+				switch (value.CheckType)
+				{
+					case StatCheckType.旗標:
+						var flag = value.GetFieldValue<FlagData>("_flag");
+						if (flag != null) Add(Flags, flag.name, use, seen);
+						break;
+					case StatCheckType.好感度:
+						var relation = value.GetFieldValue<RelationshipStat>("_relationship");
+						if (relation != null) Add(Relations, RelationshipName(relation), use, seen);
+						break;
+					case StatCheckType.書籍:
+					case StatCheckType.秘笈等級:
+						item = value.GetFieldValue<Book>("_book");
+						break;
+					case StatCheckType.雜物:
+						item = value.GetFieldValue<Misc>("_misc");
+						break;
+					case StatCheckType.貴重品:
+						item = value.GetFieldValue<SpecialItem>("_specialItem");
+						break;
+					case StatCheckType.數值群組:
+						Variable(value.GetFieldValue<StatGroupVariable>("_statGroup"));
+						break;
+					case StatCheckType.條件設定:
+						var nested = value.GetFieldValue<ConditionResultData>("_condition");
+						foreach (var part in nested?.GetFieldValue<List<ConditionResultItem>>("_items") ?? new List<ConditionResultItem>()) Condition(part);
+						break;
+				}
+				if (item != null) Add(Items, ItemKey(item.ItemType, item.Id), use, seen);
+			}
+		}
+		Condition(condition);
+	}
+
 	// 一段条件文字里每个用到旗标、物品的小条件各记一处（同一处同一个旗标只记一次）
-	private static void AddConditions(string text, string kind, StoryUse template, Dictionary<string, string> itemNames, HashSet<string> seen)
+	private static void AddConditions(string text, string kind, StoryUse template, Dictionary<string, string> itemNames, HashSet<string> seen, bool references = true)
 	{
 		if (string.IsNullOrEmpty(text))
 		{
@@ -181,12 +246,12 @@ public static class StoryUsage
 				continue;
 			}
 			string shown = Readable(clause);
-			foreach (Match m in FlagInCondition.Matches(clause))
+			if (references) foreach (Match m in FlagInCondition.Matches(clause))
 			{
 				string id = m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Success ? m.Groups[2].Value : m.Groups[3].Value;
 				Add(Flags, id, Copy(template, kind, shown), seen);
 			}
-			foreach (Match m in RelationInCondition.Matches(clause))
+			if (references) foreach (Match m in RelationInCondition.Matches(clause))
 			{
 				Add(Relations, TextConverter.ToSimplified(m.Groups[1].Value), Copy(template, kind, shown), seen);
 			}
@@ -201,7 +266,7 @@ public static class StoryUsage
 				}
 				Add(Stats, name, Copy(template, kind, shown), seen);
 			}
-			foreach (Match m in ItemInCondition.Matches(clause))
+			if (references) foreach (Match m in ItemInCondition.Matches(clause))
 			{
 				if (itemNames.TryGetValue(m.Groups[1].Value + "_" + m.Groups[2].Value, out string key))
 				{
@@ -232,7 +297,19 @@ public static class StoryUsage
 		list.Add(use);
 	}
 
-	// 条件里写的是物品的中文名（「杂物_烤鱼」）：用游戏里的名字和资源名（「Misc0001_唐門改良金創藥」）对上编号
+	/// <summary>好感索引沿用原始类型名；类型没起名的用资源名后半段，不用本地化显示名。</summary>
+	internal static string RelationshipName(RelationshipStat stat)
+	{
+		string name = stat.Type.ToString();
+		if (name.All(char.IsDigit))
+		{
+			string[] parts = stat.name.Split('_');
+			name = parts.Length > 2 ? string.Join("_", parts.Skip(2).ToArray()) : stat.name;
+		}
+		return TextConverter.ToSimplified(name);
+	}
+
+	// 尚未取得条件资料时，用游戏名字和资源名对应文字本里的物品；正常索引使用原始物品编号。
 	private static Dictionary<string, string> ItemNames()
 	{
 		var names = new Dictionary<string, string>(StringComparer.Ordinal);

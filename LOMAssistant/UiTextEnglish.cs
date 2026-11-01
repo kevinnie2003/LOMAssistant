@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LOMAssistant;
 
@@ -541,6 +541,13 @@ public static class UiTextEnglish
 		["读过 {0}%"] = "{0}% read",
 		["看剧情图"] = "Story map",
 		["触发条件"] = "Trigger conditions",
+		["自动触发"] = "Automatic trigger",
+		["进入「{0}」"] = "Enter location: 「{0}」",
+		["从「{0}」剧情接入"] = "Continue from story: 「{0}」",
+		["从「{0}」接入"] = "Enter from 「{0}」",
+		["由其他剧情接入"] = "Entered from another story",
+		["不满足：{0}"] = "Not met: {0}",
+		["执行次数 {0}"] = "Execution count {0}",
 		["前后"] = "Before and after",
 		["从哪来"] = "Comes from",
 		["下一步"] = "Next step",

@@ -568,7 +568,7 @@ internal static class OptionInfoPatch
 	private static string MissionName(MissionCheckData check, string fallback)
 	{
 		LOMAssistant.Features.Story.StoryMission known = LOMAssistant.Features.Story.StoryAtlas.Find(check.Key);
-		string desc = TextConverter.ToSimplified(check.GetFieldValue<string>("_desc") ?? "").Split('\n')[0].Trim();
+		string desc = TextConverter.ToSimplified(UiQuestNames.Description(check.Key, check.GetFieldValue<string>("_desc")) ?? "").Split('\n')[0].Trim();
 		return known != null && known.Title.Length > 0 ? known.Title : desc.Length > 0 ? desc : fallback;
 	}
 

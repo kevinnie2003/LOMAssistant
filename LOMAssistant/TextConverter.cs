@@ -176,6 +176,7 @@ public static class TextConverter
 	/// <summary>要显示给玩家的文字：界面语言是繁体时转成繁体，韩语、日语时查表（查不到原样），否则原样。</summary>
 	public static string ForDisplay(string text)
 	{
+		text = UiConditionNames.Describe(text);
 		string language = DisplayLanguage;
 		if (language == "ChineseTraditional")
 		{

@@ -228,7 +228,8 @@ public partial class StoryReviewPanel
 		GUI.enabled = removable > 0 && !save.Busy;
 		bool confirm = _deleteGroup == month && Time.unscaledTime < _deleteGroupUntil;
 		string deleteText = confirm ? "确定删除这 " + removable + " 个？" : "删这一组（有备注的不删）";
-		if (GUILayout.Button(deleteText, confirm ? _primary : _button, GUILayout.Width(S(confirm ? 200 : 240)), Ctl()))
+		GUIStyle deleteStyle = confirm ? _primary : _button;
+		if (GUILayout.Button(deleteText, deleteStyle, GUILayout.Width(TextWidth(deleteText, deleteStyle, S(confirm ? 200 : 240))), Ctl()))
 		{
 			if (confirm)
 			{
