@@ -1152,7 +1152,7 @@ public partial class StoryReviewPanel : MonoBehaviour
 			GUILayout.Label(StoryDone(m) ? "<color=#2F6B3A><b>✓ 读完</b></color>" : "<color=#A3302A>" + string.Format("读过 {0}%", m.Read) + "</color>", _small, GUILayout.Width(S(80)));
 			GUILayout.Label("<b>" + m.Title + "</b>", _label);
 			GUILayout.FlexibleSpace();
-			if (GUILayout.Button("看剧情图", _button, GUILayout.Width(S(130))))
+			if (GUILayout.Button("看剧情图", _button, GUILayout.Width(TextWidth("看剧情图", _button, S(130)))))
 			{
 				OpenFlow(m);
 			}

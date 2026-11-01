@@ -1,3 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
 namespace LOMAssistant;
 
 /// <summary>
@@ -8,9 +12,85 @@ namespace LOMAssistant;
 /// </summary>
 internal static class UiConditionNames
 {
+	// 原资料没有备注的条件变量；保留类型前缀，避免同编号的时间变量和旗标混用。
+	public static readonly Dictionary<string, string> Descriptions = new Dictionary<string, string>
+	{
+		{ "时间_M7001_01", "围攻唐门的预定时点 (M7001_01)" },
+		{ "时间_M7002_01", "东西武林盟的预定时点 (M7002_01)" },
+		{ "时间_M7005", "最后一夜感情事件的预定时点 (M7005)" },
+		{ "时间_S0018_02", "传奇铁匠后续的预定时点 (S0018_02)" },
+		{ "时间_S0101_01", "假赵活风声事件处理一个月后 (S0101_01)" },
+		{ "时间_S0102_01", "上官萤澄清假赵活事件一个月后 (S0102_01)" },
+		{ "时间_S0106_01", "假赵活事件处理一旬后 (S0106_01)" },
+		{ "时间_S0200_01", "叶家兄妹留宿一旬后 (S0200_01)" },
+		{ "时间_S0202_01", "叶家兄妹留宿一个月后 (S0202_01)" },
+		{ "时间_S0202_02", "叶家兄妹出游后续的预定时点 (S0202_02)" },
+		{ "时间_S0203_01", "叶云舟清扫谈话的预定时点 (S0203_01)" },
+		{ "时间_S2901_01", "郁竹回家的预定时点 (S2901_01)" },
+		{ "时间_S2902_01", "好多钱事件的预定时点 (S2902_01)" },
+		{ "时间_S2912_01", "郁竹铸神雷剑一旬后 (S2912_01)" },
+		{ "时间_S3002_01", "青城排挤事件两旬后 (S3002_01)" },
+		{ "时间_Back_Work_E_01", "叶云舟搬柴事件的起算时点 (Back_Work_E_01)" },
+		{ "时间_Kitchen_Special_01", "决战前伙房特殊事件的起算时点 (Kitchen_Special_01)" },
+		{ "数值_Ch_3_6_4_3_001", "学问与战术的合计判定值 (Ch_3_6_4_3_001)" },
+	};
+
+	// 旗标说明与数值页共用一张表；条件继续保留变量编号，不把译文用于判定。
+	static UiConditionNames()
+	{
+		var flags = new List<string[]>();
+		foreach (var pair in UiFlagNames.Descriptions)
+		{
+			// 游戏的条件变量叫 TalkOption_01，实际旗标叫 Talk_Option_01。
+			string id = pair.Key.StartsWith("Talk_Option_") ? pair.Key.Replace("Talk_Option_", "TalkOption_") : pair.Key;
+			string suffix = " (" + id + ")";
+			Descriptions["旗标_" + id] = pair.Value[0] + suffix;
+			flags.Add(pair.Value.Select(text => text == null ? null : text + suffix).ToArray());
+		}
+		Table = flags.Concat(Table).ToArray();
+	}
+
+	// 旧条件文字缓存里没有类型前缀；仅补条件位置的编号，不改剧本名、存档或判定数据。
+	// 时间编号只在「目前时间」的右侧识别，避免与同名旗标混用；已有「说明 (编号)」不再补。
+	private static readonly Regex BareCondition = new Regex(
+		@"(?<time>(?:目前时间|目前時間)(?:\s+需)?\s*(?:>=|<=|!=|=|>|<|≥|≤|≠)\s*)(?<id>[A-Za-z][A-Za-z0-9_]*)(?=$|\s|[<；）)])|(?<=^|\s|；|（|\(|>)(?<id>[A-Za-z][A-Za-z0-9_]*)(?=\s*(?:需)?(?:>=|<=|!=|=|>|<|≥|≤|≠))");
+
+	public static string Describe(string text)
+	{
+		if (string.IsNullOrEmpty(text)) return text;
+		return BareCondition.Replace(text, match =>
+		{
+			string id = match.Groups["id"].Value;
+			string time = match.Groups["time"].Value;
+			if (Descriptions.TryGetValue((time.Length > 0 ? "时间_" : "旗标_") + id, out string description)) return time + description;
+			if (time.Length == 0 && Descriptions.TryGetValue("数值_" + id, out description)) return description;
+			return match.Value;
+		});
+	}
+
 	// 中文（简体）、韩语、日语、英语；缺少译文填 null，不借用其他语言。
 	public static readonly string[][] Table =
 	{
+		new[] { "围攻唐门的预定时点 (M7001_01)", "당문 포위 공격 예정 시점 (M7001_01)", "唐門包囲攻撃の予定時点 (M7001_01)", "Scheduled time of the Tang Clan siege (M7001_01)" },
+		new[] { "东西武林盟的预定时点 (M7002_01)", "동서 무림맹 예정 시점 (M7002_01)", "東西武林盟の予定時点 (M7002_01)", "Scheduled time of the east-west martial alliance event (M7002_01)" },
+		new[] { "最后一夜感情事件的预定时点 (M7005)", "마지막 밤 연애 사건 예정 시점 (M7005)", "最後の夜の恋愛イベント予定時点 (M7005)", "Scheduled time of the last-night romance event (M7005)" },
+		new[] { "传奇铁匠后续的预定时点 (S0018_02)", "전설의 대장장이 후속 예정 시점 (S0018_02)", "伝説の鍛冶師の続きの予定時点 (S0018_02)", "Scheduled follow-up to the legendary blacksmith (S0018_02)" },
+		new[] { "假赵活风声事件处理一个月后 (S0101_01)", "가짜 조활 소문 사건 처리 한 달 뒤 (S0101_01)", "偽の趙活の噂の事件から一か月後 (S0101_01)", "One month after the impostor Zhao Huo rumor event (S0101_01)" },
+		new[] { "上官萤澄清假赵活事件一个月后 (S0102_01)", "상관형이 가짜 조활 사건을 해명한 한 달 뒤 (S0102_01)", "上官螢の偽の趙活事件の弁明から一か月後 (S0102_01)", "One month after Shangguan Ying clarifies the impostor incident (S0102_01)" },
+		new[] { "假赵活事件处理一旬后 (S0106_01)", "가짜 조활 사건 처리 한 순 뒤 (S0106_01)", "偽の趙活事件の処理から一旬後 (S0106_01)", "One ten-day period after the impostor incident is resolved (S0106_01)" },
+		new[] { "叶家兄妹留宿一旬后 (S0200_01)", "엽씨 남매가 당문에 머문 한 순 뒤 (S0200_01)", "葉家の兄妹の滞在開始から一旬後 (S0200_01)", "One ten-day period after the Ye siblings start staying at Tang Clan (S0200_01)" },
+		new[] { "叶家兄妹留宿一个月后 (S0202_01)", "엽씨 남매가 당문에 머문 한 달 뒤 (S0202_01)", "葉家の兄妹の滞在開始から一か月後 (S0202_01)", "One month after the Ye siblings start staying at Tang Clan (S0202_01)" },
+		new[] { "叶家兄妹出游后续的预定时点 (S0202_02)", "엽씨 남매 외출 후속 예정 시점 (S0202_02)", "葉家の兄妹の外出後の予定時点 (S0202_02)", "Scheduled follow-up to the Ye siblings outing (S0202_02)" },
+		new[] { "叶云舟清扫谈话的预定时点 (S0203_01)", "엽운주와 청소 중 대화 예정 시점 (S0203_01)", "葉雲舟との掃除中の会話予定時点 (S0203_01)", "Scheduled cleaning conversation with Ye Yunzhou (S0203_01)" },
+		new[] { "郁竹回家的预定时点 (S2901_01)", "욱죽 귀가 예정 시점 (S2901_01)", "郁竹の帰宅予定時点 (S2901_01)", "Scheduled time of Yu Zhu's return home (S2901_01)" },
+		new[] { "好多钱事件的预定时点 (S2902_01)", "돈이 잔뜩 사건 예정 시점 (S2902_01)", "大金イベントの予定時点 (S2902_01)", "Scheduled time of the money event (S2902_01)" },
+		new[] { "郁竹铸神雷剑一旬后 (S2912_01)", "욱죽이 신뢰검을 벼리기 시작한 한 순 뒤 (S2912_01)", "郁竹の神雷剣鍛造開始から一旬後 (S2912_01)", "One ten-day period after Yu Zhu begins forging the Divine Thunder Sword (S2912_01)" },
+		new[] { "青城排挤事件两旬后 (S3002_01)", "청성 따돌림 사건 두 순 뒤 (S3002_01)", "青城の仲間外れイベントから二旬後 (S3002_01)", "Two ten-day periods after the Qingcheng ostracism event (S3002_01)" },
+		new[] { "叶云舟搬柴事件的起算时点 (Back_Work_E_01)", "엽운주 땔감 나르기 사건 기준 시점 (Back_Work_E_01)", "葉雲舟との薪運びイベントの基準時点 (Back_Work_E_01)", "Reference time for the firewood event with Ye Yunzhou (Back_Work_E_01)" },
+		new[] { "决战前伙房特殊事件的起算时点 (Kitchen_Special_01)", "결전 전 부엌 특별 사건 기준 시점 (Kitchen_Special_01)", "決戦前の厨房特別イベントの基準時点 (Kitchen_Special_01)", "Reference time for the kitchen event before the final battle (Kitchen_Special_01)" },
+		new[] { "学问与战术的合计判定值 (Ch_3_6_4_3_001)", "학문·전술 합산 판정값 (Ch_3_6_4_3_001)", "学問と戦術の合計判定値 (Ch_3_6_4_3_001)", "Combined knowledge and tactics check value (Ch_3_6_4_3_001)" },
+		new[] { "秘笈等级_十八种奇兵锻法", "「십팔종·기병단법잡기」 비급 등급", null, null },
+		new[] { "贵重品_逆鳞宝衣", "역린보의 보유 수량", null, null },
 		new[] { "道德", "도덕", "道徳", null },
 		new[] { "心上人", "마음에 둔 사람", "想い人", "Love interest" },
 		new[] { "性情", "성정", "性情", null },
@@ -19,6 +99,7 @@ internal static class UiConditionNames
 		new[] { "处世", "처세", "処世", null },
 		new[] { "银两", "은자", "銀両", null },
 		new[] { "目前时间", "현재 시점", "現在の時期", null },
+		new[] { "时间_目前时间", "현재 시점", "現在の時期", "Current time" },
 		new[] { "修养", "수양", "品性", null },
 		new[] { "好感度_小师妹", "소사매 호감도", "小師妹の好感度", null },
 		new[] { "技能_医术", "기능 「의술」", "技能「医術」", null },

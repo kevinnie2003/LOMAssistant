@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace LOMAssistant;
 
 /// <summary>
@@ -6,8 +10,34 @@ namespace LOMAssistant;
 /// </summary>
 internal static class UiQuestNames
 {
+	// 游戏任务备注误填为其他事件时，仅按任务 ID 修正显示名，不改游戏数据和判定。
+	private static readonly Dictionary<string, string> Descriptions = new Dictionary<string, string>(StringComparer.Ordinal)
+	{
+		{ "M7006_04_01", "陪小兰" },
+		{ "M7006_06_01", "忘记了约定" },
+	};
+
+	public static string Description(string key, string text) => key != null && Descriptions.TryGetValue(key, out string name) ? name : text;
+
+	// 未命名任务的简短标题，依据对应剧本核对；不替换游戏数据里的正式名称。
+	// 用开始剧本 ID 查询，同一考试在不同日期复用时也共享标题。
+	public static readonly Dictionary<string, string[]> Titles = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+	{
+		{ "S0030_01", new[] { "二师兄的内功指点", "이사형의 내공 가르침", "二師兄の内功指導", "Second Senior Brother’s inner cultivation lesson" } },
+		{ "S0031_01", new[] { "教龙湘做菜", "용상에게 요리 가르치기", "龍湘に料理を教える", "Teaching Long Xiang to cook" } },
+		{ "S0200_01", new[] { "小师妹与叶云裳结交", "소사매와 엽운상의 친구 맺기", "小師妹と葉雲裳の友達づくり", "Little Junior Sister befriends Ye Yunshang" } },
+		{ "S0205_01", new[] { "小师妹与叶云裳的纸牌游戏", "소사매와 엽운상의 카드 놀이", "小師妹と葉雲裳のカード遊び", "Little Junior Sister and Ye Yunshang play cards" } },
+		{ "S0206_01", new[] { "陪小师妹与叶云裳玩耍", "소사매·엽운상과 놀아주기", "小師妹と葉雲裳と遊ぶ", "Playing with Little Junior Sister and Ye Yunshang" } },
+		{ "S0207_01", new[] { "归来后与叶云裳重逢", "귀환 후 엽운상과 재회", "帰還後の葉雲裳との再会", "Reuniting with Ye Yunshang after returning" } },
+		{ "S0503_01", new[] { "正心堂打坐疗伤", "정심당에서 좌선하며 요양", "正心堂で座禅療養", "Meditating to recover at Zhengxin Hall" } },
+		{ "S2100_01", new[] { "唐门段考", "당문 문파 시험", "唐門の段位試験", "Tang Clan examination" } },
+		{ "S2401_01", new[] { "夏侯兰修炼：坏习惯", "하후란 수련·나쁜 버릇", "夏侯蘭の修練・悪い癖", "Training with Xiahou Lan: Bad habits" } },
+		{ "S2402_01", new[] { "夏侯兰修炼：目不转睛", "하후란 수련·눈길을 가만두지 못함", "夏侯蘭の修練・視線が離せない", "Training with Xiahou Lan: Unable to look away" } },
+		{ "S8500_01", new[] { "梦回故乡", "고향으로 돌아가는 꿈", "故郷に帰る夢", "Dreaming of returning home" } },
+	};
+
 	// 中文（简体）、韩语、日语、英语；缺少译文填 null。
-	public static readonly string[][] Table =
+	public static readonly string[][] Table = new[]
 	{
 		new[] { "1-2 段考", "1-2 문파 시험", "1-2 段位試験", null },
 		new[] { "1-3 招唤", "1-3 소환", "1-3 召喚", null },
@@ -23,8 +53,8 @@ internal static class UiQuestNames
 		new[] { "5-1.主线振作", "5-1. 다시 일어서기", "5-1. 立ち直り", null },
 		new[] { "5-2. 求亲", "5-2. 청혼", "5-2. 求婚", null },
 		new[] { "5-2.小师妹出嫁", "5-2. 소사매의 출가", "5-2. 小師妹の嫁入り", null },
-		new[] { "6-1 四师兄道别", "6-1 넷째 사형과의 작별", "6-1 四師兄の別れ", null },
-		new[] { "6-1 饯别四师兄", "6-1 넷째 사형 송별", "6-1 四師兄の送別", null },
+		new[] { "6-1 四师兄道别", "6-1 사사형과의 작별", "6-1 四師兄の別れ", null },
+		new[] { "6-1 饯别四师兄", "6-1 사사형 송별", "6-1 四師兄の送別", null },
 		new[] { "6-2.武林大会召开", "6-2. 무림대회 개최", "6-2. 武林大会の開催", null },
 		new[] { "上官萤写信 崆峒派", "상관형의 편지·공동파", "上官蛍の手紙・崆峒派", null },
 		new[] { "下山找人", "하산하여 사람 찾기", "下山して人探し", null },
@@ -72,7 +102,7 @@ internal static class UiQuestNames
 		new[] { "唐门留学 传闻", "당문 유학·소문", "唐門留学・噂", null },
 		new[] { "唐门留学 客栈 中", "당문 유학·객잔(중)", "唐門留学・宿屋（中）", null },
 		new[] { "唐门留学 离家出走", "당문 유학·가출", "唐門留学・家出", null },
-		new[] { "四师兄归来", "넷째 사형의 귀환", "四師兄の帰還", null },
+		new[] { "四师兄归来", "사사형의 귀환", "四師兄の帰還", null },
 		new[] { "因果", "인과", "因果", null },
 		new[] { "围攻唐门", "당문 포위 공격", "唐門包囲戦", null },
 		new[] { "围攻唐门 强制发生", "당문 포위 공격 (강제 발생)", "唐門包囲戦（強制発生）", null },
@@ -104,11 +134,11 @@ internal static class UiQuestNames
 		new[] { "工欲善其事", "일을 잘하려면", "工その事を善くせんと欲すれば", null },
 		new[] { "序章两年後的唐门会议", "서장 2년 후의 당문 회의", "序章から二年後の唐門会議", null },
 		new[] { "弟子房", "제자방", "弟子部屋", null },
-		new[] { "弹珠台", "핀볼대", "ピンボール台", null },
+		new[] { "弹珠台", "구슬치기대", "ピンボール台", null },
 		new[] { "後山", "뒷산", "裏山", null },
 		new[] { "心相低下的惩罚剧情", "심상이 낮을 때의 벌 스토리", "心相が低いときの罰ストーリー", null },
-		new[] { "忘记了约定", "잊어버린 약속", "忘れた約束", null },
-		new[] { "怂恿四师兄", "넷째 사형 부추기기", "四師兄をそそのかす", null },
+		new[] { "忘记了约定", "잊어버린 약속", "忘れた約束", "Forgotten promise" },
+		new[] { "怂恿四师兄", "사사형 부추기기", "四師兄をそそのかす", null },
 		new[] { "总攻击", "총공격", "総攻撃", null },
 		new[] { "情书", "연애편지", "恋文", null },
 		new[] { "拷问", "고문", "拷問", null },
@@ -139,7 +169,7 @@ internal static class UiQuestNames
 		new[] { "瑞笙来访 西武林盟", "서생의 방문·서무림맹", "瑞笙の来訪・西武林盟", null },
 		new[] { "瑞笙来访 顽抗路线", "서생의 방문·항전 루트", "瑞笙の来訪・抗戦ルート", null },
 		new[] { "破庙下", "폐사당 (하)", "荒れ寺（下）", null },
-		new[] { "神兵帖3", "신병첩 3", "神兵帖 3", null },
+		new[] { "神兵帖3", "신병첩 2,3", "神兵帖 3", null },
 		new[] { "神兵帖4", "신병첩 4", "神兵帖 4", null },
 		new[] { "神兵帖4 第二节", "신병첩 4 제2절", "神兵帖 4 第二節", null },
 		new[] { "神兵帖4锻冶场", "신병첩 4 대장간", "神兵帖 4 鍛冶場", null },
@@ -179,7 +209,7 @@ internal static class UiQuestNames
 		new[] { "锦香宫行下", "금향궁 여정 (하)", "錦香宮への旅（下）", null },
 		new[] { "锻冶场", "대장간", "鍛冶場", null },
 		new[] { "陪叶云裳", "엽운상과 함께", "葉雲裳に付き添う", null },
-		new[] { "陪小兰", "하후란과 함께", "小蘭に付き添う", null },
+		new[] { "陪小兰", "하후란과 함께", "小蘭に付き添う", "Spending time with Xiahou Lan" },
 		new[] { "陪小师妹", "소사매와 함께", "小師妹に付き添う", null },
 		new[] { "陪小梅", "우소매와 함께", "小梅に付き添う", null },
 		new[] { "陪小竹", "욱죽과 함께", "小竹に付き添う", null },
@@ -192,7 +222,7 @@ internal static class UiQuestNames
 		new[] { "青城段考", "청성파 대고사", "青城の段位試験", null },
 		new[] { "青城留学", "청성 유학", "青城留学", null },
 		new[] { "青城留学 叶云裳秘笈2", "청성 유학·엽운상 비급 2", "青城留学・葉雲裳の秘伝書 2", null },
-		new[] { "青城留学 四师兄行商", "청성 유학·넷째 사형 행상", "青城留学・四師兄の行商", null },
+		new[] { "青城留学 四师兄行商", "청성 유학·사사형 행상", "青城留学・四師兄の行商", null },
 		new[] { "青城留学 指指点点", "청성 유학·손가락질", "青城留学・後ろ指", null },
 		new[] { "青城留学 排挤", "청성 유학·따돌림", "青城留学・仲間外れ", null },
 		new[] { "青城留学 虎啸功", "청성 유학·호소공", "青城留学・虎嘯功", null },
@@ -208,5 +238,5 @@ internal static class UiQuestNames
 		new[] { "龙之团聚 东西武林盟", "용상 부녀의 재회·동서 무림맹", "龍の再会・東西武林盟", null },
 		new[] { "龙之团聚 正常路线", "용상 부녀의 재회·일반 루트", "龍の再会・通常ルート", null },
 		new[] { "龙之觉醒", "용상의 각성", "龍の覚醒", null },
-	};
+	}.Concat(Titles.Values).ToArray();
 }

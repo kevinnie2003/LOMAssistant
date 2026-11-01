@@ -741,6 +741,19 @@ public static class Tests
 		}
 		Assert(LOMAssistant.UiText.Translate("心上人!=自己", "Korean") == "마음에 둔 사람!=자신", "简略条件中的右侧名称");
 		Assert(LOMAssistant.UiText.Translate("그 외 (공략 중인 인원 수(소사매·상… 미충족)", "Korean") == "그 외 (공략 중인 인원 수(소사매·상… 미충족)", "已翻译的缩略条件应保持原样");
+		foreach (string language in new[] { "Korean", "Japanese", "English" })
+		{
+			string time = NameTable("UiConditionNames", language).Single(r => r[0] == "时间_目前时间")[1];
+			Assert(LOMAssistant.UiText.Translate("时间_目前时间<=40", language) == time + "<=40", language + "：缓存条件带时间前缀时仍识别完整变量名");
+		}
+		foreach (string language in new[] { "Korean", "Japanese" })
+		{
+			string name = NameTable("UiConditionNames", language).Single(r => r[0] == "全武学点数")[1];
+			string actual = LOMAssistant.UiText.Translate("否则（以下都不满足：全武学点数<200；全武学点数<120）", language);
+			Assert(actual.Contains(name + "<200；" + name + "<120"), language + "：完整否则说明中的每条条件都应翻译，保留分号与数值");
+			string item = NameTable("UiConditionNames", language).Single(r => r[0] == "贵重品_连环火箭")[1];
+			Assert(LOMAssistant.UiText.Translate("全武学点数<200；贵重品_连环火箭>=1", language) == name + "<200；" + item + ">=1", language + "：分号后的完整条件名优先于其中的物品名");
+		}
 	}
 
 	/// <summary>实际界面组合：任务编号、地点、选择、掷骰和否则分支。</summary>

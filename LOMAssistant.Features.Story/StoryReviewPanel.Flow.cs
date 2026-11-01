@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -26,6 +26,9 @@ public partial class StoryReviewPanel
 		public readonly List<FlowWay> Ways = new List<FlowWay>();
 		/// <summary>方块里第一行去处的纵坐标（行高 RowHeight），排版时算。</summary>
 		public float RowsTop;
+		/// <summary>相邻连线的目的地色号；-1 保留原色，不参与剧情判定。</summary>
+		public int LineTint = -1;
+		public Color LineColor;
 	}
 
 	/// <summary>方块里的一行去处。</summary>
@@ -40,6 +43,8 @@ public partial class StoryReviewPanel
 		public string Effects = "";
 		public readonly List<StoryExit> Exits = new List<StoryExit>();
 		public bool Back;
+		/// <summary>排版后的折线，只影响绘制，不参与剧情连接和判定。</summary>
+		public Vector2[] Points;
 	}
 
 	private sealed class FlowLink
@@ -55,8 +60,13 @@ public partial class StoryReviewPanel
 
 	private sealed class FlowGraph
 	{
+		/// <summary>任务入口说明，只作显示，不计入剧情段或跳转路径。</summary>
+		public StoryMission Entry;
+		public FlowBox EntryBox;
+		public readonly List<(StoryMission Mission, FlowBox To)> EntryWays = new List<(StoryMission, FlowBox)>();
 		public readonly List<FlowBox> Boxes = new List<FlowBox>();
 		public readonly List<FlowLink> Links = new List<FlowLink>();
+		public readonly List<(FlowBox[] Sources, FlowBox To, bool Back, Vector2 A, Vector2 B)> Lines = new List<(FlowBox[], FlowBox, bool, Vector2, Vector2)>();
 		public float Width, Height;
 		public bool Cut;
 	}
@@ -72,6 +82,7 @@ public partial class StoryReviewPanel
 	private FlowGraph _flow;
 	private float _flowBuiltScale;
 	private int _flowBuiltVersion;
+	private int _flowBuiltAtlasVersion = -1;
 	private FlowBox _flowPicked;
 	private Vector2 _flowScroll, _flowListScroll, _flowDetailScroll;
 	private string _flowSearch = "";
@@ -79,12 +90,17 @@ public partial class StoryReviewPanel
 	/// <summary>打开某个任务的剧情图；pickScript 给了就选中含这个剧本的那一段并滚过去。</summary>
 	private void OpenFlow(StoryMission m, string pickScript = null)
 	{
+		if (m == null) return;
+		m = StoryAtlas.Find(m.Key) ?? m;
 		_tab = 2;
-		_flowMission = m;
+		// 外部链接仍使用原任务，列表选中合并后的共同入口。
+		_flowMission = FlowMissions(m).First();
 		_flow = null;
 		_flowPicked = null;
 		_flowScroll = Vector2.zero;
 		_flowPickScript = pickScript;
+		_flowSearch = "";
+		_flowListQuery = null;
 	}
 
 	private string _flowPickScript;
@@ -110,6 +126,33 @@ public partial class StoryReviewPanel
 		}
 		return graph;
 	}
+
+	// 只在剧情图列表合并显示，路线图和游戏进度仍保留每个任务。
+	private static StoryMission[] FlowMissions(StoryMission mission)
+	{
+		var members = mission.FlowGroup.Length == 0 ? new[] { mission }
+			: StoryAtlas.Missions.Where(m => m.FlowGroup == mission.FlowGroup && m.StartScript.Length > 0).ToArray();
+		return members.Length > 0 ? members : new[] { mission };
+	}
+
+	private static string FlowTitle(StoryMission mission)
+	{
+		var members = FlowMissions(mission);
+		var first = members[0];
+		// 同一开场兼有地点入口和自动入口时，标题取地点入口，触发方式留在各行。
+		if (members.All(m => m.StartScript == first.StartScript)) first = members.FirstOrDefault(m => m.Position != Mortal.Core.PositionType.無) ?? first;
+		return members.Length > 1 && !first.Main && first.SeriesTitle != first.Series ? first.SeriesTitle : first.Title;
+	}
+
+	private static string FlowWhen(StoryMission mission)
+	{
+		var members = FlowMissions(mission);
+		return members.Select(m => m.When).Distinct().Count() == 1 ? mission.When
+			: StoryAtlas.TimeRange(members.Any(m => m.DisplayFrom == null) ? (int?)null : members.Min(m => m.DisplayFrom),
+				members.Any(m => m.DisplayTo == null) ? (int?)null : members.Max(m => m.DisplayTo));
+	}
+
+	private static int? FlowDate(StoryMission mission) => FlowMissions(mission).Min(m => m.DisplayFrom ?? m.DisplayTo);
 
 	/// <summary>主干：从开头到这个任务的每个出口都必经的段落；其余是岔路。</summary>
 	private static HashSet<FlowBox> Trunk(FlowGraph graph)
@@ -165,6 +208,11 @@ public partial class StoryReviewPanel
 		{
 			return;
 		}
+		if (_flowBuiltAtlasVersion != StoryAtlas.Version)
+		{
+			_flowListQuery = null;
+			if (_flowMission != null) _flowMission = StoryAtlas.Find(_flowMission.Key);
+		}
 		if (_flowJumpScript != null)
 		{
 			string script = _flowJumpScript;
@@ -191,20 +239,25 @@ public partial class StoryReviewPanel
 		}
 		// 按剧情时间从早到晚，主线和支线排在一起；同一旬里主线在前。按年份分段，「任意时间」的放最后
 		string group = null;
-		foreach (StoryMission m in StoryAtlas.Missions.Where(m => m.StartScript.Length > 0 && (Matches(query, m.Title, m.Key, m.SeriesTitle, m.Place, m.Summary) || _flowDialogueHits.Contains(m)))
-			.OrderBy(m => m.From ?? int.MaxValue).ThenBy(m => m.Main ? 0 : 1).ThenBy(m => m.Key, StringComparer.Ordinal))
+		foreach (var members in StoryAtlas.Missions.Where(m => m.StartScript.Length > 0)
+			.GroupBy(m => m.FlowGroup.Length > 0 ? "group:" + m.FlowGroup : "mission:" + m.Key)
+			.Where(g => g.Any(m => Matches(query, m.Title, m.Key, m.SeriesTitle, m.Place, m.Summary) || _flowDialogueHits.Contains(m)))
+			.OrderBy(g => FlowDate(g.First()) ?? int.MaxValue).ThenBy(g => g.First().Main ? 0 : 1).ThenBy(g => g.First().Key, StringComparer.Ordinal))
 		{
-			string g = m.From != null ? $"第{m.From.Value / 36 + 1}年" : "任意时间 / 每月";
+			StoryMission m = members.First();
+			bool selected = members.Contains(_flowMission);
+			int? date = FlowDate(m);
+			string g = date != null ? $"第{date.Value / 36 + 1}年" : "任意时间 / 每月";
 			if (g != group)
 			{
 				group = g;
 				GUILayout.Label(g, _muted);
 			}
-			string when = m.From != null ? $"{m.From.Value % 36 / 3 + 1}月{StoryAtlas.StageText(m.From.Value % 3 + 1)}" : m.When;
+			string when = date != null ? $"{date.Value % 36 / 3 + 1}月{StoryAtlas.StageText(date.Value % 3 + 1)}" : FlowWhen(m);
 			string kind = m.Main ? "主线" : Short(m.SeriesTitle, 10);
-			var style = new GUIStyle(m == _flowMission ? _primary : _button) { alignment = TextAnchor.MiddleLeft, wordWrap = true, richText = true };
-			string whenColor = m == _flowMission ? "#F3E6D6" : "#73644F";
-			if (GUILayout.Button($"<size={Mathf.RoundToInt(13 * _scale)}><color={whenColor}>{when} · {kind}</color></size>\n{Short(m.Title, 16)}", style))
+			var style = new GUIStyle(selected ? _primary : _button) { alignment = TextAnchor.MiddleLeft, wordWrap = true, richText = true };
+			string whenColor = selected ? "#F3E6D6" : "#73644F";
+			if (GUILayout.Button($"<size={Mathf.RoundToInt(13 * _scale)}><color={whenColor}>{when} · {kind}</color></size>\n{Short(FlowTitle(m), 16)}", style))
 			{
 				OpenFlow(m);
 			}
@@ -217,11 +270,12 @@ public partial class StoryReviewPanel
 		{
 			return;
 		}
-		if (_flow == null || !Mathf.Approximately(_flowBuiltScale, _scale) || _flowBuiltVersion != StoryNodes.Version)
+		if (_flow == null || !Mathf.Approximately(_flowBuiltScale, _scale) || _flowBuiltVersion != StoryNodes.Version || _flowBuiltAtlasVersion != StoryAtlas.Version)
 		{
-			_flow = BuildFlow(_flowMission);
+			_flow = BuildFlow(_flowMission, FlowMissions(_flowMission));
 			_flowBuiltScale = _scale;
 			_flowBuiltVersion = StoryNodes.Version;
+			_flowBuiltAtlasVersion = StoryAtlas.Version;
 			_flowPicked = _flowPicked == null ? null : _flow.Boxes.FirstOrDefault(b => b.Id == _flowPicked.Id);
 		}
 		if (_flowPickScript != null)
@@ -234,7 +288,8 @@ public partial class StoryReviewPanel
 			}
 			_flowPickScript = null;
 		}
-		GUI.Label(new Rect(area.x, area.y, area.width, S(36)), $"<b>{_flowMission.Title}</b>　<color=#73644F>{_flowMission.When}{(_flowMission.Place.Length > 0 ? " · " + _flowMission.Place : "")}{(_flow.Cut ? " · 太长，只画了前 " + FlowLimit + " 段" : "")}</color>", _label);
+		string place = FlowMissions(_flowMission).All(m => m.Position == _flowMission.Position) ? _flowMission.Place : "";
+		GUI.Label(new Rect(area.x, area.y, area.width, S(36)), $"<b>{FlowTitle(_flowMission)}</b>　<color=#73644F>{FlowWhen(_flowMission)}{(place.Length > 0 ? " · " + place : "")}{(_flow.Cut ? " · 太长，只画了前 " + FlowLimit + " 段" : "")}</color>", _label);
 		float detailWidth = _flowPicked != null ? Mathf.Min(S(460), area.width * 0.36f) : 0;
 		var canvas = new Rect(area.x, area.y + S(44), area.width - detailWidth - (detailWidth > 0 ? S(12) : 0), area.height - S(44));
 		Fill(canvas, PaperLight);
@@ -255,12 +310,13 @@ public partial class StoryReviewPanel
 	}
 
 	/// <summary>从 name 开始，一路只有一条去处、没有分岔的剧本合在一起。</summary>
-	private static List<string> Chain(string name, out StoryScript last)
+	private static List<string> Chain(string name, out StoryScript last, HashSet<string> boundaries = null)
 	{
 		var chain = new List<string>();
 		StoryScript script = StoryScripts.Get(name);
 		while (script != null && !script.Branches && script.Exits.Count == 1 && script.Exits[0].Path.Count == 0 && script.Exits[0].Target.Length > 0
-			&& !script.Exits[0].ToMap && !script.Exits[0].ToTitle && script.Exits[0].MainMission.Length == 0 && !chain.Contains(script.Name) && chain.Count < 30)
+			&& !script.Exits[0].ToMap && !script.Exits[0].ToTitle && script.Exits[0].MainMission.Length == 0 && !chain.Contains(script.Name) && chain.Count < 30
+			&& !(boundaries?.Contains(script.Exits[0].Target) ?? false))
 		{
 			chain.Add(script.Name);
 			script = StoryScripts.Get(script.Exits[0].Target);
@@ -303,30 +359,40 @@ public partial class StoryReviewPanel
 	}
 
 	/// <summary>这个去处触发的是哪个结局（汗青书），找不到返回空。</summary>
-	private static string EndingName(StoryScript script, StoryExit exit)
+	private static string EndingId(StoryScript script, StoryExit exit)
 	{
 		foreach (var (path, death, id) in script.Endings)
 		{
 			if (!death && (StoryScripts.IsPrefix(path, exit.Path) || StoryScripts.IsPrefix(exit.Path, path)))
 			{
-				StoryEnding ending = StoryAtlas.Endings.FirstOrDefault(e => !e.Death && e.Id == id);
-				return ending != null ? ending.Title : id;
+				return id;
 			}
 		}
 		return "";
 	}
 
-	private FlowGraph BuildFlow(StoryMission mission)
+	private FlowGraph BuildFlow(StoryMission mission, StoryMission[] group = null)
 	{
-		var graph = new FlowGraph();
-		var otherStarts = new HashSet<string>(StoryAtlas.Missions.Where(m => m != mission && m.StartScript.Length > 0).Select(m => m.StartScript), StringComparer.OrdinalIgnoreCase);
+		var graph = new FlowGraph { Entry = mission };
+		var members = group ?? new[] { mission };
+		var included = members.SelectMany(m => m.Scripts).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+		var otherStarts = new HashSet<string>(StoryAtlas.Missions.Where(m => !members.Contains(m) && m.StartScript.Length > 0).Select(m => m.StartScript), StringComparer.OrdinalIgnoreCase);
 		var byScript = new Dictionary<string, FlowBox>(StringComparer.OrdinalIgnoreCase);
 		var terminals = new Dictionary<string, FlowBox>(StringComparer.Ordinal);
 		var queue = new Queue<FlowBox>();
 
 		FlowBox Box(string head, int layer)
 		{
-			List<string> chain = Chain(head, out StoryScript last);
+			HashSet<string> boundaries = null;
+			if (members.Length > 1)
+			{
+				if (byScript.TryGetValue(head, out FlowBox existing)) return existing;
+				// 合并入口时保留每条支路，不能把汇合前的台词吞进已有方块。
+				boundaries = new HashSet<string>(otherStarts, StringComparer.OrdinalIgnoreCase);
+				boundaries.UnionWith(members.Select(m => m.StartScript));
+				boundaries.UnionWith(byScript.Keys);
+			}
+			List<string> chain = Chain(head, out StoryScript last, boundaries);
 			string key = last != null ? last.Name : head;
 			if (byScript.TryGetValue(key, out FlowBox known))
 			{
@@ -384,10 +450,25 @@ public partial class StoryReviewPanel
 			return box;
 		}
 
-		Box(mission.StartScript, 0);
+		foreach (StoryMission member in members)
+		{
+			if (members.Length > 1 && member.FlowEntries.Any(e => members.Contains(e.From))) continue;
+			FlowBox first = Box(member.StartScript, 0);
+			if (first != null) graph.EntryWays.Add((member, first));
+		}
+		// 先沿主线推进建立后续方块，避免把同图后续段误排为第一列和回头线。
+		if (members.Length > 1)
+		{
+			Drain();
+			foreach (StoryMission member in members.Where(m => graph.EntryWays.All(e => e.Mission != m)))
+			{
+				FlowBox first = Box(member.StartScript, 0);
+				if (first != null) graph.EntryWays.Add((member, first));
+			}
+		}
 		// 回地图以后由地图事件接着演的段落（襄阳行这类）：顺着剧本走不到，演完前面的再从这些段落接着画，
 		// 前面放一个「地图上接着」的小方块
-		var later = new Queue<string>(mission.Scripts.Where(n => !string.Equals(n, mission.StartScript, StringComparison.OrdinalIgnoreCase)));
+		var later = new Queue<string>(included.Where(n => !string.Equals(n, mission.StartScript, StringComparison.OrdinalIgnoreCase)));
 		while (true)
 		{
 			Drain();
@@ -400,7 +481,7 @@ public partial class StoryReviewPanel
 					continue;
 				}
 				// 只从没有别的段落接进来的那几段开始
-				bool reached = mission.Scripts.Any(n => !string.Equals(n, name, StringComparison.OrdinalIgnoreCase) && (StoryScripts.Get(n)?.Exits.Any(x => string.Equals(x.Target, name, StringComparison.OrdinalIgnoreCase)) ?? false));
+				bool reached = included.Any(n => !string.Equals(n, name, StringComparison.OrdinalIgnoreCase) && (StoryScripts.Get(n)?.Exits.Any(x => string.Equals(x.Target, name, StringComparison.OrdinalIgnoreCase)) ?? false));
 				if (!reached)
 				{
 					root = name;
@@ -435,13 +516,16 @@ public partial class StoryReviewPanel
 					FlowBox to;
 					if (exit.ToTitle)
 					{
-						string name = EndingName(from.Last, exit);
-						to = Terminal(from, "ending:" + name, name.Length > 0 ? "结局：" + Short(name, 9) : "结局", true);
+						string id = EndingId(from.Last, exit);
+						string name = StoryAtlas.Endings.FirstOrDefault(e => !e.Death && e.Id == id)?.Title ?? id;
+						to = Terminal(from, "ending:" + id, name.Length > 0 ? "结局：" + Short(name, 9) : "结局", true);
 					}
 					else if (exit.MainMission.Length > 0)
 					{
 						StoryMission next = StoryAtlas.Find(exit.MainMission);
-						to = Terminal(from, "main:" + exit.MainMission, "主线 → " + (next != null ? Short(next.Title, 10) : exit.MainMission), false);
+						to = members.Length > 1 && next != null && members.Contains(next) ? Box(next.StartScript, from.Layer + 1)
+							: Terminal(from, "main:" + exit.MainMission, "主线 → " + (next != null ? Short(next.Title, 10) : exit.MainMission), false);
+						if (to == null) continue;
 					}
 					else if (exit.ToMap)
 					{
@@ -577,6 +661,7 @@ public partial class StoryReviewPanel
 				}
 			}
 			float w = S(290), gapX = S(120), gapY = S(22);
+			float entryWidth = graph.Entry != null ? w + gapX : 0;
 			// 一列一列往右排：每个方块对着连进来的那几行去处的平均高度放，同一列里按这个高度排先后、互不重叠
 			var incoming = new Dictionary<FlowBox, List<float>>();
 			float bottom = 0;
@@ -592,7 +677,7 @@ public partial class StoryReviewPanel
 					float bh = BoxHeight(b);
 					float wanted = layer.Key == 0 ? y : Wanted(b) - InPort(b, bh);
 					y = Mathf.Max(y, wanted);
-					b.Rect = new Rect(S(24) + layer.Key * (w + gapX), y, b.Terminal ? w * 0.72f : w, bh);
+					b.Rect = new Rect(S(24) + entryWidth + layer.Key * (w + gapX), y, b.Terminal ? w * 0.72f : w, bh);
 					b.RowsTop = b.Rect.y + HeaderHeight;
 					y += bh + gapY;
 					for (int k = 0; k < b.Ways.Count; k++)
@@ -610,8 +695,9 @@ public partial class StoryReviewPanel
 				}
 				bottom = Mathf.Max(bottom, y);
 			}
-			graph.Width = S(48) + (graph.Boxes.Count == 0 ? 0 : graph.Boxes.Max(b => b.Layer) + 1) * (w + gapX);
+			graph.Width = S(48) + entryWidth + (graph.Boxes.Count == 0 ? 0 : graph.Boxes.Max(b => b.Layer) + 1) * (w + gapX);
 			graph.Height = bottom + S(40);
+			LayoutFlowLines(graph);
 			return graph;
 		}
 	}
@@ -645,9 +731,204 @@ public partial class StoryReviewPanel
 		}
 	}
 
+
+	// 入口只显示条件模板，不读取随机值，也不执行条件检查。
+	private static string FlowEntryText(StoryMission mission, StoryEntry entry = null, bool missionEntry = false)
+	{
+		string origin = entry == null ? "" : (string.Format(TextConverter.ForDisplay("从「{0}」剧情接入"), TextConverter.ForDisplay(entry.From.Title)) + "\n" + FlowPathText(entry.Path)).TrimEnd();
+		if (entry != null && !missionEntry) return origin;
+		if (mission.Inactive) return TextConverter.ForDisplay("由其他剧情接入");
+		bool automatic = entry == null && mission.Position == Mortal.Core.PositionType.無;
+		var parts = new List<string> { entry != null ? origin : automatic
+			? TextConverter.ForDisplay("自动触发")
+			: string.Format(TextConverter.ForDisplay("进入「{0}」"), TextConverter.ForDisplay(mission.Place)) };
+		// 合并后各入口日期可能不同；只在这时逐行保留日期，不能只看图上方的总范围。
+		if (FlowMissions(mission).Select(m => m.When).Distinct().Count() > 1) parts.Add(TextConverter.ForDisplay(mission.When));
+		var conditions = mission.Conditions.Where(c => c != null).Select(DataHelper.ConditionTemplate).Where(t => t.Length > 0).Select(TextConverter.ForDisplay);
+		// MissionCheckData.Check 要求所有条目都成立；条目内部的 AND/OR 由模板保留。
+		parts.Add(string.Join("\n" + TextConverter.ForDisplay(" 且 ").TrimStart(), conditions.ToArray()));
+		if (automatic && parts.Skip(1).Any(t => t.Length > 0)) parts[0] += ":";
+		return string.Join("\n", parts.Where(t => t.Length > 0).ToArray());
+	}
+
+	// 和剧情出口用同一条原始路径；入口说明只读模板，不能为画图执行随机判定。
+	private static string FlowPathText(List<StoryStep> path)
+	{
+		var parts = new List<string>();
+		foreach (StoryStep step in path)
+		{
+			if (step.Kind == StoryStep.Option)
+			{
+				parts.Add(string.Format(TextConverter.ForDisplay("选「{0}」"), TextConverter.ForDisplay(StoryScripts.OptionText(step.Key))));
+				if (step.Requirement.Length > 0)
+				{
+					var needs = DataHelper.CheckpointTemplates(step.Requirement, false);
+					parts.Add(needs.Count > 0 ? TextConverter.ForDisplay(string.Join(" 或 ", needs.ToArray())) : TextConverter.ForDisplay("条件不明") + " (" + step.Requirement + ")");
+				}
+			}
+			else if (step.Kind == StoryStep.Dice)
+				parts.Add(string.Format(TextConverter.ForDisplay("掷骰「{0}」（{1}）"), TextConverter.ForDisplay(StoryScripts.OptionText(step.Key)), step.Range));
+			else
+			{
+				var arms = DataHelper.CheckpointTemplates(step.Key, true);
+				if (arms.Count == 0) parts.Add(TextConverter.ForDisplay("条件不明") + " (" + step.Key + ")");
+				else
+				{
+					foreach (string earlier in arms.Take(step.Arm > 0 ? step.Arm - 1 : arms.Count))
+						parts.Add(string.Format(TextConverter.ForDisplay("不满足：{0}"), "(" + TextConverter.ForDisplay(earlier) + ")"));
+					if (step.Arm > 0 && step.Arm <= arms.Count) parts.Add(TextConverter.ForDisplay(arms[step.Arm - 1]));
+				}
+			}
+		}
+		return string.Join("\n", parts.ToArray());
+	}
+
+	// 入口只借用剧情方块的绘制和连接，不加入剧情图的数据及跳转路径。
+	private FlowBox FlowEntryBox(FlowGraph graph)
+	{
+		if (graph.Entry == null || graph.EntryWays.Count == 0) return null;
+		var box = new FlowBox { Title = "触发条件", Layer = -1 };
+		foreach (var entry in graph.EntryWays)
+		{
+			// 不同入口各占一行，即使去处相同也保留各自条件；不在行间拼接“或”。
+			var sources = new List<(StoryEntry Entry, bool Mission)>();
+			if (entry.Mission.FlowEntries.Count == 0 && (!entry.Mission.Inactive || entry.Mission.Entries.Count == 0)) sources.Add((null, true));
+			sources.AddRange(entry.Mission.FlowEntries.Select(e => (e, true)));
+			sources.AddRange(entry.Mission.Entries.Select(e => (e, false)));
+			foreach (var source in sources)
+			{
+				string text = Cached((entry.Mission, source, TextConverter.DisplayLanguage, "flow-entry"), () => FlowEntryText(entry.Mission, source.Entry, source.Mission));
+				var way = new FlowWay { To = entry.To, Short = text.Replace("\r", "").Replace("\n", " ") };
+				way.Full.Add(text);
+				box.Ways.Add(way);
+			}
+		}
+		box.Rect = new Rect(S(24), S(24), S(290), BoxHeight(box));
+		box.RowsTop = box.Rect.y + HeaderHeight;
+		return box;
+	}
+
+	// 同一去处、同一线型共用通道；实线和虚线都在起点附近汇合。
+	private void LayoutFlowLines(FlowGraph graph)
+	{
+		graph.EntryBox = FlowEntryBox(graph);
+		var boxes = (graph.EntryBox == null ? graph.Boxes : new[] { graph.EntryBox }.Concat(graph.Boxes)).ToArray();
+		var exits = boxes.SelectMany(b => b.Ways.Select((w, i) => (From: b, Way: w, Y: b.RowsTop + (i + 0.5f) * RowHeight))).Where(e => e.Way.To != null).ToArray();
+		var byColumn = exits.ToLookup(e => e.From.Layer);
+		var ports = new Dictionary<(FlowBox To, bool Back), float>();
+		// 入点避开同一通道中通往别处的出线高度，防止横线盖在一起。
+		foreach (var target in exits.Select(e => (e.Way.To, e.Way.Back)).Distinct())
+		{
+			float normal = target.To.Rect.y + InPort(target.To, target.To.Rect.height) + (target.Back ? S(10) : 0);
+			var occupied = byColumn[target.To.Layer - 1].Where(e => e.Way.To != target.To || e.Way.Back != target.Back).Select(e => e.Y).ToList();
+			if (ports.TryGetValue((target.To, !target.Back), out float other)) occupied.Add(other);
+			ports[target] = Enumerable.Range(5, target.To.Terminal ? 11 : 21).Select(i => target.To.Rect.y + S(i * 2))
+				.OrderBy(y => occupied.Count(v => Mathf.Abs(y - v) < S(8))).ThenBy(y => Mathf.Abs(y - normal)).First();
+		}
+		// 按目的地直接分配线道，不再逐条比较纵向范围寻找可复用的空道。
+		var lanes = new Dictionary<int, Dictionary<(FlowBox To, bool Back), int>>();
+		int Slot(int column, FlowBox target, bool back)
+		{
+			if (!lanes.TryGetValue(column, out var slots)) lanes[column] = slots = new Dictionary<(FlowBox, bool), int>();
+			if (!slots.TryGetValue((target, back), out int slot)) slots[(target, back)] = slot = slots.Count;
+			return slot;
+		}
+		var routes = new List<(FlowBox From, FlowWay Way, int Row, int Out, int In, float Below)>();
+		float bottom = boxes.Length == 0 ? 0 : boxes.Max(b => b.Rect.yMax);
+		var detours = new Dictionary<(FlowBox To, bool Back), float>();
+		foreach (FlowBox box in boxes)
+			foreach (var group in box.Ways.Select((way, row) => (Way: way, Row: row)).Where(w => w.Way.To != null)
+				.GroupBy(w => (w.Way.To, w.Way.Back)))
+			{
+				FlowBox target = group.Key.To;
+				// 跨列和回接从整张图下方绕行，两端仍在列间，不能穿过中间方块。
+				bool detour = group.Key.Back || target.Layer != box.Layer + 1;
+				float below = 0;
+				if (detour && !detours.TryGetValue(group.Key, out below)) detours[group.Key] = below = bottom + S(24 + detours.Count * 16);
+				int output = detour ? Slot(box.Layer, target, group.Key.Back) : -1;
+				int input = Slot(target.Layer - 1, target, group.Key.Back);
+				foreach (var row in group) routes.Add((box, row.Way, row.Row, output, input, below));
+			}
+		// 通道不够时只加宽该列间距，不循环复用线道，也不把线挤进方块。
+		float shift = 0;
+		foreach (var column in boxes.GroupBy(b => b.Layer).OrderBy(g => g.Key))
+		{
+			if (lanes.TryGetValue(column.Key - 1, out var slots)) shift += Mathf.Max(0, S(48 + slots.Count * 16) - S(120));
+			foreach (FlowBox box in column) box.Rect.x += shift;
+		}
+		var columns = boxes.GroupBy(b => b.Layer).ToDictionary(g => g.Key, g => g.First().Rect.x);
+		float Lane(int column, int slot) => columns[column] + S(290 + 24 + slot * 16);
+		foreach (var route in routes)
+		{
+			var from = new Vector2(route.From.Rect.xMax, route.From.RowsTop + (route.Row + 0.5f) * RowHeight);
+			FlowBox target = route.Way.To;
+			var to = new Vector2(target.Rect.x, ports[(target, route.Way.Back)]);
+			float input = Lane(target.Layer - 1, route.In);
+			route.Way.Points = route.Out < 0
+				? new[] { from, new Vector2(input, from.y), new Vector2(input, to.y), to }
+				: new[] { from, new Vector2(Lane(route.From.Layer, route.Out), from.y), new Vector2(Lane(route.From.Layer, route.Out), route.Below), new Vector2(input, route.Below), new Vector2(input, to.y), to };
+		}
+		graph.Width += shift;
+		foreach (var route in routes)
+			foreach (Vector2 point in route.Way.Points)
+			{
+				graph.Width = Mathf.Max(graph.Width, point.x + S(24));
+				graph.Height = Mathf.Max(graph.Height, point.y + S(24));
+			}
+		// 不同起点的共用线段也只画一次，防止虚线的间隙被重复绘制填满。
+		foreach (var group in routes.GroupBy(r => (r.Way.To, r.Way.Back)))
+		{
+			var parts = group.SelectMany(r => r.Way.Points.Zip(r.Way.Points.Skip(1), (a, b) => (r.From, A: a, B: b)))
+				.Where(p => p.A.x != p.B.x || p.A.y != p.B.y).GroupBy(p => (Vertical: p.A.x == p.B.x, Fixed: p.A.x == p.B.x ? p.A.x : p.A.y));
+			foreach (var axis in parts)
+			{
+				var ranges = axis.Select(p => (p.From, Low: axis.Key.Vertical ? Mathf.Min(p.A.y, p.B.y) : Mathf.Min(p.A.x, p.B.x), High: axis.Key.Vertical ? Mathf.Max(p.A.y, p.B.y) : Mathf.Max(p.A.x, p.B.x)))
+					.OrderBy(p => p.Low).ToArray();
+				float low = ranges[0].Low, high = ranges[0].High;
+				var sources = new HashSet<FlowBox>();
+				void Add() => graph.Lines.Add((sources.ToArray(), group.Key.To, group.Key.Back,
+					axis.Key.Vertical ? new Vector2(axis.Key.Fixed, low) : new Vector2(low, axis.Key.Fixed),
+					axis.Key.Vertical ? new Vector2(axis.Key.Fixed, high) : new Vector2(high, axis.Key.Fixed)));
+				foreach (var range in ranges)
+				{
+					if (range.Low > high) { Add(); low = range.Low; sources.Clear(); }
+					sources.Add(range.From);
+					high = Mathf.Max(high, range.High);
+				}
+				Add();
+			}
+		}
+		TintFlowLines(graph, boxes);
+	}
+
+	// 实线、虚线一并判断相邻或交叉；按目的地配色，整条线保持一致。
+	private void TintFlowLines(FlowGraph graph, FlowBox[] boxes)
+	{
+		// 合流后再检查，避免为每个选项重复比较同一段；横向距离超过范围即停止。
+		var segments = graph.Lines.Select(l => (l.To, Left: Mathf.Min(l.A.x, l.B.x), Right: Mathf.Max(l.A.x, l.B.x), Top: Mathf.Min(l.A.y, l.B.y), Bottom: Mathf.Max(l.A.y, l.B.y)))
+			.Distinct().OrderBy(s => s.Left).ToArray();
+		var neighbors = boxes.ToDictionary(b => b, b => new HashSet<FlowBox>());
+		for (int i = 0; i < segments.Length; i++)
+			for (int j = i + 1; j < segments.Length && segments[j].Left <= segments[i].Right + S(20); j++)
+			{
+				var a = segments[i]; var b = segments[j];
+				if (a.To == b.To) continue;
+				float dx = Mathf.Max(0, b.Left - a.Right), dy = Mathf.Max(0, Mathf.Max(a.Top - b.Bottom, b.Top - a.Bottom));
+				if (dx * dx + dy * dy > S(20) * S(20)) continue;
+				neighbors[a.To].Add(b.To); neighbors[b.To].Add(a.To);
+			}
+		foreach (FlowBox box in boxes.Where(b => neighbors[b].Count > 0).OrderByDescending(b => neighbors[b].Count))
+		{
+			box.LineTint = Enumerable.Range(0, neighbors[box].Count + 1).First(c => neighbors[box].All(b => b.LineTint != c));
+			box.LineColor = Color.HSVToRGB((0.55f + box.LineTint * 0.381966f) % 1f, 0.35f, 0.78f);
+		}
+	}
+
 	private void DrawFlowCanvas(Rect canvas)
 	{
 		FlowGraph graph = _flow;
+		FlowBox entry = graph.EntryBox;
+		var boxes = entry == null ? graph.Boxes : new[] { entry }.Concat(graph.Boxes);
 		Event e = Event.current;
 		if (e.type == EventType.ScrollWheel && canvas.Contains(e.mousePosition) && e.shift)
 		{
@@ -655,47 +936,27 @@ public partial class StoryReviewPanel
 			e.Use();
 		}
 		// 四周留出余量：图比窗口小时也能上下左右拖
-		_flowScroll = GUI.BeginScrollView(canvas, _flowScroll, new Rect(0, 0, Mathf.Max(graph.Width, canvas.width) + canvas.width * 0.4f, Mathf.Max(graph.Height, canvas.height) + canvas.height * 0.4f));
+		_flowScroll = GUI.BeginScrollView(canvas, _flowScroll, new Rect(0, 0, Mathf.Max(graph.Width, canvas.width) + canvas.width * 0.4f, Mathf.Max(Mathf.Max(graph.Height, (entry?.Rect.yMax ?? 0) + S(40)), canvas.height) + canvas.height * 0.4f));
 		int pan = GUIUtility.GetControlID(FocusType.Passive);
 		var view = new Rect(_flowScroll.x, _flowScroll.y, canvas.width, canvas.height);
 		if (e.type == EventType.Repaint)
 		{
-			// 线：从方块里那一行去处的右边伸出去，在目标方块左边的竖道里拐弯，进目标方块；进同一个方块的几条线各占一条竖道
-			var slots = new Dictionary<FlowBox, int>();
-			foreach (FlowBox box in graph.Boxes)
+			// 排版时统一避让；绘制仍复用原来的线段、选中高亮和入点。
+			bool Hot(FlowBox[] sources, FlowBox to) => _flowPicked != null && (to == _flowPicked || sources.Contains(_flowPicked));
+			foreach (var line in graph.Lines.OrderBy(l => Hot(l.Sources, l.To)))
 			{
-				for (int k = 0; k < box.Ways.Count; k++)
+				bool hot = Hot(line.Sources, line.To);
+				Color color = hot ? Cinnabar : InkLine;
+				if (!hot && line.To.LineTint >= 0)
 				{
-					FlowWay way = box.Ways[k];
-					if (way.To == null)
-					{
-						continue;
-					}
-					bool hot = _flowPicked != null && (box == _flowPicked || way.To == _flowPicked);
-					Color color = hot ? Cinnabar : InkLine;
-					float width = hot ? S(3) : S(2);
-					var from = new Vector2(box.Rect.xMax, box.RowsTop + (k + 0.5f) * RowHeight);
-					Rect b = way.To.Rect;
-					if (way.Back)
-					{
-						// 往回接的线从下面绕过去
-						float below = Mathf.Max(box.Rect.yMax, b.yMax) + S(14);
-						Segment(from, new Vector2(from.x + S(14), from.y), color, width, true);
-						Segment(new Vector2(from.x + S(14), from.y), new Vector2(from.x + S(14), below), color, width, true);
-						Segment(new Vector2(from.x + S(14), below), new Vector2(b.center.x, below), color, width, true);
-						Segment(new Vector2(b.center.x, below), new Vector2(b.center.x, b.yMax), color, width, true);
-						continue;
-					}
-					slots.TryGetValue(way.To, out int slot);
-					slots[way.To] = slot + 1;
-					var to = new Vector2(b.x, b.y + InPort(way.To, b.height));
-					float lane = b.x - S(18) - (slot % 8) * S(7);
-					Elbow(from, to, color, width, false, Mathf.Max(from.x + S(10), lane));
-					Fill(new Rect(to.x - S(7), to.y - S(4), S(7), S(8)), color);
+					color = Color.Lerp(InkLine, line.To.LineColor, 0.3f);
+					color.a = InkLine.a;
 				}
+				Segment(line.A, line.B, color, hot ? S(3) : S(2), line.Back);
+				if (line.B.x == line.To.Rect.x) Fill(new Rect(line.B.x - S(7), line.B.y - S(4), S(7), S(8)), color);
 			}
 		}
-		foreach (FlowBox box in graph.Boxes)
+		foreach (FlowBox box in boxes)
 		{
 			if (!box.Rect.Overlaps(view))
 			{
@@ -746,6 +1007,7 @@ public partial class StoryReviewPanel
 						_flowRow.normal.background = null;
 						_flowRowMuted = new GUIStyle(_boxSmall) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip, richText = true };
 					}
+					if (box == entry) text = Fit(text, _flowRow, row.width - S(28));
 					GUI.Label(new Rect(row.x + S(11), row.y, row.width - S(28), row.height), text, stays ? _flowRowMuted : _flowRow);
 					if (!stays)
 					{
@@ -768,7 +1030,7 @@ public partial class StoryReviewPanel
 				string tip = (full.Length > 0 ? full : way.Short) + (way.To != null && !way.To.Terminal ? "\n→ " + way.To.Title : way.To != null ? "\n→ " + way.To.Title : "\n选了以后还在这一段里，之后合回来") + (way.Effects.Length > 0 ? "\n" + way.Effects : "");
 				Hover(row, tip);
 			}
-			if (!box.Terminal && GUI.Button(box.Rect, GUIContent.none, GUIStyle.none))
+			if (box != entry && !box.Terminal && GUI.Button(box.Rect, GUIContent.none, GUIStyle.none))
 			{
 				_flowPicked = box;
 				_flowDetailScroll = Vector2.zero;
@@ -807,7 +1069,7 @@ public partial class StoryReviewPanel
 		}
 		if (!box.Terminal && box.Chain.Count > 0)
 		{
-			JumpButton(_flowMission, box.Chain[0]);
+			JumpButton(_flow.EntryWays.Count > 1 ? _flow.EntryWays.Select(w => w.Mission).FirstOrDefault(m => m.Scripts.Contains(box.Chain[0])) ?? _flowMission : _flowMission, box.Chain[0]);
 		}
 		if (box.Last == null)
 		{

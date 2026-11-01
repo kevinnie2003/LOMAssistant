@@ -446,6 +446,7 @@ public partial class StoryReviewPanel
 		{
 			FlagData f = flag;
 			string note = TextConverter.ToSimplified(f.DevNote ?? "").Replace("\n", " ").Trim();
+			if (UiFlagNames.Descriptions.TryGetValue(f.name, out string[] description)) note = description[0];
 			flags.Add(new StatRow
 			{
 				Id = "flag:" + f.name,
@@ -537,8 +538,11 @@ public partial class StoryReviewPanel
 		var steps = use.Path.Select(step => StoryScripts.Describe(step, TextConverter.ForDisplay)).ToList();
 		GUILayout.Label(RichText.Strip(what) + (steps.Count > 0 ? "　" + string.Join(" → ", steps.ToArray()) : ""), _muted);
 		GUILayout.EndVertical();
-		GUI.enabled = use.Mission != null;
-		if (GUILayout.Button(use.Mission != null ? "看剧情图" : "不属于任务", use.Mission != null ? _primary : _button, GUILayout.Width(S(140)), GUILayout.Height(S(40))))
+		bool hasFlow = use.Mission != null;
+		GUI.enabled = hasFlow;
+		string flowText = hasFlow ? "看剧情图" : "不属于任务";
+		GUIStyle flowStyle = hasFlow ? _primary : _button;
+		if (GUILayout.Button(flowText, flowStyle, GUILayout.Width(TextWidth(flowText, flowStyle, S(140))), GUILayout.Height(S(40))))
 		{
 			OpenFlow(use.Mission, use.Script);
 		}
@@ -893,16 +897,7 @@ public partial class StoryReviewPanel
 	}
 
 	/// <summary>好感的人名：类型名（简体）；类型没起名的（同一人的几份好感）用资源名后半段。</summary>
-	private static string RelationshipName(RelationshipStat stat)
-	{
-		string name = stat.Type.ToString();
-		if (name.All(char.IsDigit))
-		{
-			string[] parts = stat.name.Split('_');
-			name = parts.Length > 2 ? string.Join("_", parts.Skip(2).ToArray()) : stat.name;
-		}
-		return TextConverter.ToSimplified(name);
-	}
+	private static string RelationshipName(RelationshipStat stat) => StoryUsage.RelationshipName(stat);
 
 	private readonly Dictionary<GUIStyle, GUIStyle> _oneLine = new Dictionary<GUIStyle, GUIStyle>();
 

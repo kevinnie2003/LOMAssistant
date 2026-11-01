@@ -68,7 +68,10 @@ public partial class StoryReviewPanel
 		{
 			bool owned = !StoryAtlas.Ready || StoryAtlas.Owner.ContainsKey(_now.Story);
 			GUI.enabled = owned;
-			if (GUI.Button(new Rect(r.xMax - S(130) - S(10) - S(220), r.y, S(220), S(36)), owned ? "在剧情图里看" : "这一段不属于任务", owned ? _primary : _button))
+			string flowText = owned ? "在剧情图里看" : "这一段不属于任务";
+			GUIStyle flowStyle = owned ? _primary : _button;
+			float flowWidth = TextWidth(flowText, flowStyle, S(220));
+			if (GUI.Button(new Rect(r.xMax - S(130) - S(10) - flowWidth, r.y, flowWidth, S(36)), flowText, flowStyle))
 			{
 				_flowJumpScript = _now.Story;
 				_tab = 2;

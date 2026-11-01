@@ -95,6 +95,11 @@ public partial class StoryReviewPanel
 		if (_route == null || _routeBuiltFor != StoryAtlas.Version || !Mathf.Approximately(_routeBuiltZoom, _routeZoom * _scale))
 		{
 			_route = BuildRoute();
+			// 重建后按编号重新关联选中的站点，搜索结果也要使用新的索引。
+			_routePicked = _routePicked != null ? StoryAtlas.Find(_routePicked.Key) : null;
+			_routeAutoPicked = _routeAutoPicked != null ? StoryAtlas.Find(_routeAutoPicked.Key) : null;
+			_routeSide = _routeSide != null ? _route.Side.FirstOrDefault(s => s.Series == _routeSide.Series) : null;
+			_searchedFor = _flagSearchedFor = null;
 			_routeBuiltFor = StoryAtlas.Version;
 			_routeBuiltZoom = _routeZoom * _scale;
 		}
@@ -179,8 +184,8 @@ public partial class StoryReviewPanel
 				}
 			}
 		}
-		// 日期：没有日期的任务跟在它前一站后面
-		var date = mains.Values.ToDictionary(m => m.Key, m => m.From, StringComparer.Ordinal);
+		// 日期：使用包含触发条件的显示日期，没有日期的任务跟在它前一站后面。
+		var date = mains.Values.ToDictionary(m => m.Key, m => m.DisplayFrom, StringComparer.Ordinal);
 		for (int pass = 0; pass < 6; pass++)
 		{
 			foreach (var e in edges)
@@ -216,7 +221,15 @@ public partial class StoryReviewPanel
 		// 横轴：每个出现过的日期一列，列距按相隔的旬数，有上下限
 		float x = Z(40);
 		int? last = null;
-		foreach (int d in placed.Select(m => date[m.Key].Value).Distinct().OrderBy(v => v))
+		var dates = placed.Select(m => date[m.Key].Value).ToList();
+		var sideDates = StoryAtlas.Missions.Where(m => !m.Main && m.StartScript.Length > 0 && m.DisplayFrom != null).Select(m => m.DisplayFrom.Value).ToList();
+		// 支线可能早于或晚于主线，补足横轴两端，区间内仍沿用插值。
+		if (sideDates.Count > 0)
+		{
+			if (dates.Count == 0 || sideDates.Min() < dates.Min()) dates.Add(sideDates.Min());
+			if (sideDates.Max() > dates.Max()) dates.Add(sideDates.Max());
+		}
+		foreach (int d in dates.Distinct().OrderBy(v => v))
 		{
 			if (last != null)
 			{
@@ -386,22 +399,7 @@ public partial class StoryReviewPanel
 			{
 				continue;
 			}
-			// 几组条件之间是「\n或 」；旗标说明里自己也会换行（「你的决策」后面一行一个选项），换成空格
-			string first = RichText.Strip(StoryAtlas.ConditionText(target)).Split(new[] { "\n或 " }, StringSplitOptions.None)[0].Replace("\r", "").Replace("\n", " ");
-			string clause = first.Split(new[] { " 且 " }, StringSplitOptions.None).Select(c => c.Trim())
-				.FirstOrDefault(c => c.Length > 0 && !c.Contains("时间") && !c.Contains("時間") && !c.Contains("行动次数") && !c.Contains("行動次數"));
-			if (clause == null)
-			{
-				continue;
-			}
-			// 条件写成「名字 (编号) 需=4 → 当前0」，名字只是旗标说明的第一行。说明后面几行一行一个选项（「你的决策」：1. 退隐江湖 2. 战他娘亲 …）
-			// 的，按要的数字查出那一项，写成「你的决策：西武林盟」
-			var flag = System.Text.RegularExpressions.Regex.Match(clause, @"^(.+?) \(([A-Za-z0-9_]+)\) 需=(\d+)");
-			string note = flag.Success ? MissionManagerData.Instance?.GetFlag(flag.Groups[2].Value)?.DevNote : null;
-			var pick = note != null ? System.Text.RegularExpressions.Regex.Match(TextConverter.ToSimplified(note), @"(?:^|\s)" + flag.Groups[3].Value + @"[.．、:：]\s*([^\s\r\n]+)") : System.Text.RegularExpressions.Match.Empty;
-			clause = pick.Success
-				? flag.Groups[1].Value.Trim() + "：" + pick.Groups[1].Value
-				: System.Text.RegularExpressions.Regex.Replace(clause, @" → 当前.*$| \([A-Za-z0-9_]+\)", "").Replace(" 需", "").Trim();
+			string clause = DataHelper.ConditionSummary(target.Conditions, TextConverter.ForDisplay);
 			if (clause.Length > 0)
 			{
 				layout.EdgeLabels[(from, to)] = Short(clause, 12);
@@ -425,15 +423,15 @@ public partial class StoryReviewPanel
 				Title = SideTitle(g.ToList()),
 				Missions = g.ToList(),
 				Joins = g.SelectMany(m => m.Next).Distinct().Where(mains.ContainsKey).Select(k => mains[k]).ToList(),
-				Dated = g.Any(m => m.From != null),
+				Dated = g.Any(m => m.DisplayFrom != null),
 				Read = StoryScripts.ReadPercent(g.SelectMany(m => m.Scripts).Distinct().Select(StoryScripts.Get).Where(s => s != null).SelectMany(s => s.Lines)),
 				Visited = g.Any(m => m.Visited)
-			}).OrderBy(s => s.Dated ? s.Missions.Where(m => m.From != null).Min(m => m.From.Value) : int.MaxValue).ToList();
+			}).OrderBy(s => s.Dated ? s.Missions.Where(m => m.DisplayFrom != null).Min(m => m.DisplayFrom.Value) : int.MaxValue).ToList();
 		var pillStyle = new GUIStyle(_boxTitle) { fontSize = Mathf.Max(9, Mathf.RoundToInt(_boxTitle.fontSize * _routeZoom)) };
 		// 签条：左边一道墨条，前面留「✓ 」的位置
 		foreach (SideStory side in groups)
 		{
-			float sx = side.Dated ? XOf(layout, side.Missions.Where(m => m.From != null).Min(m => m.From.Value)) - Z(10) : Z(20);
+			float sx = side.Dated ? XOf(layout, side.Missions.Where(m => m.DisplayFrom != null).Min(m => m.DisplayFrom.Value)) - Z(10) : Z(20);
 			float w = pillStyle.CalcSize(new GUIContent(TextConverter.ForDisplay("✓ " + side.Title + (side.Joins.Count > 0 ? " → 主线" : "")))).x + Z(26);
 			int row = rows.FindIndex(end => end <= sx);
 			if (row < 0)
@@ -461,7 +459,7 @@ public partial class StoryReviewPanel
 		{
 			return title;
 		}
-		var first = missions.OrderBy(m => m.From ?? int.MaxValue).ThenBy(m => m.Key, StringComparer.Ordinal).ToList();
+		var first = missions.OrderBy(m => m.DisplayFrom ?? int.MaxValue).ThenBy(m => m.Key, StringComparer.Ordinal).ToList();
 		string named = first.Select(m => m.Desc).FirstOrDefault(d => d.Any(c => c >= 128))
 			?? first.Select(m => m.Summary).FirstOrDefault(d => d.Length > 0);
 		return named != null ? Short(named, 12) : title;
@@ -745,7 +743,7 @@ public partial class StoryReviewPanel
 		}
 		else if (_route?.Side.FirstOrDefault(s => s.Missions.Contains(m)) is SideStory side)
 		{
-			var order = side.Missions.OrderBy(x => x.From ?? int.MaxValue).ToList();
+			var order = side.Missions.OrderBy(x => x.DisplayFrom ?? int.MaxValue).ToList();
 			int at = order.IndexOf(m);
 			if (at >= 0 && at + 1 < order.Count)
 			{
@@ -799,7 +797,7 @@ public partial class StoryReviewPanel
 		}
 		bool open = _routeOptionsOpen.Contains(m.Key);
 		GUILayout.Space(S(10));
-		if (GUILayout.Button((open ? "▼ " : "▶ ") + string.Format("这一站的选项（{0}）", count), new GUIStyle(_button) { alignment = TextAnchor.MiddleLeft }))
+		if (GUILayout.Button((open ? "▼ " : "▶ ") + string.Format(TextConverter.ForDisplay("这一站的选项（{0}）"), count), new GUIStyle(_button) { alignment = TextAnchor.MiddleLeft }))
 		{
 			if (!_routeOptionsOpen.Remove(m.Key))
 			{
@@ -1045,7 +1043,7 @@ public partial class StoryReviewPanel
 			}
 		}
 		GUILayout.Label((side.Visited ? "<color=#2F6B3A>✓ 这一局走过</color>" : "这一局没走过") + (side.Read != null ? $"　·　对白读过 {side.Read}%" : ""), _label);
-		var order = side.Missions.OrderBy(m => m.From ?? int.MaxValue).ToList();
+		var order = side.Missions.OrderBy(m => m.DisplayFrom ?? int.MaxValue).ToList();
 		// 这一局还没走过的第一步标成「下一步」
 		StoryMission upcoming = order.FirstOrDefault(m => !m.Visited);
 		foreach (StoryMission m in order)
@@ -1105,7 +1103,9 @@ public partial class StoryReviewPanel
 		{
 			bool main = trunk.Contains(box);
 			// 岔路写怎么走进来：连进来的那几行去处的短说明（完整条件在剧情图里悬停看）
-			string entry = main ? "" : Cached((box, "entry"), () => string.Join("；", graph.Boxes.SelectMany(b => b.Ways).Where(w => w.To == box && w.Short != "接着").Select(w => w.Short).Distinct().Take(4).ToArray()));
+			string entry = main ? "" : Cached((box, "entry"), () => string.Join("；", graph.Boxes.SelectMany(b => b.Ways)
+				.Where(w => w.To == box && (w.Exits.Count == 0 || w.Exits.Any(e => e.Path.Count > 0 || e.AfterScene)))
+				.Select(w => w.Short).Distinct().Take(4).ToArray()));
 			string head = (main ? "<b>主干</b>　" : "<color=#73644F>岔路</color>　") + Short(box.Title, 18) + (box.Read != null ? $"　<color=#73644F>读过 {box.Read}%</color>" : "");
 			if (GUILayout.Button(head + (entry.Length > 0 ? "\n<size=" + Mathf.RoundToInt(14 * _scale) + "><color=#73644F>" + entry + "</color></size>" : ""),
 				new GUIStyle(_button) { alignment = TextAnchor.MiddleLeft, wordWrap = true, richText = true }))
@@ -1164,7 +1164,7 @@ public partial class StoryReviewPanel
 		{
 			GUILayout.Space(S(6));
 			GUILayout.Label($"<b>{name}</b>" + (note.Length > 0 ? "　" + Short(note, 40) : ""), _label);
-			foreach (StoryUse use in uses.OrderBy(u => !u.Changes).ThenBy(u => u.Mission == null).ThenBy(u => u.Mission?.From ?? int.MaxValue).Take(20))
+			foreach (StoryUse use in uses.OrderBy(u => !u.Changes).ThenBy(u => u.Mission == null).ThenBy(u => u.Mission?.DisplayFrom ?? int.MaxValue).Take(20))
 			{
 				DrawUse(use);
 			}
