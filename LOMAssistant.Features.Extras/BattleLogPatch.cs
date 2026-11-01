@@ -7,8 +7,8 @@ using UnityEngine;
 namespace LOMAssistant.Features.Extras;
 
 /// <summary>
-/// 团战诊断日志：开打时记下关卡、胜负规则、限时、双方人数和游戏速度，各势力门人的血量怎么设的，结束时记下胜负类型、打了几秒、双方剩多少人。
-/// 只写进 Mod 日志，不改游戏。排查「一进团战就直接胜利 / 失败」这类问题用。
+/// 战役诊断日志：开打时记下关卡、胜负规则、限时、双方人数和游戏速度，各势力门人的血量怎么设的，结束时记下胜负类型、打了几秒、双方剩多少人。
+/// 只写进 Mod 日志，不改游戏。排查「一进战役就直接胜利 / 失败」这类问题用。
 /// </summary>
 public static class BattleLogPatch
 {
@@ -23,13 +23,13 @@ public static class BattleLogPatch
 			var tr = Traverse.Create(__instance);
 			BattleLevel level = tr.Field("_levelData").GetValue<BattleLevel>();
 			_startedAt = Time.realtimeSinceStartup;
-			FileLogger.Log($"[团战] 开打：{(level != null ? level.name : "?")}（场景键 {PlayerStatManagerData.Instance?.CurrentSceneKey}）"
+			FileLogger.Log($"[战役] 开打：{(level != null ? level.name : "?")}（场景键 {PlayerStatManagerData.Instance?.CurrentSceneKey}）"
 				+ $"，限时取胜 {level?.VictoryTimeout}、全灭判负 {level?.VitoryDefeat}，限时 {tr.Field("_maxSessionTime").GetValue<int>()} 秒"
 				+ $"，我方 {level?.GetFriendPeople()} 人、敌方 {level?.GetEnemyPeople()} 人，游戏速度 {Time.timeScale}");
 		}
 		catch (Exception e)
 		{
-			FileLogger.Log("[团战] 记录开打失败（已忽略）：" + e.Message);
+			FileLogger.Log("[战役] 记录开打失败（已忽略）：" + e.Message);
 		}
 	}
 
@@ -42,13 +42,13 @@ public static class BattleLogPatch
 		{
 			BattleTeamStat team = __instance.TeamStat;
 			GameStat hp = team?.DefaultPeopleHealth;
-			FileLogger.Log($"[团战] 势力设定 {__instance.name}：势力 {(team != null ? team.name + "#" + team.GetInstanceID() : "无")}"
+			FileLogger.Log($"[战役] 势力设定 {__instance.name}：势力 {(team != null ? team.name + "#" + team.GetInstanceID() : "无")}"
 				+ $"，默认血量 {(hp != null ? hp.name + "#" + hp.GetInstanceID() + " 值 " + hp.Value + "、加成 " + hp.AdditionValue + "、范围 " + hp.Min + "～" + hp.Max + "、最终 " + hp.FinalValue : "无")}"
 				+ $"，门人血量设成 {(____hpData != null ? ____hpData.name + "=" + ____hpData.Health : "无")}");
 		}
 		catch (Exception e)
 		{
-			FileLogger.Log("[团战] 记录势力设定失败（已忽略）：" + e.Message);
+			FileLogger.Log("[战役] 记录势力设定失败（已忽略）：" + e.Message);
 		}
 	}
 
@@ -63,12 +63,12 @@ public static class BattleLogPatch
 			{
 				return;
 			}
-			FileLogger.Log($"[团战] 结束：{type}（finish={finish}），游戏内第 {tr.Field("_currentSessionTime").GetValue<int>()} 秒、真实 {Time.realtimeSinceStartup - _startedAt:0.0} 秒"
+			FileLogger.Log($"[战役] 结束：{type}（finish={finish}），游戏内第 {tr.Field("_currentSessionTime").GetValue<int>()} 秒、真实 {Time.realtimeSinceStartup - _startedAt:0.0} 秒"
 				+ $"，我方剩 {tr.Field("_currentFriendNpcs").GetValue<int>()} 人、敌方剩 {tr.Field("_currentEnemyNpcs").GetValue<int>()} 人，游戏速度 {Time.timeScale}");
 		}
 		catch (Exception e)
 		{
-			FileLogger.Log("[团战] 记录结束失败（已忽略）：" + e.Message);
+			FileLogger.Log("[战役] 记录结束失败（已忽略）：" + e.Message);
 		}
 	}
 }

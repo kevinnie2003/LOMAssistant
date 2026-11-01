@@ -141,9 +141,9 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			if (ConfigManager.EnableBattleWin.Value)
 			{
 				TryPatchAll(typeof(BattleWinPatch));
-				LogInfo("团战直接获胜补丁已应用。");
+				LogInfo("战役直接获胜补丁已应用。");
 			}
-			// 团战开打、结束写进 Mod 日志（只记录，不改游戏）
+			// 战役开打、结束写进 Mod 日志（只记录，不改游戏）
 			TryPatchAll(typeof(BattleLogPatch));
 			TryPatchAll(typeof(PinballScorePatch));
 			LogInfo("弹珠分数补丁已应用。");

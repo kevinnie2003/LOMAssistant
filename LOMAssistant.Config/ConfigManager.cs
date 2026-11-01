@@ -46,6 +46,7 @@ public static class ConfigManager
 	public static ConfigElement<bool> CheatBattleNoCooldown;
 
 	public static ConfigElement<float> GameSpeed;
+	public static ConfigElement<bool> GameSpeedInBattle;
 
 	public static ConfigElement<int> ActionMode;
 
@@ -407,7 +408,7 @@ public static class ConfigManager
 		EnableLibraryDisplay = new ConfigElement<int>("EnableLibraryDisplay", "讲经堂解锁显示：0=关，1=鼠标停在汗青书、生死簿各项上显示达成条件，2=全部显示为已解锁（也显示条件）。改后重启生效", 1);
 		EnableCombatAssist = new ConfigElement<bool>("EnableCombatAssist", "是否启用战斗辅助（ESC界面增加直接获胜按钮）。true=开，false=关，改后重启生效", defaultValue: true);
 		EnableSkipAction = new ConfigElement<bool>("EnableSkipAction", "是否启用空过（养成界面 ESC 菜单增加“空过”按钮，消耗 1 次行动、不触发任何事件）。true=开，false=关，改后重启生效", defaultValue: true);
-		EnableBattleWin = new ConfigElement<bool>("EnableBattleWin", "是否启用团战直接获胜（团战暂停界面增加“直接获胜”按钮）。true=开，false=关，改后重启生效", defaultValue: true);
+		EnableBattleWin = new ConfigElement<bool>("EnableBattleWin", "是否启用战役直接获胜（战役暂停界面增加“直接获胜”按钮）。true=开，false=关，改后重启生效", defaultValue: true);
 		PinballFixedScore = new ConfigElement<int>("PinballFixedScore", "弹珠小游戏固定总分：离开小游戏时总分直接改为该值（影响剧情判定）。-1=关闭", -1);
 		PanelKey = new ConfigElement<KeyCode>("PanelKey", "打开咖啡伴侣窗口「设置」页的热键", KeyCode.F8);
 		SaveNoteKey = new ConfigElement<KeyCode>("SaveNoteKey", "存档备注：在存档/读档界面选中手动存档后按这个键写备注（和设置页热键相同时，在存档界面优先写备注）", KeyCode.F8);
@@ -417,9 +418,10 @@ public static class ConfigManager
 		CheatFreeUpgradeMoney = new ConfigElement<bool>("CheatFreeUpgradeMoney", "锻造、炼丹不消耗银两，银两不够也能升级。true=开，false=关", defaultValue: true);
 		CheatDuelInvincible = new ConfigElement<bool>("CheatDuelInvincible", "决斗中无敌：我方不受伤害。true=开，false=关", defaultValue: false);
 		CheatDuelNoDamage = new ConfigElement<bool>("CheatDuelNoDamage", "决斗中造成伤害为 0：敌方不受伤害。true=开，false=关", defaultValue: false);
-		CheatBattleInvincible = new ConfigElement<bool>("CheatBattleInvincible", "团战中我方（主角和同伴）不会受伤：挨打、中毒都不扣血，敌人照常受伤。true=开，false=关", defaultValue: false);
-		CheatBattleNoCooldown = new ConfigElement<bool>("CheatBattleNoCooldown", "团战绝招没有冷却：放完马上又能用。true=开，false=关", defaultValue: false);
+		CheatBattleInvincible = new ConfigElement<bool>("CheatBattleInvincible", "战役中我方（主角和同伴）不会受伤：挨打、中毒都不扣血，敌人照常受伤。true=开，false=关", defaultValue: false);
+		CheatBattleNoCooldown = new ConfigElement<bool>("CheatBattleNoCooldown", "战役绝招没有冷却：放完马上又能用。true=开，false=关", defaultValue: false);
 		GameSpeed = new ConfigElement<float>("GameSpeed", "游戏倍速（在游戏原本速度上再乘以该值；1=原速）", 1f);
+		GameSpeedInBattle = new ConfigElement<bool>("GameSpeedInBattle", "战役也按游戏倍速：true=战役也加速，false=战役按原速（默认）", defaultValue: false);
 		ActionMode = new ConfigElement<int>("ActionMode", "养成行动点：0=正常，1=不消耗（扣到剩 1 点后不再扣，可一直行动；用「空过」结束本旬），2=每旬固定 N 点（N 见 ActionsPerRound）", 0);
 		ActionsPerRound = new ConfigElement<int>("ActionsPerRound", "行动点选「每旬N点」时，每旬固定几点（1～5，原版每旬 3 点）。有的选项要「剩余行动点大于 2」才出现，设成 3 点以上就能在旬初触发", 1);
 		ShowFlagChanges = new ConfigElement<bool>("ShowFlagChanges", "剧情改动旗标时在屏幕上提示（可能剧透）。true=开，false=关", defaultValue: false);

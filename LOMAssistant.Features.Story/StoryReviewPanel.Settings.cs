@@ -131,10 +131,10 @@ public partial class StoryReviewPanel
 			{
 				Row(ConfigManager.CheatDuelInvincible, "决斗我方无敌"),
 				Row(ConfigManager.CheatDuelNoDamage, "决斗敌方不受伤"),
-				Row(ConfigManager.CheatBattleInvincible, "团战我方不受伤"),
-				Row(ConfigManager.CheatBattleNoCooldown, "团战绝招无冷却"),
+				Row(ConfigManager.CheatBattleInvincible, "战役我方不受伤"),
+				Row(ConfigManager.CheatBattleNoCooldown, "战役绝招无冷却"),
 				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
-				Row(ConfigManager.EnableBattleWin, "团战直接获胜按钮"),
+				Row(ConfigManager.EnableBattleWin, "战役直接获胜按钮"),
 				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
 				Row(ConfigManager.EnableSkillColumns, "技能表全显示"),
 			}),
@@ -151,6 +151,7 @@ public partial class StoryReviewPanel
 			("其他", new List<SettingRow>
 			{
 				new SettingRow { Element = ConfigManager.GameSpeed, Name = "游戏倍速", Speeds = GameSpeed.Options },
+				Row(ConfigManager.GameSpeedInBattle, "战役也按倍速"),
 				Row(ConfigManager.GameFontScale, "游戏文字大小（%）", 50f, 200f),
 				Row(ConfigManager.EnableBackgroundRun, "后台继续运行"),
 				Row(ConfigManager.EnableFastStartup, "开游戏更快"),

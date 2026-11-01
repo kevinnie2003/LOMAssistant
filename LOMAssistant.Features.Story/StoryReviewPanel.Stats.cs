@@ -80,7 +80,7 @@ public partial class StoryReviewPanel
 		{ GameStatType.防禦, "防御" },
 		{ GameStatType.攻擊爆擊, "攻击暴击" },
 		{ GameStatType.暗器爆擊, "暗器暴击" },
-		{ GameStatType.戰役預設血量, "团战预设血量" },
+		{ GameStatType.戰役預設血量, "战役预设血量" },
 		{ GameStatType.稱號, "称号" },
 		{ GameStatType.娘化, "娘化" },
 		{ GameStatType.全武學點數, "累计武学点" },
@@ -497,7 +497,7 @@ public partial class StoryReviewPanel
 		_usageScroll = GUILayout.BeginScrollView(_usageScroll);
 		if (uses.Count == 0)
 		{
-			GUILayout.Label("剧本、任务条件里都没找到（可能在商店、弹珠、团战、小游戏里，或者游戏没用到）", _muted);
+			GUILayout.Label("剧本、任务条件里都没找到（可能在商店、弹珠、战役、小游戏里，或者游戏没用到）", _muted);
 		}
 		// 先列改动（给、收），再列判定；同一类里主线、支线按时间排，不属于任务的放最后
 		foreach (bool changes in new[] { true, false })
@@ -614,7 +614,7 @@ public partial class StoryReviewPanel
 		foreach (ItemData item in collection?.List?.OfType<ItemData>() ?? Enumerable.Empty<ItemData>())
 		{
 			ItemData it = item;
-			// 消耗品（团战里的药之类）游戏不往存档里写数量，改了也存不住，只显示
+			// 消耗品（战役里的药之类）游戏不往存档里写数量，改了也存不住，只显示
 			bool consumable = it.ItemType == GameItemType.消耗品;
 			ItemWarnings.TryGetValue(it.Id, out string warning);
 			string desc = Localized(it.GetDescKey(), "").Replace("\n", " ");

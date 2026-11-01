@@ -909,7 +909,7 @@ public partial class StoryReviewPanel : MonoBehaviour
 		string muted = onPaper ? "#73644F" : "#9A9286";
 		if (ending.Ways.Count == 0)
 		{
-			return $"<color={muted}>在剧本和决斗数据里都没找到触发的地方（可能由团战、小游戏等直接触发）</color>";
+			return $"<color={muted}>在剧本和决斗数据里都没找到触发的地方（可能由战役、小游戏等直接触发）</color>";
 		}
 		var lines = new List<string>();
 		foreach (StoryEndingWay way in ending.Ways.Take(4))

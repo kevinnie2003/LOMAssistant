@@ -11,7 +11,7 @@ namespace LOMAssistant.Features.Story;
 public sealed class StoryUse
 {
 	public string Script = "";
-	/// <summary>剧本所属任务；没归到任务的（地点事件、团战等单独的剧本）为 null。</summary>
+	/// <summary>剧本所属任务；没归到任务的（地点事件、战役等单独的剧本）为 null。</summary>
 	public StoryMission Mission;
 	/// <summary>改、给、收、判定、触发条件。</summary>
 	public string Kind = "";
@@ -26,7 +26,7 @@ public sealed class StoryUse
 /// <summary>
 /// 反查：一面旗标、一件物品在哪些剧情里被改（给、收）、在哪些剧情里被判定。
 /// 剧本读完后从 StoryScripts 的大概（Modifies、Checks）、任务的触发条件、条件文字本（ConditionBook）里整理出来；
-/// 剧本重读（StoryAtlas.Version 变了）就重新整理。商店、弹珠、团战掉落这些不经过剧本的找不到。
+/// 剧本重读（StoryAtlas.Version 变了）就重新整理。商店、弹珠、战役掉落这些不经过剧本的找不到。
 /// </summary>
 public static class StoryUsage
 {

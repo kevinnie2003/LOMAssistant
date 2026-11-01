@@ -127,19 +127,19 @@ Connect a large language model with your own API key to ask about the story and 
 
 Switches in the training and combat groups of the settings page (F8):
 
-- Game speed 1x / 2x / 3x / 5x (team battles and lines that advance by themselves stay at normal speed)
+- Game speed 1x / 2x / 3x / 5x (battles and lines that advance by themselves stay at normal speed; turn on "Speed up battles too" in settings to speed up battles as well)
 - Action points: normal / not consumed / N per period
   > ⚠️ The last two can make some story events not trigger or trigger early, and may block key main quests. Use with care and keep saves.
 - Break the 100 stat cap; training, forging and alchemy use up no attempts or points, and forging and alchemy cost no silver
 - Develop gear without story requirements (off by default): the forge and alchemy room can develop new gear and medicines before the story that unlocks them; level and sect size requirements still apply
-- Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in team battles
+- Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
 - Duel enemy forecast (off by default): shows the enemy's chosen move; the window can be moved and resized
 - Pinball total score; the fourth senior brother sells every item (off by default)
 
 Also:
 
 - **Skip turn**: in the ESC menu on the training and study maps; uses one action without triggering events.
-- **Win now**: in the ESC menu during duels and team battles.
+- **Win now**: in the ESC menu during duels and battles.
 - **Speed-ups**: faster scene changes, loading and skipping, shorter pauses after stat changes, no idle wait between duel rounds.
 - **Skill list columns**: in battle, a long skill list is split into columns.
 

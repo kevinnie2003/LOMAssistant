@@ -10,7 +10,7 @@ namespace LOMAssistant.Features.Extras;
 /// 游戏会自己改 timeScale（暂停=0、剧情快进=10、战斗加速等），所以不能直接写死，
 /// 而是每帧检查：值跟我们上次写的不一样，说明是游戏改的，记下来当作基准再乘倍率。
 /// 暂停（0）乘完还是 0，不受影响。
-/// 军团战（Battle 场景）和剧情里自动往下走的台词（剧本写成不等点击、停一下就换下一句）按原速：
+/// 战役（Battle 场景）和剧情里自动往下走的台词（剧本写成不等点击、停一下就换下一句）按原速：
 /// 前者倍速下来不及看清、操作，后者一闪而过。
 /// </summary>
 public static class GameSpeed
@@ -42,7 +42,8 @@ public static class GameSpeed
 	private static bool Exempt()
 	{
 		string scene = SceneManager.GetActiveScene().name;
-		if (scene == "Battle")
+		// 战役默认按原速（设置「战役也按倍速」打开时照样加速）
+		if (scene == "Battle" && !ConfigManager.GameSpeedInBattle.Value)
 		{
 			return true;
 		}
