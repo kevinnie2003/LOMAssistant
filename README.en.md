@@ -192,7 +192,7 @@ Everything is on the settings page of the window (F8). Changes are saved immedia
 
 **Presets**: at the top of the settings page you can switch in one click to **As intended**, **Assist**, **Advanced** or **All on**. They only change story hints, life-sim and combat aids and cheats; saves, speed-ups, interface and hotkeys stay as they are. Changing any of those switches makes it **Custom**, which you can switch back to later. New players pick one the first time they open the window; if they don't, it stays on **Assist**.
 
-<img src="media/presets.webp" width="640" alt="Choosing a preset: three cards saying who each one suits and what it changes">
+<img src="media/presets.webp" width="640" alt="Choosing a preset: four cards saying who each one suits and what it changes">
 
 ## Building
 
