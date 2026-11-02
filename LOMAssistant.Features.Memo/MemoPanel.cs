@@ -52,6 +52,8 @@ internal sealed class MemoPanel : MonoBehaviour
 	private GUIStyle _button;
 	private GUIStyle _buttonSelected;
 	private GUIStyle _buttonLeft;
+	private GUIStyle _rowButton;
+	private GUIStyle _rowButtonSelected;
 	private GUIStyle _field;
 	private GUIStyle _primary;
 	private Vector2 _scroll;
@@ -211,6 +213,10 @@ internal sealed class MemoPanel : MonoBehaviour
 		_buttonSelected.normal.background = _buttonSelected.hover.background;
 		_buttonLeft = OneLine(PanelTheme.ToastButton(scale, 13));
 		_buttonLeft.alignment = TextAnchor.MiddleLeft;
+		_rowButton = PanelTheme.ToastButton(scale, 12);
+		_rowButton.padding = new RectOffset(Mathf.RoundToInt(2f * scale), Mathf.RoundToInt(2f * scale), 0, 0);
+		_rowButtonSelected = new GUIStyle(_rowButton);
+		_rowButtonSelected.normal.background = _rowButtonSelected.hover.background;
 		_field = PanelTheme.Field(scale, 13);
 		_field.normal.textColor = _field.focused.textColor = _field.hover.textColor = PanelTheme.ToastText;
 		_primary = PanelTheme.ToastButton(scale, 14);
@@ -468,22 +474,22 @@ internal sealed class MemoPanel : MonoBehaviour
 			new Rect(bx + bw * 2f, row.y + 5f * _scale, bw, 18f * _scale),
 			new Rect(bx + bw * 3f, row.y + 5f * _scale, bw, 18f * _scale),
 		};
-		if (GUI.Button(buttons[0], item.done ? "○" : "✓", item.done ? _buttonSelected : _button))
+		if (GUI.Button(buttons[0], item.done ? "○" : "✓", item.done ? _rowButtonSelected : _rowButton))
 		{
 			item.done = !item.done;
 			MemoStore.Save();
 			ResetState(item);
 		}
-		if (GUI.Button(buttons[1], item.muted ? "静" : "响", item.muted ? _buttonSelected : _button))
+		if (GUI.Button(buttons[1], item.muted ? "静" : "响", item.muted ? _rowButtonSelected : _rowButton))
 		{
 			item.muted = !item.muted;
 			MemoStore.Save();
 		}
-		if (GUI.Button(buttons[2], "改", _button))
+		if (GUI.Button(buttons[2], "改", _rowButton))
 		{
 			StartEdit(item);
 		}
-		if (GUI.Button(buttons[3], _confirmDelete == item ? "?" : "×", _confirmDelete == item ? _buttonSelected : _button))
+		if (GUI.Button(buttons[3], _confirmDelete == item ? "?" : "×", _confirmDelete == item ? _rowButtonSelected : _rowButton))
 		{
 			if (_confirmDelete == item)
 			{
@@ -557,7 +563,7 @@ internal sealed class MemoPanel : MonoBehaviour
 				_editOp = (MemoOp)i;
 			}
 		}
-		r.x = 150f * _scale;
+		r.x = 190f * _scale;
 		Label(ref r, "目标值", 48f * _scale);
 		_editValue = GUI.TextField(new Rect(r.x, r.y - 1f * _scale, 82f * _scale, 22f * _scale), _editValue, 9, _field);
 		r.x = 0f;
