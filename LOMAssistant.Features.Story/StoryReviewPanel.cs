@@ -658,7 +658,7 @@ public partial class StoryReviewPanel : MonoBehaviour
 	}
 
 	/// <summary>横平竖直的线；dashed 为虚线。</summary>
-	private void Segment(Vector2 a, Vector2 b, Color color, float w, bool dashed)
+	private void Segment(Vector2 a, Vector2 b, Color color, float w, bool dashed, bool aligned = false)
 	{
 		var r = new Rect(Mathf.Min(a.x, b.x) - w / 2, Mathf.Min(a.y, b.y) - w / 2, Mathf.Abs(b.x - a.x) + w, Mathf.Abs(b.y - a.y) + w);
 		if (!dashed)
@@ -668,9 +668,13 @@ public partial class StoryReviewPanel : MonoBehaviour
 		}
 		bool across = r.width >= r.height;
 		float length = across ? r.width : r.height, dash = S(7), gap = S(5);
-		for (float t = 0; t < length; t += dash + gap)
+		// 合流线被拆分成高亮区间后，虚线仍按同一坐标对齐，不能从每一段重新起笔。
+		float offset = aligned ? (across ? r.x : r.y) % (dash + gap) : 0;
+		for (float t = -offset; t < length; t += dash + gap)
 		{
-			Fill(across ? new Rect(r.x + t, r.y, Mathf.Min(dash, length - t), r.height) : new Rect(r.x, r.y + t, r.width, Mathf.Min(dash, length - t)), color);
+			float start = Mathf.Max(0, t), end = Mathf.Min(length, t + dash);
+			if (end <= start) continue;
+			Fill(across ? new Rect(r.x + start, r.y, end - start, r.height) : new Rect(r.x, r.y + start, r.width, end - start), color);
 		}
 	}
 

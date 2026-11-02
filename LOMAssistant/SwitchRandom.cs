@@ -106,21 +106,7 @@ internal static class SwitchRandom
 		{
 			return null;
 		}
-		int lo = int.MaxValue, hi = int.MinValue;
-		foreach (ConditionResultItem item in items)
-		{
-			foreach (StatCompareItem compare in item.GetFieldValue<List<StatCompareItem>>("_items") ?? new List<StatCompareItem>())
-			{
-				foreach (StatGroupVariable group in new[] { compare.GetFieldValue<StatGroupVariable>("_value1"), compare.GetFieldValue<StatGroupVariable>("_value2") })
-				{
-					Ranges(group, ref lo, ref hi, 0);
-				}
-			}
-		}
-		if (lo > hi)
-		{
-			return null;
-		}
+		if (!Range(items, out int lo, out int hi)) return null;
 		// 随机值每个数都试一遍，数出每条路占几个数（游戏的随机值是 Random.Range(min, max + 1)，每个数机会相同）
 		int step = Mathf.Max(1, (hi - lo + 1) / 2000);
 		var arms = new Dictionary<int, Arm>();
@@ -150,6 +136,31 @@ internal static class SwitchRandom
 			_override = null;
 		}
 		return arms.Values.OrderBy(a => a.Branch).ToList();
+	}
+
+	// 流程图只辨认抽选边界，不试算分支，也不读取或修改随机值。
+	internal static bool IsRandom(string name)
+	{
+		SwitchResultData data = Find(name);
+		return data != null && !data.GetFieldValue<bool>("_useCount")
+			&& Range(data.GetFieldValue<List<ConditionResultItem>>("_items"), out _, out _);
+	}
+
+	private static bool Range(List<ConditionResultItem> items, out int lo, out int hi)
+	{
+		lo = int.MaxValue; hi = int.MinValue;
+		if (items == null) return false;
+		foreach (ConditionResultItem item in items)
+		{
+			foreach (StatCompareItem compare in item.GetFieldValue<List<StatCompareItem>>("_items") ?? new List<StatCompareItem>())
+			{
+				foreach (StatGroupVariable group in new[] { compare.GetFieldValue<StatGroupVariable>("_value1"), compare.GetFieldValue<StatGroupVariable>("_value2") })
+				{
+					Ranges(group, ref lo, ref hi, 0);
+				}
+			}
+		}
+		return lo <= hi;
 	}
 
 	private static void Ranges(StatGroupVariable group, ref int lo, ref int hi, int depth)

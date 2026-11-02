@@ -31,6 +31,10 @@ public sealed class StoryExit
 	public bool AfterScene;
 	public bool ToMap, ToTitle;
 	public string MainMission = "";
+	/// <summary>到达地点的随机事件选择处；不展开抽到的剧本。</summary>
+	public string EventPool = "";
+	/// <summary>此去处之前明确设置的旅行续接剧本，仅用于静态流程追踪。</summary>
+	public string TravelTarget = "";
 }
 
 /// <summary>一个剧本读出来的大概：有没有选项、掷骰、战斗，有哪些去处，用了哪些对白。只读剧本文字，不执行。</summary>
@@ -38,6 +42,8 @@ public sealed class StoryScript
 {
 	public string Name = "";
 	public bool Menu, Dice, Fight;
+	/// <summary>没有剧情或条件，仅转到 GetCurrentTravelScript 的中转脚本。</summary>
+	public bool TravelForward;
 	public List<StoryExit> Exits = new List<StoryExit>();
 	/// <summary>对白 key（GetStoryText），已读标记按它算。</summary>
 	public List<string> Lines = new List<string>();
@@ -94,10 +100,11 @@ public static class StoryScripts
 	private static readonly Regex RollResult = new Regex(@"^local (\w+) = dicemenudialog\.ResultSelection");
 	private static readonly Regex ArmTest = new Regex(@"^(if|elseif) (\w+) == (\d+) then$");
 	private static readonly Regex Next = new Regex(@"luamanager\.(SetNextScript|SetCurrentStoryScript)\(""([^""]+)""\)");
-	// 赶路：先记下路上走完接哪段（SetCurrentTravelScript），再进「…_travel」这段过场或按地图位置抽路上的事件，
-	// 过场最后按记下的那段接下去（GetCurrentTravelScript），剧本里写的不是那段的名字
+	private static readonly Regex Assignment = new Regex(@"^(?:local )?(\w+) = (.*)$");
+	private static readonly Regex Position = new Regex(@"^checkpointmanager\.Position\(""([^""]+)""\)");
 	private static readonly Regex TravelSet = new Regex(@"luamanager\.SetCurrentTravelScript\(""([^""]+)""\)");
-	private static readonly Regex NextVar = new Regex(@"luamanager\.SetNextScript\((\w+)\)");
+	private static readonly Regex VariableNext = new Regex(@"luamanager\.(SetNextScript|SetCurrentStoryScript)\((\w+)\)");
+	private static readonly Regex Literal = new Regex(@"^""([^""]+)""$");
 	private static readonly Regex Scene = new Regex(@"luamanager\.ChangeScene\(""(\w+)""(?:, *""(\w*)"")?");
 	private static readonly Regex EndPanel = new Regex(@"endgamepanel\.Open\(""(\w+)""\)");
 	private static readonly Regex CgPanel = new Regex(@"cgpanel\.Open\(""(\w+)""\)");
@@ -174,6 +181,7 @@ public static class StoryScripts
 		public string Var = "";
 		public int Arm;
 		public bool Else;
+		public int Branch;
 	}
 
 	public static StoryScript Parse(string name, string text)
@@ -184,8 +192,12 @@ public static class StoryScripts
 		var switches = new Dictionary<string, string>(StringComparer.Ordinal);
 		var choices = new Dictionary<string, (string Kind, Dictionary<int, StoryStep> Rows)>(StringComparer.Ordinal);
 		var blocks = new List<Block>();
+		// 变量名会在不同选项内复用，只认当前作用域中的最近一次赋值。
+		var targets = new List<(string Var, string Target, string Pool, bool Travel, List<(Block Block, int Branch)> Scope)>();
 		string lastRoll = null;
-		string travel = null;
+		bool InScope(List<(Block Block, int Branch)> scope) => scope.Count <= blocks.Count
+			&& scope.Select((s, i) => s.Block == blocks[i] && s.Branch == blocks[i].Branch).All(v => v);
+		string TravelTarget() => targets.LastOrDefault(t => t.Var == "#travel" && InScope(t.Scope)).Target ?? "";
 		// 下一句 say 的说话人：前面最近一次 setcharacter，说完就清掉（没设的是旁白）
 		string speaker = "";
 
@@ -197,6 +209,16 @@ public static class StoryScripts
 				continue;
 			}
 			Match m;
+			if (line.StartsWith("luamanager.SetCurrentTravelScript(", StringComparison.Ordinal))
+				targets.Add(("#travel", TravelSet.Match(line).Groups[1].Value, "", false, blocks.Select(b => (b, b.Branch)).ToList()));
+			if ((m = Assignment.Match(line)).Success)
+			{
+				string variable = m.Groups[1].Value, value = m.Groups[2].Value;
+				Match pool = Position.Match(value), literal = Literal.Match(value);
+				bool travel = value == "luamanager.GetCurrentTravelScript()";
+				if (pool.Success || literal.Success || travel || targets.Any(t => t.Var == variable))
+					targets.Add((variable, literal.Success ? literal.Groups[1].Value : "", pool.Success ? pool.Groups[1].Value : "", travel, blocks.Select(b => (b, b.Branch)).ToList()));
+			}
 			if ((m = TableStart.Match(line)).Success)
 			{
 				tables[m.Groups[1].Value] = new Dictionary<int, StoryStep>();
@@ -245,6 +267,8 @@ public static class StoryScripts
 				else if (blocks.Count > 0)
 				{
 					Block top = blocks[blocks.Count - 1];
+					top.Branch++;
+					top.Else = false;
 					top.Arm = top.Var == m.Groups[2].Value ? int.Parse(m.Groups[3].Value) : 0;
 				}
 				continue;
@@ -258,11 +282,13 @@ public static class StoryScripts
 			}
 			if (line.StartsWith("elseif ", StringComparison.Ordinal) && blocks.Count > 0)
 			{
+				blocks[blocks.Count - 1].Branch++;
 				blocks[blocks.Count - 1].Var = "";
 				continue;
 			}
 			if (line == "else" && blocks.Count > 0)
 			{
+				blocks[blocks.Count - 1].Branch++;
 				blocks[blocks.Count - 1].Else = true;
 				continue;
 			}
@@ -270,11 +296,22 @@ public static class StoryScripts
 			{
 				if (blocks.Count > 0)
 				{
+					// 分支内写过旅行目标，汇合后不能继续沿用分支前的值。
+					Block top = blocks[blocks.Count - 1];
+					bool travelChanged = targets.Any(t => t.Var == "#travel" && t.Scope.Any(s => s.Block == top));
 					blocks.RemoveAt(blocks.Count - 1);
+					if (travelChanged) targets.Add(("#travel", "", "", false, blocks.Select(b => (b, b.Branch)).ToList()));
 				}
 				continue;
 			}
 
+			if ((m = VariableNext.Match(line)).Success)
+			{
+				var target = targets.LastOrDefault(t => t.Var == m.Groups[2].Value && InScope(t.Scope));
+				if (target.Travel && blocks.Count == 0) script.TravelForward = true;
+				if (!string.IsNullOrEmpty(target.Target) || !string.IsNullOrEmpty(target.Pool))
+					AddExit(script, blocks, choices, switches, e => { e.Target = target.Target; e.TravelTarget = TravelTarget(); e.EventPool = target.Pool; e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
+			}
 			if ((m = SetCharacter.Match(line)).Success)
 			{
 				speaker = m.Groups[1].Value;
@@ -310,23 +347,9 @@ public static class StoryScripts
 					script.Effects.Add((CurrentPath(blocks, choices, switches), TextConverter.ToSimplified(RichText.Strip(effect))));
 				}
 			}
-			if ((m = TravelSet.Match(line)).Success)
-			{
-				travel = m.Groups[1].Value;
-			}
 			if ((m = Next.Match(line)).Success)
 			{
-				string target = m.Groups[2].Value;
-				if (travel != null && target.EndsWith("_travel", StringComparison.Ordinal))
-				{
-					target = travel;
-				}
-				AddExit(script, blocks, choices, switches, e => { e.Target = target; e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
-			}
-			else if (travel != null && (m = NextVar.Match(line)).Success)
-			{
-				string target = travel;
-				AddExit(script, blocks, choices, switches, e => e.Target = target);
+				AddExit(script, blocks, choices, switches, e => { e.Target = m.Groups[2].Value; e.TravelTarget = TravelTarget(); e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
 			}
 			if ((m = Scene.Match(line)).Success)
 			{
@@ -370,9 +393,15 @@ public static class StoryScripts
 				AddExit(script, blocks, choices, switches, e => e.MainMission = mission);
 			}
 		}
+		script.TravelForward &= !script.Branches && script.Lines.Count == 0 && script.Checks.Count == 0
+			&& script.Modifies.Count == 0 && script.Commands.Count == 0 && script.Exits.Count == 0;
 		script.Lines = script.Lines.Distinct().ToList();
 		return script;
 	}
+
+	/// <summary>只解析显式设置的旅行续接，不读取运行中的旅行状态，也不改写回放用的 Target。</summary>
+	internal static string FlowTarget(StoryExit exit) => exit.TravelTarget.Length > 0 && Get(exit.Target)?.TravelForward == true
+		? exit.TravelTarget : exit.Target;
 
 	/// <summary>按当前所在的分岔记一个去处；同一条路上的「接到剧本」和「推进主线」合成一条。</summary>
 	private static void AddExit(StoryScript script, List<Block> blocks, Dictionary<string, (string Kind, Dictionary<int, StoryStep> Rows)> choices,
@@ -385,12 +414,12 @@ public static class StoryScripts
 			same = new StoryExit { Path = path };
 			script.Exits.Add(same);
 		}
-		else if (same.Target.Length > 0)
+		else if (same.Target.Length > 0 || same.EventPool.Length > 0)
 		{
 			// 同一条路上再跳一次：前一个是战斗后接着的剧本，这次是马上要去的
 			var copy = new StoryExit { Path = path };
 			fill(copy);
-			if (copy.Target.Length > 0 && copy.Target != same.Target)
+			if ((copy.Target.Length > 0 || copy.EventPool.Length > 0) && (copy.Target != same.Target || copy.EventPool != same.EventPool))
 			{
 				script.Exits.Add(copy);
 				return;
@@ -573,7 +602,7 @@ public static class StoryScripts
 	internal static string Describe(StoryExit exit, Func<string, string> format)
 	{
 		var parts = exit.Path.Select(step => Describe(step, format)).ToList();
-		string where = exit.ToTitle ? format("回到标题（结局）") : exit.ToMap ? format("回到地图") : exit.Target.Length > 0 ? string.Format(format(exit.AfterScene ? "战斗之后接到「{0}」" : "接到「{0}」"), format(SegmentName(exit.Target))) : "";
+		string where = exit.ToTitle ? format("回到标题（结局）") : exit.ToMap ? format("回到地图") : exit.EventPool.Length > 0 ? format("随机事件") : StoryPlaces.IsReturn(exit.Target) ? StoryPlaces.ReturnText(exit.Target, format) : exit.Target.Length > 0 ? string.Format(format(exit.AfterScene ? "战斗之后接到「{0}」" : "接到「{0}」"), format(SegmentName(exit.Target))) : "";
 		if (exit.MainMission.Length > 0)
 		{
 			StoryMission mission = StoryAtlas.Find(exit.MainMission);
