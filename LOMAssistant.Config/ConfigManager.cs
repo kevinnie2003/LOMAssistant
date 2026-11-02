@@ -124,7 +124,6 @@ public static class ConfigManager
 	public static ConfigElement<KeyCode> MemoKey;
 	public static ConfigElement<bool> MemoNotify;
 	public static ConfigElement<int> MemoAhead;
-	public static ConfigElement<float> MemoOpacity;
 	public static ConfigElement<float> MemoX;
 	public static ConfigElement<float> MemoY;
 	public static ConfigElement<float> MemoWidth;
@@ -451,11 +450,10 @@ public static class ConfigManager
 		DuelForecastY = new ConfigElement<float>("DuelForecastY", "决斗敌方行动预测窗口的纵向位置（占屏幕高度的比例，-1=默认居中）。拖动窗口会自动保存", -1f);
 		DuelForecastWidth = new ConfigElement<float>("DuelForecastWidth", "决斗敌方行动预测窗口的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
 		DuelForecastHeight = new ConfigElement<float>("DuelForecastHeight", "决斗敌方行动预测窗口的高度（占屏幕高度的比例，-1=按内容自适应）。调整窗口大小会自动保存", -1f);
-		MemoFloat = new ConfigElement<bool>("MemoFloat", "备忘录悬浮窗：浮在游戏画面上，实时盯着选好的条件（数值、好感、功法、锻造、炼丹等），可以拖标题栏移动、拖右下角缩放、调底部滑条改透明度。true=开（默认），false=关", defaultValue: true);
+		MemoFloat = new ConfigElement<bool>("MemoFloat", "备忘录悬浮窗：浮在游戏画面上，实时盯着选好的条件（数值、好感、功法、锻造、炼丹等），可以拖标题栏移动、拖右下角缩放，底色不透明度跟「提示框不透明度」。true=开（默认），false=关", defaultValue: true);
 		MemoKey = new ConfigElement<KeyCode>("MemoKey", "打开/隐藏备忘录悬浮窗的热键", KeyCode.F10);
 		MemoNotify = new ConfigElement<bool>("MemoNotify", "备忘录提示：条件达成、回落、快到期或过期时，在悬浮窗顶部提示一次。true=开（默认），false=关", defaultValue: true);
 		MemoAhead = new ConfigElement<int>("MemoAhead", "备忘录提前几旬提示快到期（0=到期和过期才提示）", 3);
-		MemoOpacity = new ConfigElement<float>("MemoOpacity", "备忘录悬浮窗背景的不透明度（0.2～1，1=不透明）。调低能透过窗口看到游戏画面，文字和按钮不变。拖动窗口底部滑条会自动保存", 0.9f);
 		MemoX = new ConfigElement<float>("MemoX", "备忘录悬浮窗的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
 		MemoY = new ConfigElement<float>("MemoY", "备忘录悬浮窗的纵向位置（占屏幕高度的比例，-1=默认右上）。拖动窗口会自动保存", -1f);
 		MemoWidth = new ConfigElement<float>("MemoWidth", "备忘录悬浮窗的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
@@ -505,7 +503,7 @@ public static class ConfigManager
 		BranchPanelY = new ConfigElement<float>("BranchPanelY", "剧情分支小窗的位置（占屏幕高度的比例，-1=默认）。拖动小窗会自动保存", -1f);
 		BranchPanelAutoHide = new ConfigElement<float>("BranchPanelAutoHide", "剧情分支小窗多少秒没有新判断就自动收起（0=不自动收起）", 15f);
 		PanelOpacity = new ConfigElement<float>("PanelOpacity", "咖啡伴侣窗口的背景不透明度（0.3～1，1=不透明）。调低能透过窗口看到游戏画面，文字和按钮不变。默认 0.8", 0.8f);
-		PopupOpacity = new ConfigElement<float>("PopupOpacity", "提示框的底色不透明度（0.3～1，1=不透明）：地图建筑提示、剧情分支小窗、决斗敌方预选、快进、读档进度这些浮在游戏画面上的提示。调低能透过提示框看到游戏画面，文字不变", 0.8f);
+		PopupOpacity = new ConfigElement<float>("PopupOpacity", "提示框的底色不透明度（0.3～1，1=不透明）：地图建筑提示、剧情分支小窗、决斗敌方预选、备忘录、快进、读档进度这些浮在游戏画面上的提示。调低能透过提示框看到游戏画面，文字不变", 0.8f);
 		DialogOpacity = new ConfigElement<float>("DialogOpacity", "小窗的底色不透明度（0.3～1，1=不透明）：随机事件选择、存档备注。调低能透过小窗看到游戏画面，文字和按钮不变", 1f);
 		EnableFastStartup = new ConfigElement<bool>("EnableFastStartup", "开游戏更快：标题画面按钮浮现的开场动画加快 6 倍。true=开（默认），false=关，改后重启生效", defaultValue: true);
 		EnableFlowSpeedup = new ConfigElement<bool>("EnableFlowSpeedup", "流程提速：切场景不再写多余的全局存档副本、读档时旗标查表、快进时指令不空等、数值变化后的停顿缩到 0.2 秒（没显示的不停顿）、养成地图上行动后的等待和转场加快 3 倍、决斗回合之间不干等。默认开；只有怀疑它导致问题时才关。true=开，false=关", defaultValue: true);

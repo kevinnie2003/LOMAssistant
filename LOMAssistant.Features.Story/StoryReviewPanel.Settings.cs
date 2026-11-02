@@ -129,7 +129,6 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.MemoFloat, "备忘录悬浮窗"),
 				Row(ConfigManager.MemoNotify, "备忘录达成、到期提示"),
 				Row(ConfigManager.MemoAhead, "备忘录提前几旬提示", 0f, 12f),
-				Row(ConfigManager.MemoOpacity, "备忘录悬浮窗不透明度", 0.2f, 1f),
 			}),
 			("战斗", new List<SettingRow>
 			{
@@ -182,7 +181,6 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.StoryReviewKey, "本窗口"),
 				new SettingRow { Element = ConfigManager.GamepadPanelButton, Name = "手柄开关本窗口", Choices = new[] { "L3", "R3", "LB+RB" } },
 				Row(ConfigManager.DebugPanelKey, "数值页"),
-				Row(ConfigManager.MemoKey, "备忘录"),
 				Row(ConfigManager.PanelKey, "设置页"),
 				Row(ConfigManager.SaveNoteKey, "存档备注"),
 				Row(ConfigManager.HideUIKey, "隐藏界面看 CG"),
@@ -193,6 +191,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.AnytimeSaveKey, "随时存档：存新档"),
 				Row(ConfigManager.AnytimeLoadKey, "随时存档：读最近的"),
 				Row(ConfigManager.AnytimeRollbackKey, "回退到判定前"),
+				Row(ConfigManager.MemoKey, "备忘录"),
 			}),
 		};
 	}

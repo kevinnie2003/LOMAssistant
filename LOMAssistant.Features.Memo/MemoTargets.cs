@@ -39,35 +39,59 @@ internal sealed class MemoTarget
 internal static class MemoTargets
 {
 	private static List<MemoTarget> _cache;
+	private static Dictionary<string, MemoTarget> _byKey = new Dictionary<string, MemoTarget>();
 	private static PlayerStatManagerData _builtFor;
 	private static bool _builtForSave;
-	private static float _nextRebuild;
+	private static bool _invalid = true;
+	private static float _nextMissRebuild;
+
+	/// <summary>目录每重建一次加一，搜索结果按它判断要不要重算。</summary>
+	public static int Version { get; private set; }
 
 	/// <summary>所有能盯的，按组、名字排。没数据时空。</summary>
 	public static List<MemoTarget> Catalog()
 	{
-		List<MemoTarget> list = _cache;
-		if (list != null && !Stale())
+		if (_cache != null && !Stale())
 		{
-			return list;
+			return _cache;
 		}
-		list = Build();
-		_cache = list;
-		_builtFor = PlayerStatManagerData.Instance;
-		_builtForSave = StoryNodes.HasCurrentSave;
-		_nextRebuild = Time.unscaledTime + 5f;
-		return list;
+		Rebuild();
+		return _cache;
 	}
 
-	// 几秒一重建（物品、功法列表会变）；刚读档/回主菜单时立刻重建
+	// 现值都是现读游戏对象，目录本身只在换存档、手动刷新（打开窗口、开始编辑）时重建；
+	// 全部旗标、物品走一遍不便宜，不能定时重建
 	private static bool Stale() =>
-		Time.unscaledTime >= _nextRebuild
+		_invalid
 		|| !ReferenceEquals(_builtFor, PlayerStatManagerData.Instance)
 		|| _builtForSave != StoryNodes.HasCurrentSave;
 
+	private static void Rebuild()
+	{
+		System.Diagnostics.Stopwatch watch = System.Diagnostics.Stopwatch.StartNew();
+		_cache = Build();
+		_byKey = new Dictionary<string, MemoTarget>();
+		foreach (MemoTarget target in _cache)
+		{
+			string id = (int)target.Kind + "|" + target.Key;
+			if (!_byKey.ContainsKey(id))
+			{
+				_byKey[id] = target;
+			}
+		}
+		_builtFor = PlayerStatManagerData.Instance;
+		_builtForSave = StoryNodes.HasCurrentSave;
+		_invalid = false;
+		Version++;
+		if (_cache.Count > 0)
+		{
+			FileLogger.Log("[备忘录] 条件目录 " + _cache.Count + " 条，用时 " + watch.ElapsedMilliseconds + " ms");
+		}
+	}
+
 	public static void Invalidate()
 	{
-		_nextRebuild = 0f;
+		_invalid = true;
 	}
 
 	/// <summary>某条备忘录盯的那条数据；找不到了（还没拿到这本书、换了存档）返回 null。</summary>
@@ -77,7 +101,19 @@ internal static class MemoTargets
 		{
 			return null;
 		}
-		return Catalog().FirstOrDefault(t => t.Kind == kind && t.Key == key);
+		Catalog();
+		if (_byKey.TryGetValue((int)kind + "|" + key, out MemoTarget target))
+		{
+			return target;
+		}
+		// 盯的东西还没进目录（书还没拿到这类）：隔一会儿重建一次看看有没有了
+		if (_cache.Count > 0 && Time.unscaledTime >= _nextMissRebuild)
+		{
+			_nextMissRebuild = Time.unscaledTime + 30f;
+			Rebuild();
+			_byKey.TryGetValue((int)kind + "|" + key, out target);
+		}
+		return target;
 	}
 
 	private static List<MemoTarget> Build()
@@ -120,13 +156,13 @@ internal static class MemoTargets
 			string text = LocalizationManager.Instance.LocaleResolver.GetString(key);
 			if (!string.IsNullOrEmpty(text) && text != key)
 			{
-				return TextConverter.ToSimplified(text);
+				return TextConverter.ToSimplifiedUnlessJapanese(text);
 			}
 		}
 		catch
 		{
 		}
-		return TextConverter.ToSimplified(fallback ?? "");
+		return TextConverter.ToSimplifiedUnlessJapanese(fallback ?? "");
 	}
 
 	private static void AddStats(List<MemoTarget> list, PlayerStatManagerData player)
@@ -170,13 +206,13 @@ internal static class MemoTargets
 		{ GameStatType.防禦, "防御" },
 		{ GameStatType.攻擊爆擊, "攻击暴击" },
 		{ GameStatType.暗器爆擊, "暗器暴击" },
-		{ GameStatType.戰役預設血量, "团战预设血量" },
+		{ GameStatType.戰役預設血量, "战役预设血量" },
 		{ GameStatType.稱號, "称号" },
 		{ GameStatType.全武學點數, "累计武学点" },
 		{ GameStatType.全鍛造點數, "累计锻造点" },
 		{ GameStatType.全毒藥點數, "累计炼丹点" },
 		{ GameStatType.全貢獻度, "累计贡献度" },
-		{ GameStatType.門派貢獻, "门派贡献门槛" },
+		{ GameStatType.門派貢獻, "门派贡献门槛（10～50）" },
 	};
 
 	private static void AddFavor(List<MemoTarget> list, PlayerStatManagerData player)
@@ -269,13 +305,12 @@ internal static class MemoTargets
 				Name = name + " 层数",
 				Group = "功法",
 				Unit = "层",
-				Current = () => Mathf.Min(max, b.CurrentMartialLevel + 1),
+				// 和游戏功法页、剧情条件一样：练成几层（0 到满层）
+				Current = () => Mathf.Clamp(b.CurrentMartialLevel, 0, max),
 				Max = () => max,
 				Ceiling = max,
-				Hint = () => "当前 " + Mathf.Min(max, b.CurrentMartialLevel + 1) + " / " + max + " 层",
+				Hint = () => "当前 " + Mathf.Clamp(b.CurrentMartialLevel, 0, max) + " / " + max + " 层",
 			});
-			bool open = b.CurrentMartialLevel >= 0 && b.CurrentMartialLevel < max && b.LevelData[b.CurrentMartialLevel] != null;
-			int need = open ? b.LevelData[b.CurrentMartialLevel].Points : 0;
 			list.Add(new MemoTarget
 			{
 				Kind = MemoKind.Martial,
@@ -284,9 +319,9 @@ internal static class MemoTargets
 				Group = "功法",
 				Unit = "点",
 				Current = () => b.CurrentLevelPoints,
-				Max = () => need,
-				Ceiling = need,
-				Hint = () => open ? "本层 " + b.CurrentLevelPoints + " / " + need + " 点" : "已练满或暂无本层数据",
+				Max = () => BookLevelPoints(b),
+				Ceiling = BookLevelPoints(b),
+				Hint = () => BookLevelPoints(b) > 0 ? "本层 " + b.CurrentLevelPoints + " / " + BookLevelPoints(b) + " 点" : "已练满或暂无本层数据",
 			});
 			int total = TotalBookPoints(b);
 			list.Add(new MemoTarget
@@ -333,8 +368,6 @@ internal static class MemoTargets
 				Ceiling = max,
 				Hint = () => (u.CurrentLevel < 0 ? "未开发" : "当前 " + Mathf.Max(0, u.CurrentLevel) + " / " + max + " 级"),
 			});
-			bool open = u.CurrentLevel >= 0 && u.CurrentLevel < max && u.UpgradeLevels[u.CurrentLevel] != null;
-			int need = open ? u.UpgradeLevels[u.CurrentLevel].LevelPoints : 0;
 			list.Add(new MemoTarget
 			{
 				Kind = kind,
@@ -343,9 +376,9 @@ internal static class MemoTargets
 				Group = group,
 				Unit = "点",
 				Current = () => u.CurrentPoints,
-				Max = () => need,
-				Ceiling = need,
-				Hint = () => open ? "本级 " + u.CurrentPoints + " / " + need + " 点" : "未开发或已满级",
+				Max = () => UpgradeLevelPoints(u),
+				Ceiling = UpgradeLevelPoints(u),
+				Hint = () => UpgradeLevelPoints(u) > 0 ? "本级 " + u.CurrentPoints + " / " + UpgradeLevelPoints(u) + " 点" : "未开发或已满级",
 			});
 			int total = TotalUpgradePoints(u);
 			string progressName = name + (kind == MemoKind.Alchemy ? " 炼制进度" : " 开发进度");
@@ -375,6 +408,21 @@ internal static class MemoTargets
 			return 0;
 		}
 		return Mathf.Clamp(Mathf.RoundToInt(invested * 100f / total), 0, 100);
+	}
+
+	// 正在练的这一层要多少点；练满或没数据是 0。现读，升层后马上换成下一层的
+	private static int BookLevelPoints(Book book)
+	{
+		MartialLevelData[] levels = book.LevelData;
+		int level = book.CurrentMartialLevel;
+		return levels != null && level >= 0 && level < levels.Length && levels[level] != null ? levels[level].Points : 0;
+	}
+
+	private static int UpgradeLevelPoints(UpgradeItemData item)
+	{
+		UpgradeItemLevel[] levels = item.UpgradeLevels;
+		int level = item.CurrentLevel;
+		return levels != null && level >= 0 && level < levels.Length && levels[level] != null ? levels[level].LevelPoints : 0;
 	}
 
 	private static int TotalBookPoints(Book book)
