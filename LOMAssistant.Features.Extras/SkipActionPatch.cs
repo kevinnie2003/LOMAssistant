@@ -49,11 +49,22 @@ public static class SkipActionPatch
 			Button skip = MenuButtonHelper.CloneButton(template, "空过", ButtonName);
 			MenuNavChain.Ensure(skip.transform.parent);
 			skip.onClick.AddListener(OnSkipClick);
+			skip.gameObject.SetActive(ConfigManager.EnableSkipAction.Value);
 			FileLogger.Log("空过：已添加按钮 " + MenuButtonHelper.DescribeHierarchy(skip.transform));
 		}
 		catch (Exception e)
 		{
 			LOMAssistantPlugin.LogError("空过：添加按钮失败: " + e);
+		}
+	}
+
+	/// <summary>设置页开关「空过」：已经加好的按钮马上跟着显示、隐藏（剧情菜单里的下次打开菜单时按场合显示）。</summary>
+	internal static void SettingChanged(bool on)
+	{
+		MenuButtonHelper.SetVisible(ButtonName, on);
+		if (!on)
+		{
+			MenuButtonHelper.SetVisible(StoryButtonName, false);
 		}
 	}
 
@@ -191,7 +202,7 @@ public static class SkipActionPatch
 			Transform skip = menu != null ? FindDeep(menu.transform, StoryButtonName) : null;
 			if (skip != null)
 			{
-				skip.gameObject.SetActive(enabled && InBreakMenu());
+				skip.gameObject.SetActive(enabled && InBreakMenu() && ConfigManager.EnableSkipAction.Value);
 			}
 		}
 		catch (Exception e)

@@ -1,5 +1,6 @@
 using System;
 using HarmonyLib;
+using LOMAssistant.Config;
 using Mortal.Battle;
 using UnityEngine.UI;
 
@@ -12,6 +13,9 @@ namespace LOMAssistant.Features.Extras;
 public static class BattleWinPatch
 {
 	private const string ButtonName = "LOMAssistant_BattleWinButton";
+
+	/// <summary>设置页开关：已经加好的按钮马上跟着显示、隐藏。</summary>
+	internal static void SettingChanged(bool on) => MenuButtonHelper.SetVisible(ButtonName, on);
 
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(PausePanel), "Awake")]
@@ -29,6 +33,7 @@ public static class BattleWinPatch
 
 			Button win = MenuButtonHelper.CloneButton(giveup, "直接获胜", ButtonName);
 			MenuNavChain.Ensure(win.transform.parent);
+			win.gameObject.SetActive(ConfigManager.EnableBattleWin.Value);
 			win.onClick.AddListener(() =>
 			{
 				LOMAssistantPlugin.LogInfo("战役直接获胜：已执行。");

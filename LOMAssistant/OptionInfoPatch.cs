@@ -149,13 +149,16 @@ internal static class OptionInfoPatch
 	/// <summary>为真时取选项文字不经过下面的结果说明（本 Mod 自己取原文用）。</summary>
 	public static bool Raw;
 
+	/// <summary>设置「选项提示、判定记录」：补丁一直打着，每次用到时看开没开，改了马上生效。</summary>
+	internal static bool On => ConfigManager.EnableOptionInfo.Value;
+
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(LeanLocalizationResolver), "GetStoryText")]
 	public static void LeanLocalizationResolver_GetStoryText_Postfix(string key, ref string __result)
 	{
 		// 本 Mod 自己取选项原文（剧情回顾里显示）时不加结果说明，也不算游戏弹出的菜单；
 		// 设成「鼠标悬停」「不显示」时也不接在选项后面（悬停时由 OptionHoverHint 另外显示）
-		if (Raw)
+		if (Raw || !On)
 		{
 			return;
 		}
@@ -296,6 +299,10 @@ internal static class OptionInfoPatch
 	[HarmonyPatch(typeof(DiceMenuDialog), "OnEnable")]
 	public static void DiceMenuDialog_OnEnable_Postfix(DiceMenuDialog __instance)
 	{
+		if (!On)
+		{
+			return;
+		}
 		foreach (UnityEngine.UI.Button button in __instance.CachedButtons ?? new UnityEngine.UI.Button[0])
 		{
 			if (button != null)
@@ -310,6 +317,10 @@ internal static class OptionInfoPatch
 	[HarmonyPatch(typeof(DiceOption), "UpdateContent")]
 	public static void DiceOption_UpdateContent_Postfix(DiceOption __instance)
 	{
+		if (!On)
+		{
+			return;
+		}
 		DiceNoWrap(__instance);
 		DiceFitToScreen(__instance);
 	}
@@ -317,7 +328,13 @@ internal static class OptionInfoPatch
 	// 选中时显示的是另一个文字框（_highText，粗体字型，字宽不同），换上来时再量一次
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(DiceOption), "Select")]
-	public static void DiceOption_Select_Postfix(DiceOption __instance) => DiceFitToScreen(__instance);
+	public static void DiceOption_Select_Postfix(DiceOption __instance)
+	{
+		if (On)
+		{
+			DiceFitToScreen(__instance);
+		}
+	}
 
 	/// <summary>说明往右写到画面右边还写不完时，把说明的字缩小到刚好写到画面右边为止（最小 <see cref="DiceMinDescSize"/>）。</summary>
 	private const float DiceMinDescSize = 11f;
@@ -406,7 +423,7 @@ internal static class OptionInfoPatch
 		{
 			HandleDialogChange(_positionCtrl, addSuffix: false);
 		}
-		if (HasTriggerMission(fieldValue, out var missionKey))
+		if (On && HasTriggerMission(fieldValue, out var missionKey))
 		{
 			HandleDialogChange(__instance, addSuffix: true, "可触发：" + missionKey);
 		}
@@ -426,6 +443,10 @@ internal static class OptionInfoPatch
 	[HarmonyPatch(typeof(ConditionResultData), "Execute")]
 	public static void PrefixExecuteConditionResult(ConditionResultData __instance)
 	{
+		if (!On)
+		{
+			return;
+		}
 		List<ConditionResultItem> fieldValue = __instance.GetFieldValue<List<ConditionResultItem>>("_items");
 		LogCheckpoint("触发剧情检查点:", fieldValue);
 	}
@@ -435,7 +456,7 @@ internal static class OptionInfoPatch
 	[HarmonyPatch(typeof(MissionCheckData), "Check")]
 	public static void PostfixCheckMission(MissionCheckData __instance, bool __result)
 	{
-		if (!__result)
+		if (!__result || !On)
 		{
 			return;
 		}
@@ -457,6 +478,10 @@ internal static class OptionInfoPatch
 	[HarmonyPatch(typeof(SwitchResultData), "Execute")]
 	public static void PrefixExecuteSwitchResult(SwitchResultData __instance)
 	{
+		if (!On)
+		{
+			return;
+		}
 		List<ConditionResultItem> fieldValue = __instance.GetFieldValue<List<ConditionResultItem>>("_items");
 		LogCheckpoint("触发剧情分支检查点:", fieldValue);
 	}
@@ -647,10 +672,13 @@ internal sealed class OptionHoverHint : MonoBehaviour
 		}
 	}
 
+	// 选项提示开着、后果设成鼠标悬停
+	private static bool Hovering => OptionInfoPatch.On && ConfigManager.OptionResultMode.Value == 1;
+
 	private void Update()
 	{
 		// 选项后果设成悬停时都看；其余时候只为强行放出来的选项显示条件
-		if (ConfigManager.OptionResultMode.Value != 1 && !HiddenOptions.Any)
+		if (!Hovering && !HiddenOptions.Any)
 		{
 			return;
 		}
@@ -682,7 +710,7 @@ internal sealed class OptionHoverHint : MonoBehaviour
 
 	private void OnGUI()
 	{
-		if ((ConfigManager.OptionResultMode.Value != 1 && !HiddenOptions.Any) || UiHider.Active || Event.current.type != EventType.Repaint)
+		if ((!Hovering && !HiddenOptions.Any) || UiHider.Active || Event.current.type != EventType.Repaint)
 		{
 			return;
 		}
@@ -741,7 +769,7 @@ internal sealed class OptionHoverHint : MonoBehaviour
 		{
 			return "";
 		}
-		return ConfigManager.OptionResultMode.Value == 1 ? OptionInfoPatch.OptionNote(key) : HiddenOptions.Note(key);
+		return Hovering ? OptionInfoPatch.OptionNote(key) : HiddenOptions.Note(key);
 	}
 
 	private void Draw(Button button, string note, Button[] group)

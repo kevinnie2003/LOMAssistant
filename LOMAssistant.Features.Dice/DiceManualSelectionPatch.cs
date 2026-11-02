@@ -62,7 +62,8 @@ public static class DiceManualSelectionPatch
 	/// <summary>选定第 i 条线路（鼠标点击和手柄共用）。</summary>
 	public static void Choose(int i)
 	{
-		if (!(Menu == null))
+		// 设置页里中途关掉后，已经挂上的点击不再生效
+		if (!(Menu == null) && ConfigManager.EnableManualDiceSelection.Value)
 		{
 			LOMAssistantPlugin.LogInfo("骰子手动选择：选中线路 " + i);
 			FileLogger.Log("[DicePatch] OnButtonClick: line=" + i);

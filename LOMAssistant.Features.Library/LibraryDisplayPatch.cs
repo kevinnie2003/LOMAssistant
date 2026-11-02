@@ -147,7 +147,7 @@ internal sealed class LibraryHoverHint : MonoBehaviour
 
 	private void OnGUI()
 	{
-		if (_hovered == null || Event.current.type != EventType.Repaint || UiHider.Active || InputGuard.ModWindowOpen)
+		if (_hovered == null || ConfigManager.EnableLibraryDisplay.Value == 0 || Event.current.type != EventType.Repaint || UiHider.Active || InputGuard.ModWindowOpen)
 		{
 			return;
 		}

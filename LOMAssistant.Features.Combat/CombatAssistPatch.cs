@@ -11,15 +11,16 @@ namespace LOMAssistant.Features.Combat;
 
 public static class CombatAssistPatch
 {
+	private const string ButtonName = "LOMAssistant_DuelWinButton";
+
+	/// <summary>设置页开关：已经加好的按钮马上跟着显示、隐藏。</summary>
+	internal static void SettingChanged(bool on) => LOMAssistant.Features.Extras.MenuButtonHelper.SetVisible(ButtonName, on);
+
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(CombatManager), "InitCombatRound")]
 	public static void InitCombatRound_Postfix(CombatManager __instance)
 	{
 		FileLogger.Log("战斗辅助：InitCombatRound Postfix 被调用。");
-		if (!ConfigManager.EnableCombatAssist.Value)
-		{
-			return;
-		}
 		if (CombatUIManager.Instance == null)
 		{
 			LOMAssistantPlugin.LogWarning("战斗辅助：CombatUIManager 为空。");
@@ -43,7 +44,13 @@ public static class CombatAssistPatch
 			LOMAssistantPlugin.LogWarning("战斗辅助：投降按钮为空。");
 			return;
 		}
+		// 按钮一直加上，设置关着就藏起来，在设置页打开时马上显示
+		if (value.transform.parent.Find(ButtonName) != null)
+		{
+			return;
+		}
 		GameObject gameObject = Object.Instantiate(value.gameObject, value.gameObject.transform.parent);
+		gameObject.name = ButtonName;
 		LeanLocalizedText[] componentsInChildren = gameObject.GetComponentsInChildren<LeanLocalizedText>(includeInactive: true);
 		foreach (LeanLocalizedText obj in componentsInChildren)
 		{
@@ -62,7 +69,7 @@ public static class CombatAssistPatch
 		{
 			BattleWin(menuPanel);
 		});
-		gameObject.SetActive(value: true);
+		gameObject.SetActive(ConfigManager.EnableCombatAssist.Value);
 		LOMAssistant.Features.Extras.MenuNavChain.Ensure(gameObject.transform.parent);
 		LOMAssistantPlugin.LogInfo("战斗辅助：已添加直接获胜按钮。");
 		FileLogger.Log("战斗辅助：已添加直接获胜按钮。");

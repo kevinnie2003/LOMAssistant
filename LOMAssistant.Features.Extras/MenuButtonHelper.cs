@@ -23,6 +23,18 @@ internal static class MenuButtonHelper
 	/// Clones an existing menu button right after the template, relabels it, replaces
 	/// its click handlers and tightens the parent layout so all buttons still fit.
 	/// </summary>
+	/// <summary>场景里叫这个名字的、本 Mod 加的按钮全部显示或隐藏（设置页开关改了马上生效）。</summary>
+	public static void SetVisible(string objectName, bool visible)
+	{
+		foreach (Button button in Resources.FindObjectsOfTypeAll<Button>())
+		{
+			if (button != null && button.name == objectName && button.gameObject.scene.IsValid())
+			{
+				button.gameObject.SetActive(visible);
+			}
+		}
+	}
+
 	public static Button CloneButton(Button template, string label, string objectName)
 	{
 		label = TextConverter.ForDisplay(label);
