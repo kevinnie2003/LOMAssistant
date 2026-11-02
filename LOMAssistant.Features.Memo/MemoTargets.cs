@@ -288,6 +288,20 @@ internal static class MemoTargets
 				Ceiling = need,
 				Hint = () => open ? "本层 " + b.CurrentLevelPoints + " / " + need + " 点" : "已练满或暂无本层数据",
 			});
+			int total = TotalBookPoints(b);
+			list.Add(new MemoTarget
+			{
+				Kind = MemoKind.Martial,
+				Key = "pct:" + b.Id,
+				Name = name + " 修炼进度",
+				Group = "功法",
+				Unit = "%",
+				Current = () => Percent(InvestedBookPoints(b), total),
+				Max = () => 100,
+				Ceiling = 100,
+				Hint = () => "当前 " + Percent(InvestedBookPoints(b), total) + "%（练成 "
+					+ Mathf.Clamp(b.CurrentMartialLevel, 0, max) + " / " + max + " 层）",
+			});
 		}
 	}
 
@@ -333,7 +347,100 @@ internal static class MemoTargets
 				Ceiling = need,
 				Hint = () => open ? "本级 " + u.CurrentPoints + " / " + need + " 点" : "未开发或已满级",
 			});
+			int total = TotalUpgradePoints(u);
+			string progressName = name + (kind == MemoKind.Alchemy ? " 炼制进度" : " 开发进度");
+			list.Add(new MemoTarget
+			{
+				Kind = kind,
+				Key = "pct:" + u.Key,
+				Name = progressName,
+				Group = group,
+				Unit = "%",
+				Current = () => Percent(InvestedUpgradePoints(u), total),
+				Max = () => 100,
+				Ceiling = 100,
+				Hint = () => u.CurrentLevel < 0 ? "未开发" : "当前 " + Percent(InvestedUpgradePoints(u), total)
+					+ "%（开发 " + Mathf.Clamp(u.CurrentLevel, 0, max) + " / " + max + " 级）",
+			});
 		}
+	}
+
+	// ---- 进度类适配：修炼 / 炼丹 / 锻造不是直接一个数，投点数攒进度。
+	// 统一换算成「已投点数 ÷ 练满全部要的点数 × 100」，没开始是 0，练满是 100。
+
+	private static int Percent(int invested, int total)
+	{
+		if (total <= 0)
+		{
+			return 0;
+		}
+		return Mathf.Clamp(Mathf.RoundToInt(invested * 100f / total), 0, 100);
+	}
+
+	private static int TotalBookPoints(Book book)
+	{
+		int total = 0;
+		foreach (MartialLevelData level in book?.LevelData ?? new MartialLevelData[0])
+		{
+			if (level != null)
+			{
+				total += level.Points;
+			}
+		}
+		return total;
+	}
+
+	// 已投点数：练成的层全算，正在练的层按当前点数算
+	private static int InvestedBookPoints(Book book)
+	{
+		MartialLevelData[] levels = book?.LevelData ?? new MartialLevelData[0];
+		int count = Mathf.Clamp(book.CurrentMartialLevel, 0, levels.Length);
+		int invested = 0;
+		for (int i = 0; i < count; i++)
+		{
+			if (levels[i] != null)
+			{
+				invested += levels[i].Points;
+			}
+		}
+		if (count < levels.Length && levels[count] != null)
+		{
+			invested += Mathf.Min(book.CurrentLevelPoints, levels[count].Points);
+		}
+		return invested;
+	}
+
+	private static int TotalUpgradePoints(UpgradeItemData item)
+	{
+		int total = 0;
+		foreach (UpgradeItemLevel level in item?.UpgradeLevels ?? new UpgradeItemLevel[0])
+		{
+			if (level != null)
+			{
+				total += level.LevelPoints;
+			}
+		}
+		return total;
+	}
+
+	// 已投点数：开发完的级全算，正在开发的级按当前点数算；未开发（-1）是 0
+	private static int InvestedUpgradePoints(UpgradeItemData item)
+	{
+		UpgradeItemLevel[] levels = item?.UpgradeLevels ?? new UpgradeItemLevel[0];
+		int count = Mathf.Clamp(item.CurrentLevel, 0, levels.Length);
+		int invested = 0;
+		for (int i = 0; i < count; i++)
+		{
+			if (levels[i] != null)
+			{
+				invested += levels[i].LevelPoints;
+			}
+		}
+		if (item.CurrentLevel >= 0 && count < levels.Length && levels[count] != null)
+		{
+			invested += Mathf.Clamp(item.CurrentPoints, 0, levels[count].LevelPoints);
+		}
+		return invested;
 	}
 
 	private static void AddFacilities(List<MemoTarget> list, PlayerStatManagerData player)
