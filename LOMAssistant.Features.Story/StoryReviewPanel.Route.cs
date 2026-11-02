@@ -69,6 +69,10 @@ public partial class StoryReviewPanel
 	private static Color Gold => PanelTheme.Dark ? new Color(0.85f, 0.68f, 0.3f, 1f) : new Color(0.6f, 0.44f, 0.1f, 1f);
 
 	private RouteLayout _route;
+	/// <summary>路线图上拆出来的小站（按编号），只在路线图里有，游戏的任务数据里没有。</summary>
+	private readonly Dictionary<string, StoryMission> _routeParts = new Dictionary<string, StoryMission>(StringComparer.Ordinal);
+
+	private StoryMission RouteFind(string key) => key != null && _routeParts.TryGetValue(key, out StoryMission part) ? part : StoryAtlas.Find(key);
 	private int _routeBuiltFor = -1;
 	/// <summary>上一次画路线图的帧：隔了几帧才又画，就是刚切到这一页（或重新打开窗口）。</summary>
 	private int _routeShownFrame = -1;
@@ -96,8 +100,8 @@ public partial class StoryReviewPanel
 		{
 			_route = BuildRoute();
 			// 重建后按编号重新关联选中的站点，搜索结果也要使用新的索引。
-			_routePicked = _routePicked != null ? StoryAtlas.Find(_routePicked.Key) : null;
-			_routeAutoPicked = _routeAutoPicked != null ? StoryAtlas.Find(_routeAutoPicked.Key) : null;
+			_routePicked = _routePicked != null ? RouteFind(_routePicked.Key) : null;
+			_routeAutoPicked = _routeAutoPicked != null ? RouteFind(_routeAutoPicked.Key) : null;
 			_routeSide = _routeSide != null ? _route.Side.FirstOrDefault(s => s.Series == _routeSide.Series) : null;
 			_searchedFor = _flagSearchedFor = null;
 			_routeBuiltFor = StoryAtlas.Version;
@@ -239,6 +243,27 @@ public partial class StoryReviewPanel
 			last = d;
 		}
 
+		// 一个主线任务演好几节（4-5 接着演 4-6 到 4-8 这类）：后面几节各成一站，排在它后面；先在它和下一列之间留出位置
+		var parts = SplitSections(placed);
+		float partGap = layout.LabelWidth + Z(24);
+		foreach (var group in parts.GroupBy(kv => date[kv.Key].Value).OrderBy(g => g.Key))
+		{
+			int col = layout.Columns.FindIndex(c => c.Date == group.Key);
+			if (col < 0 || col + 1 >= layout.Columns.Count)
+			{
+				continue;
+			}
+			float need = (group.Max(kv => kv.Value.Count) + 1) * partGap - (layout.Columns[col + 1].X - layout.Columns[col].X);
+			if (need <= 0f)
+			{
+				continue;
+			}
+			for (int i = col + 1; i < layout.Columns.Count; i++)
+			{
+				layout.Columns[i] = (layout.Columns[i].X + need, layout.Columns[i].Date);
+			}
+		}
+
 		// 车道：先挑一条贯穿全程的主线放在第 0 道（每到一个岔口，走这一局走过的那条；都没走过就走后面还长的那条），
 		// 其余的站从主线上下两边就近找空车道，岔路的第一条接着沿用岔出去的那条车道，合流时回到主线
 		var children = edges.GroupBy(e => e.From).ToDictionary(g => g.Key, g => g.Select(e => e.To).Distinct().OrderBy(k => date[k] ?? int.MaxValue).ThenBy(k => k, StringComparer.Ordinal).ToList(), StringComparer.Ordinal);
@@ -269,7 +294,7 @@ public partial class StoryReviewPanel
 		}
 		// 名字按实际显示的宽度算，同一条车道上两站的名字不叠在一起
 		var nameStyle = new GUIStyle(_boxTitle) { fontSize = Mathf.Max(9, Mathf.RoundToInt(_boxTitle.fontSize * _routeZoom)), wordWrap = false };
-		var widths = placed.ToDictionary(m => m.Key, m => Mathf.Max(layout.LabelWidth * 0.6f, nameStyle.CalcSize(new GUIContent(TextConverter.ForDisplay("✓ " + Short(m.Title, 9)))).x), StringComparer.Ordinal);
+		var widths = placed.ToDictionary(m => m.Key, m => Mathf.Max(layout.LabelWidth * 0.6f, nameStyle.CalcSize(new GUIContent(TextConverter.ForDisplay("✓ " + Short(m.NumberedTitle, 9)))).x), StringComparer.Ordinal);
 		var usedWidth = new Dictionary<int, List<(float X, float W)>>();
 		bool Free(int l, float px, float pw) => !usedWidth.TryGetValue(l, out var xs) || xs.All(v => Mathf.Abs(v.X - px) >= (v.W + pw) / 2f + Z(14));
 		var lane = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -412,6 +437,7 @@ public partial class StoryReviewPanel
 			layout.Points[m.Key] = new Vector2(XOf(layout, date[m.Key].Value), top + (lane[m.Key] - minLane) * laneHeight + Z(20));
 		}
 		layout.MainBottom = top + (maxLane - minLane + 1) * laneHeight;
+		PlaceParts(layout, parts, partGap);
 
 		// 支线：每个任务组一颗胶囊，放在最早能触发的日期上，一行放不下就换行
 		float y = layout.MainBottom + Z(56);
@@ -443,7 +469,7 @@ public partial class StoryReviewPanel
 			side.Pill = new Rect(sx, y + row * Z(30), w, Z(24));
 			layout.Side.Add(side);
 		}
-		layout.Width = Mathf.Max(layout.Columns.Count > 0 ? layout.Columns[layout.Columns.Count - 1].X : 0, rows.DefaultIfEmpty(0).Max()) + Z(200);
+		layout.Width = Mathf.Max(Mathf.Max(layout.Columns.Count > 0 ? layout.Columns[layout.Columns.Count - 1].X : 0, layout.Points.Values.Select(v => v.x).DefaultIfEmpty(0).Max()), rows.DefaultIfEmpty(0).Max()) + Z(200);
 		layout.Height = y + rows.Count * Z(30) + Z(30);
 		return layout;
 	}
@@ -463,6 +489,129 @@ public partial class StoryReviewPanel
 		string named = first.Select(m => m.Desc).FirstOrDefault(d => d.Any(c => c >= 128))
 			?? first.Select(m => m.Summary).FirstOrDefault(d => d.Length > 0);
 		return named != null ? Short(named, 12) : title;
+	}
+
+	// 剧本编号「ch4_6_…」：第 4 章第 6 节，和任务名「4-6 …」的编号对得上
+	private static readonly System.Text.RegularExpressions.Regex SectionOf = new System.Text.RegularExpressions.Regex(@"^ch(\d+)_(\d+)(?:_|$)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+	/// <summary>
+	/// 主线任务按章节拆站：游戏只给任务起了名字、定了日期，一个任务常常接着演好几节（4-5 跟着大师兄演到 4-8）。
+	/// 和开始剧本同一章、编号在它后面的每一节各成一小站，按编号排；别的章节借用的剧本、开始那一节留在原来那站。
+	/// </summary>
+	private Dictionary<string, List<StoryMission>> SplitSections(List<StoryMission> placed)
+	{
+		_routeParts.Clear();
+		var result = new Dictionary<string, List<StoryMission>>(StringComparer.Ordinal);
+		var visited = new HashSet<string>(PlayerStatManagerData.Instance?.StoryKeyList ?? new List<string>(), StringComparer.Ordinal);
+		foreach (StoryMission m in placed)
+		{
+			System.Text.RegularExpressions.Match start = SectionOf.Match(m.StartScript);
+			if (!start.Success)
+			{
+				continue;
+			}
+			int chapter = int.Parse(start.Groups[1].Value), first = int.Parse(start.Groups[2].Value);
+			var sections = m.Scripts
+				.Select(name => (Name: name, Match: SectionOf.Match(name)))
+				.Where(x => x.Match.Success && int.Parse(x.Match.Groups[1].Value) == chapter && int.Parse(x.Match.Groups[2].Value) > first)
+				.GroupBy(x => int.Parse(x.Match.Groups[2].Value))
+				.OrderBy(g => g.Key)
+				.ToList();
+			if (sections.Count == 0)
+			{
+				continue;
+			}
+			var list = new List<StoryMission>();
+			foreach (var section in sections)
+			{
+				var names = section.Select(x => x.Name).OrderBy(ScriptOrder, StringComparer.Ordinal).ToList();
+				var scripts = names.Select(StoryScripts.Get).Where(x => x != null).ToList();
+				string legend = scripts.SelectMany(x => x.Records).Select(StoryScripts.Legend).FirstOrDefault(t => t.Length > 0) ?? "";
+				var part = new StoryMission
+				{
+					Key = m.Key + "/" + chapter + "-" + section.Key,
+					Series = m.Series,
+					SeriesTitle = m.SeriesTitle,
+					Main = true,
+					Desc = StoryMission.ChapterOf("ch" + chapter + "_" + section.Key) + "　" + (legend.Length > 0 ? Short(legend, 12) : m.Title),
+					Summary = legend,
+					When = m.When,
+					From = m.From,
+					To = m.To,
+					DisplayFrom = m.DisplayFrom,
+					DisplayTo = m.DisplayTo,
+					StartScript = names[0],
+					Scripts = names,
+					Read = StoryScripts.ReadPercent(scripts.SelectMany(x => x.Lines)),
+					Visited = scripts.Any(x => x.Records.Any(visited.Contains)),
+					Endings = StoryAtlas.Endings.Count(e => !e.Death && e.Ways.Any(w => names.Contains(w.Script, StringComparer.OrdinalIgnoreCase))),
+					PartOf = m,
+				};
+				list.Add(part);
+				_routeParts[part.Key] = part;
+			}
+			result[m.Key] = list;
+		}
+		return result;
+	}
+
+	// 剧本名里的数字按大小排：ch4_8_2 在 ch4_8_10 前面
+	private static string ScriptOrder(string name) => System.Text.RegularExpressions.Regex.Replace(name.ToLowerInvariant(), @"\d+", d => d.Value.PadLeft(4, '0'));
+
+	/// <summary>小站排在所属那站后面同一道上，一站接一站；后面几节里写明的下一个主线任务，改从那一节连过去。</summary>
+	private void PlaceParts(RouteLayout layout, Dictionary<string, List<StoryMission>> parts, float gap)
+	{
+		foreach (var pair in parts)
+		{
+			if (!layout.Points.TryGetValue(pair.Key, out Vector2 at))
+			{
+				continue;
+			}
+			List<StoryMission> list = pair.Value;
+			for (int i = 0; i < list.Count; i++)
+			{
+				layout.Points[list[i].Key] = new Vector2(at.x + (i + 1) * gap, at.y);
+				if (layout.Spine.Contains(pair.Key))
+				{
+					layout.Spine.Add(list[i].Key);
+				}
+			}
+			// 每个下一站由哪一节写明：那一节的剧本里有接到它的去处
+			string SourceOf(string target)
+			{
+				for (int i = list.Count - 1; i >= 0; i--)
+				{
+					if (list[i].Scripts.Any(name => StoryScripts.Get(name)?.Exits.Any(e => e.MainMission == target) == true))
+					{
+						return list[i].Key;
+					}
+				}
+				return pair.Key;
+			}
+			var edges = layout.Edges.ToList();
+			layout.Edges.Clear();
+			foreach (var e in edges)
+			{
+				if (e.From != pair.Key)
+				{
+					layout.Edges.Add(e);
+					continue;
+				}
+				// 按日期接的虚线从最后一节出去
+				string from = e.ByDate ? list[list.Count - 1].Key : SourceOf(e.To);
+				layout.Edges.Add((from, e.To, e.ByDate));
+				if (from != e.From && layout.EdgeLabels.TryGetValue((e.From, e.To), out string label))
+				{
+					layout.EdgeLabels.Remove((e.From, e.To));
+					layout.EdgeLabels[(from, e.To)] = label;
+				}
+			}
+			layout.Edges.Add((pair.Key, list[0].Key, false));
+			for (int i = 1; i < list.Count; i++)
+			{
+				layout.Edges.Add((list[i - 1].Key, list[i].Key, false));
+			}
+		}
 	}
 
 	/// <summary>日期 → 横坐标：落在两列之间的按旬数插进去。</summary>
@@ -543,7 +692,7 @@ public partial class StoryReviewPanel
 				{
 					continue;
 				}
-				StoryMission ma = StoryAtlas.Find(from), mb = StoryAtlas.Find(to);
+				StoryMission ma = RouteFind(from), mb = RouteFind(to);
 				bool walked = ma != null && mb != null && ma.Visited && mb.Visited;
 				// 岔开的线在出发的那一站后面就拐，合流的线在到的那一站前面才拐，看得出从哪分、到哪合
 				int outs = layout.Edges.Count(x => x.From == from), ins = layout.Edges.Count(x => x.To == to);
@@ -564,14 +713,14 @@ public partial class StoryReviewPanel
 		var upcoming = new HashSet<string>(NextStations(layout, StoryAtlas.CurrentMain), StringComparer.Ordinal);
 		foreach (var pair in layout.Points)
 		{
-			StoryMission m = StoryAtlas.Find(pair.Key);
+			StoryMission m = RouteFind(pair.Key);
 			Vector2 p = pair.Value;
 			var hit = new Rect(p.x - layout.LabelWidth / 2, p.y - Z(14), layout.LabelWidth, Z(66));
 			if (m == null || !hit.Overlaps(view))
 			{
 				continue;
 			}
-			bool dim = query.Length > 0 && !Matches(query, m.Title, m.Key, m.Place, m.Summary) || _romanceMissions != null && !_romanceMissions.Contains(m);
+			bool dim = query.Length > 0 && !Matches(query, m.NumberedTitle, m.Key, m.Place, m.Summary) || _romanceMissions != null && !_romanceMissions.Contains(m.PartOf ?? m);
 			if (repaint)
 			{
 				float rr = Z(9), alpha = dim ? 0.25f : 1f;
@@ -602,7 +751,7 @@ public partial class StoryReviewPanel
 				}
 				var label = new Rect(p.x - layout.LabelWidth / 2 - Z(20), p.y + Z(13), layout.LabelWidth + Z(40), Z(24));
 				// 结缘路线：设她结缘旗标的站，名字后面用朱砂色标出是哪一步（【认识】【告白·攻略】…）
-				string title = (m.Visited ? "<color=#2F6B3A>✓</color> " : "") + Short(m.Title, 9) + RomanceMark(m);
+				string title = (m.Visited ? "<color=#2F6B3A>✓</color> " : "") + Short(m.NumberedTitle, 9) + RomanceMark(m);
 				GUI.Label(label, dim ? "<color=#B5AA98>" + RichText.Strip(title) + "</color>" : title, new GUIStyle(name) { wordWrap = false });
 			}
 			if (GUI.Button(hit, GUIContent.none, GUIStyle.none))
@@ -619,7 +768,7 @@ public partial class StoryReviewPanel
 			{
 				continue;
 			}
-			bool dim = query.Length > 0 && !Matches(query, side.Title) && !side.Missions.Any(m => Matches(query, m.Title, m.Key, m.Place, m.Summary))
+			bool dim = query.Length > 0 && !Matches(query, side.Title) && !side.Missions.Any(m => Matches(query, m.NumberedTitle, m.Key, m.Place, m.Summary))
 				|| _romanceMissions != null && !side.Missions.Any(_romanceMissions.Contains);
 			if (repaint)
 			{
@@ -665,8 +814,13 @@ public partial class StoryReviewPanel
 	private void DrawMissionDetail(StoryMission m)
 	{
 		DrawRomanceOnMission(m);
-		GUILayout.Label((m.Main ? "主线" : m.SeriesTitle) + "　" + m.Key, _muted);
-		GUILayout.Label(m.Title, _heading);
+		GUILayout.Label((m.Main ? "主线" : m.SeriesTitle) + "　" + (m.PartOf?.Key ?? m.Key), _muted);
+		GUILayout.Label(m.NumberedTitle, _heading);
+		if (m.PartOf != null && GUILayout.Button(string.Format("属于主线任务「{0}」", m.PartOf.NumberedTitle), _button))
+		{
+			_routePicked = m.PartOf;
+			_routeDetailScroll = Vector2.zero;
+		}
 		if (m.Summary.Length > 0)
 		{
 			GUILayout.Label(m.Summary, _muted);
@@ -681,9 +835,10 @@ public partial class StoryReviewPanel
 		DrawNext(m);
 		if (GUILayout.Button("看剧情图", _primary, GUILayout.Height(S(38))))
 		{
-			OpenFlow(m);
+			// 拆出来的小站打开整个任务的剧情图，选中这一节开头
+			OpenFlow(m.PartOf ?? m, m.PartOf != null ? m.StartScript : null);
 		}
-		JumpButton(m, m.StartScript);
+		JumpButton(m.PartOf ?? m, m.StartScript);
 		string conditions = StoryAtlas.ConditionText(m);
 		if (conditions.Length > 0)
 		{
@@ -694,14 +849,16 @@ public partial class StoryReviewPanel
 		DrawStationOptions(m);
 		DrawSections(m);
 		DrawEntries(m);
-		var before = StoryAtlas.Missions.Where(x => x.Main && x.Next.Contains(m.Key)).ToList();
+		var before = _route != null && _route.Points.ContainsKey(m.Key)
+			? _route.Edges.Where(e => e.To == m.Key && !e.ByDate).Select(e => RouteFind(e.From)).Where(x => x != null).Distinct().ToList()
+			: StoryAtlas.Missions.Where(x => x.Main && x.Next.Contains(m.Key)).ToList();
 		if (before.Count > 0)
 		{
 			GUILayout.Space(S(10));
 			GUILayout.Label("从哪来", _heading);
 			foreach (StoryMission x in before)
 			{
-				if (GUILayout.Button("← " + x.Title, _button))
+				if (GUILayout.Button("← " + x.NumberedTitle, _button))
 				{
 					_routePicked = x;
 				}
@@ -730,13 +887,13 @@ public partial class StoryReviewPanel
 		{
 			foreach (string key in _route != null ? NextStations(_route, m.Key) : new List<string>())
 			{
-				StoryMission to = StoryAtlas.Find(key);
+				StoryMission to = RouteFind(key);
 				if (to != null && next.All(n => n.To != to))
 				{
 					next.Add((to, _route.EdgeLabels.TryGetValue((m.Key, key), out string label) ? label : "", false));
 				}
 			}
-			foreach (StoryMission to in m.Next.Select(StoryAtlas.Find).Where(x => x != null && next.All(n => n.To != x)))
+			foreach (StoryMission to in (m.PartOf != null || _routeParts.Values.Any(p => p.PartOf == m) ? new List<string>() : m.Next).Select(StoryAtlas.Find).Where(x => x != null && next.All(n => n.To != x)))
 			{
 				next.Add((to, "", false));
 			}
@@ -763,7 +920,7 @@ public partial class StoryReviewPanel
 		foreach (var (to, why, join) in next.Take(4))
 		{
 			GUILayout.BeginVertical(_card);
-			if (GUILayout.Button(join ? string.Format("走完接到主线「{0}」", to.Title) : "→ " + to.Title, new GUIStyle(_button) { alignment = TextAnchor.MiddleLeft, wordWrap = true }))
+			if (GUILayout.Button(join ? string.Format("走完接到主线「{0}」", to.NumberedTitle) : "→ " + to.NumberedTitle, new GUIStyle(_button) { alignment = TextAnchor.MiddleLeft, wordWrap = true }))
 			{
 				_routePicked = to;
 				_routeSide = null;
@@ -1010,7 +1167,7 @@ public partial class StoryReviewPanel
 		EnsureWrapStyles();
 		StoryMission m = s.Mission;
 		string detail = m.When + RomanceParts(s);
-		string text = (m.Visited ? "✓ " : "") + m.Title + "\n<size=" + _small.fontSize + ">" + detail + "</size>";
+		string text = (m.Visited ? "✓ " : "") + m.NumberedTitle + "\n<size=" + _small.fontSize + ">" + detail + "</size>";
 		if (GUILayout.Button(text, _wrapButton, GUILayout.Width(width)))
 		{
 			_routePicked = m;
@@ -1036,7 +1193,7 @@ public partial class StoryReviewPanel
 		GUILayout.Label(side.Title, _heading);
 		foreach (StoryMission m in side.Joins)
 		{
-			if (GUILayout.Button("走完接到主线「" + m.Title + "」", _button))
+			if (GUILayout.Button("走完接到主线「" + m.NumberedTitle + "」", _button))
 			{
 				_routePicked = m;
 				_routeSide = null;
@@ -1050,7 +1207,7 @@ public partial class StoryReviewPanel
 		{
 			GUILayout.Space(S(8));
 			GUILayout.BeginVertical(_card);
-			GUILayout.Label(m.Title + (m.Visited ? "　<color=#2F6B3A>✓ 走过</color>" : m == upcoming ? "　<color=#A3302A>下一步</color>" : ""), _label);
+			GUILayout.Label(m.NumberedTitle + (m.Visited ? "　<color=#2F6B3A>✓ 走过</color>" : m == upcoming ? "　<color=#A3302A>下一步</color>" : ""), _label);
 			GUILayout.Label(m.When + (m.Place.Length > 0 ? "　·　" + m.Place : "") + (m.Read != null ? $"　·　读过 {m.Read}%" : ""), _muted);
 			string conditions = StoryAtlas.ConditionText(m);
 			if (conditions.Length > 0)
@@ -1072,7 +1229,7 @@ public partial class StoryReviewPanel
 	/// <summary>从别的任务接进来的一处：「从「某任务」：选… → 如果…」。</summary>
 	private static string EntryText(StoryEntry e)
 	{
-		string from = (e.From.Main ? "主线" : "支线") + "「" + TextConverter.ForDisplay(e.From.Title) + "」";
+		string from = (e.From.Main ? "主线" : "支线") + "「" + TextConverter.ForDisplay(e.From.NumberedTitle) + "」";
 		return OnPaper(TextConverter.ForDisplay("从" + from + "接进来") + (e.Path.Count > 0 ? "：" + string.Join(" → ", e.Path.Select(step => StoryScripts.Describe(step, TextConverter.ForDisplay)).ToArray()) : ""));
 	}
 
@@ -1198,7 +1355,7 @@ public partial class StoryReviewPanel
 		foreach (var (script, snippet) in _searchHits)
 		{
 			StoryAtlas.Owner.TryGetValue(script, out StoryMission m);
-			string where = m != null ? (m.Main ? "主线" : m.SeriesTitle) + "「" + Short(m.Title, 14) + "」" : script;
+			string where = m != null ? (m.Main ? "主线" : m.SeriesTitle) + "「" + Short(m.NumberedTitle, 14) + "」" : script;
 			if (GUILayout.Button($"<size={Mathf.RoundToInt(14 * _scale)}><color=#73644F>{where}</color></size>\n{snippet}", new GUIStyle(_button) { alignment = TextAnchor.MiddleLeft, wordWrap = true, richText = true }) && m != null)
 			{
 				OpenFlow(m, script);

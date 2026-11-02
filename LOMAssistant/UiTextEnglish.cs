@@ -1169,6 +1169,7 @@ public static class UiTextEnglish
 		["某些条件下：{0}"] = "Under some conditions: {0}",
 		["一定触发：{0}"] = "Always: {0}",
 		["随时存档只支持游戏 1.0.6001 及以后的版本（当前 {0}），已停用。"] = "Save anywhere needs game version 1.0.6001 or later (this is {0}), so it is off.",
+		["序-{0}"] = "Prologue {0}",
 	};
 
 	/// <summary>设置说明（配置名 → 英文）。</summary>

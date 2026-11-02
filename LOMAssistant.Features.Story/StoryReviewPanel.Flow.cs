@@ -141,7 +141,7 @@ public partial class StoryReviewPanel
 		var first = members[0];
 		// 同一开场兼有地点入口和自动入口时，标题取地点入口，触发方式留在各行。
 		if (members.All(m => m.StartScript == first.StartScript)) first = members.FirstOrDefault(m => m.Position != Mortal.Core.PositionType.無) ?? first;
-		return members.Length > 1 && !first.Main && first.SeriesTitle != first.Series ? first.SeriesTitle : first.Title;
+		return members.Length > 1 && !first.Main && first.SeriesTitle != first.Series ? first.SeriesTitle : first.NumberedTitle;
 	}
 
 	private static string FlowWhen(StoryMission mission)

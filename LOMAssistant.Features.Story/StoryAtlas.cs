@@ -50,6 +50,8 @@ public sealed class StoryMission
 	public List<StoryEntry> Entries = new List<StoryEntry>();
 	/// <summary>主线：剧本里明写的下一个主线任务（Mission("Main", …)），按日期往后的才算。</summary>
 	public List<string> Next = new List<string>();
+	/// <summary>路线图把一个主线任务按章节拆开时，后面几节各成一站：这些小站所属的任务；游戏数据里的任务是 null。</summary>
+	public StoryMission PartOf;
 	/// <summary>这个任务的剧本里第一条剧情记录，用作标题旁的一句话简介。</summary>
 	public string Summary = "";
 	public string Opening = "";
@@ -59,12 +61,26 @@ public sealed class StoryMission
 		: Summary.Length > 0 ? (Summary.Length > 16 ? Summary.Substring(0, 16) + "…" : Summary) : Main ? ChapterOf(StartScript) ?? Key
 		: Opening.Length > 0 ? (Opening.Length > 16 ? Opening.Substring(0, 16) + "…" : Opening) : SeriesTitle;
 
+	/// <summary>
+	/// 路线图、剧情图的标题：游戏没给编号的主线任务（「西武林盟」「集思广益」这类），前面按开始剧本补上「第几章-第几节」；
+	/// 和名字之间用全角空格隔开，翻译时编号和任务名分开查表。
+	/// </summary>
+	public string NumberedTitle
+	{
+		get
+		{
+			string title = Title, number = Main && PartOf == null ? ChapterOf(StartScript) : null;
+			return number == null || title.StartsWith(number, StringComparison.Ordinal) || title.Length > 0 && char.IsDigit(title[0]) ? title : number + "　" + title;
+		}
+	}
+
 	private static readonly System.Text.RegularExpressions.Regex Chapter = new System.Text.RegularExpressions.Regex(@"^ch(\d+)_(\d+)");
 
-	private static string ChapterOf(string script)
+	/// <summary>剧本「ch7_5_…」的章节编号「7-5」；序章（ch0）写「序-5」。不是章节剧本返回 null。</summary>
+	public static string ChapterOf(string script)
 	{
 		var m = Chapter.Match(script ?? "");
-		return m.Success ? m.Groups[1].Value + "-" + m.Groups[2].Value : null;
+		return m.Success ? (m.Groups[1].Value == "0" ? "序" : m.Groups[1].Value) + "-" + m.Groups[2].Value : null;
 	}
 }
 
