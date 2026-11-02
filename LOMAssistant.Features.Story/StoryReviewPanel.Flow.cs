@@ -332,7 +332,9 @@ public partial class StoryReviewPanel
 
 	/// <summary>线上的短标签：这条路最后一步分岔。</summary>
 	/// <summary>线上的标签：这条路上的每一步分岔，用「→」连起来。</summary>
-	private static string LinkLabel(StoryExit exit) => exit.Path.Count == 0 ? (exit.AfterScene ? "战斗后" : "") : string.Join(" → ", exit.Path.Select(StepLabel).ToArray());
+	private static string LinkLabel(StoryExit exit) => exit.Path.Count == 0 ? Lead(exit) : string.Join(" → ", exit.Path.Select(StepLabel).ToArray());
+
+	private static string Lead(StoryExit exit) => StoryScripts.Travels(exit) ? "路上随机事件后" : exit.AfterScene ? "战斗后" : "";
 
 	/// <summary>线上的短标签：选项写「选项文字」，掷骰写「掷出 &lt;33」，条件写「如果 小梅好感>=35」。</summary>
 	private static string StepLabel(StoryStep step)
@@ -495,7 +497,7 @@ public partial class StoryReviewPanel
 					{
 						to = Terminal(from, "map", "回到地图", false);
 					}
-					else if (exit.EventPool.Length > 0)
+					else if (exit.EventPool.Length > 0 && !StoryScripts.Travels(exit))
 					{
 						to = Terminal(from, "pool:" + exit.EventPool, "随机事件", false);
 					}
@@ -719,7 +721,7 @@ public partial class StoryReviewPanel
 	private float InPort(FlowBox b, float height) => b.Terminal ? height / 2f : S(22);
 
 	/// <summary>行里的短说明：这条路上每一步分岔，选项写选项文字，掷骰写范围，条件只写个大概（完整的悬停看）。</summary>
-	private static string ShortLabel(StoryExit exit) => exit.Path.Count == 0 ? (exit.AfterScene ? "战斗后" : "接着") : string.Join(" · ", exit.Path.Select(StepShort).ToArray());
+	private static string ShortLabel(StoryExit exit) => exit.Path.Count == 0 ? (Lead(exit).Length > 0 ? Lead(exit) : "接着") : string.Join(" · ", exit.Path.Select(StepShort).ToArray());
 
 	// 与 StoryScripts.IsPrefix 使用相同的分岔身份；转义分隔符，避免不同 key 拼成相同路径。
 	private static string FlowPathKey(IEnumerable<StoryStep> path) => string.Join("|", path.Select(step =>

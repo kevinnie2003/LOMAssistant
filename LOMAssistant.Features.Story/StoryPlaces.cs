@@ -122,7 +122,7 @@ internal static class StoryPlaces
 				StoryScript script = View(StoryScripts.Get(name));
 				if (script == null) continue;
 				seen.Add(name);
-				foreach (StoryExit exit in script.Exits.Where(e => !e.ToMap && !e.ToTitle && e.EventPool.Length == 0 && e.Target.Length > 0)) todo.Enqueue(StoryScripts.FlowTarget(exit));
+				foreach (StoryExit exit in script.Exits.Where(e => !e.ToMap && !e.ToTitle && (e.EventPool.Length == 0 || StoryScripts.Travels(e)) && StoryScripts.FlowTarget(e).Length > 0)) todo.Enqueue(StoryScripts.FlowTarget(exit));
 			}
 			var scripts = seen.Select(n => View(StoryScripts.Get(n))).ToList();
 			if (!scripts.Any(s => s.Talk.Count > 0)) continue;

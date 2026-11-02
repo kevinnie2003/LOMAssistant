@@ -364,7 +364,7 @@ public static class StoryAtlas
 				seen.Add(name);
 				foreach (StoryExit exit in script.Exits)
 				{
-					if (exit.Target.Length > 0 && !exit.ToMap && !exit.ToTitle && exit.EventPool.Length == 0)
+					if (StoryScripts.FlowTarget(exit).Length > 0 && !exit.ToMap && !exit.ToTitle && (exit.EventPool.Length == 0 || StoryScripts.Travels(exit)))
 					{
 						todo.Enqueue(StoryScripts.FlowTarget(exit));
 					}

@@ -400,8 +400,11 @@ public static class StoryScripts
 	}
 
 	/// <summary>只解析显式设置的旅行续接，不读取运行中的旅行状态，也不改写回放用的 Target。</summary>
-	internal static string FlowTarget(StoryExit exit) => exit.TravelTarget.Length > 0 && Get(exit.Target)?.TravelForward == true
+	internal static string FlowTarget(StoryExit exit) => exit.TravelTarget.Length > 0 && (Travels(exit) || Get(exit.Target)?.TravelForward == true)
 		? exit.TravelTarget : exit.Target;
+
+	/// <summary>赶路时抽路上的随机事件：事件演完照样接到赶路前记下的那段，剧情没在这里断。</summary>
+	internal static bool Travels(StoryExit exit) => exit.EventPool.Length > 0 && exit.TravelTarget.Length > 0;
 
 	/// <summary>按当前所在的分岔记一个去处；同一条路上的「接到剧本」和「推进主线」合成一条。</summary>
 	private static void AddExit(StoryScript script, List<Block> blocks, Dictionary<string, (string Kind, Dictionary<int, StoryStep> Rows)> choices,
@@ -602,7 +605,7 @@ public static class StoryScripts
 	internal static string Describe(StoryExit exit, Func<string, string> format)
 	{
 		var parts = exit.Path.Select(step => Describe(step, format)).ToList();
-		string where = exit.ToTitle ? format("回到标题（结局）") : exit.ToMap ? format("回到地图") : exit.EventPool.Length > 0 ? format("随机事件") : StoryPlaces.IsReturn(exit.Target) ? StoryPlaces.ReturnText(exit.Target, format) : exit.Target.Length > 0 ? string.Format(format(exit.AfterScene ? "战斗之后接到「{0}」" : "接到「{0}」"), format(SegmentName(exit.Target))) : "";
+		string where = exit.ToTitle ? format("回到标题（结局）") : exit.ToMap ? format("回到地图") : Travels(exit) ? string.Format(format("路上随机事件后接到「{0}」"), format(SegmentName(exit.TravelTarget))) : exit.EventPool.Length > 0 ? format("随机事件") : StoryPlaces.IsReturn(exit.Target) ? StoryPlaces.ReturnText(exit.Target, format) : exit.Target.Length > 0 ? string.Format(format(exit.AfterScene ? "战斗之后接到「{0}」" : "接到「{0}」"), format(SegmentName(exit.Target))) : "";
 		if (exit.MainMission.Length > 0)
 		{
 			StoryMission mission = StoryAtlas.Find(exit.MainMission);
