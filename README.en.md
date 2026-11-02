@@ -32,6 +32,7 @@ The zip already contains BepInEx.
 | F3 | AI companion tab |
 | F8 | Settings; on the save screen, edit the note of the selected save |
 | F9 | Stats page |
+| F10 | Memo window |
 | F5 / F7 / F6 | Save-anywhere: new save / load the latest / list all |
 | F2 | Skip read dialogue until an unread line |
 | F4 | Roll back to before the last story check |
@@ -92,7 +93,7 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/option-hint.webp" width="640" alt="Options followed by their results and unlock conditions">
 
-- **Pick random events** (off by default): when working, wandering and so on, choose which event triggers, or roll with the normal odds. Events you haven't seen yet are marked **Not seen**. Branch checks that roll a random number also let you pick the path. Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off. With **Force events whose conditions aren't met** on in settings (only the **All on** preset turns it on), those events are also folded below with what they need; clicking one triggers it regardless, without changing flags.
+- **Pick random events** (off by default): when working, wandering and so on, see each event's odds and changes (changes that depend on a condition show the condition), then choose which one triggers or roll with the normal odds. Events you haven't seen yet are marked **Not seen**. Branch checks that roll a random number also let you pick the path. Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off. With **Force events whose conditions aren't met** on in settings (only the **All on** preset turns it on), those events are also folded below with what they need; clicking one triggers it regardless, without changing flags.
 
   <img src="media/event-picker.webp" width="480" alt="Pick random events: the events that can trigger, their odds and changes">
 
@@ -100,6 +101,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 - **Map event hints**: hover over a building on the training map to see its main and side quests (can they trigger, conditions) and the odds of its random events; buildings with a quest you can trigger now stay lit. Turn on "Map hints: triggerable only" in settings to list only the quests that would trigger now; the rest are only counted. Inside a building, hover over an option such as chopping wood or training to see the random events it can roll, their odds and which you have not seen; the same goes for moving and peddling in the Go out list.
 - **Time-limited story reminder**: when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left, until when, and where to go to trigger it; the Now tab marks these quests too. Assist and higher presets turn it on.
+- **Memos** (F10): a small window floating over the game that keeps track of "get this done by that date". Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline; the window shows the current value, progress and periods left, and notes at its top when a goal is met, stops being met, is about to be due or is overdue. It can be dragged, resized and collapsed.
 - **Item uses** (off by default, may reveal quest names): item descriptions in the bag and shops end with what using the item does and which stories check for it or take it. Setting: "Show item uses".
 - **Branch panel** (off by default, spoilers): lists the conditions of each branch check on the left, met in green and unmet in red.
 

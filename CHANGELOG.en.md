@@ -2,6 +2,18 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.4.0 (2026-11-02)
+
+- **Memos** (new, F10 to show or hide): a small window floating over the game that keeps track of "get this done by that date". Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline; the window shows the current value, progress and periods left at all times, and notes at its top when a goal is met, stops being met, is about to be due or is overdue. It can be dragged, resized and collapsed, and its background follows **Tooltip opacity** in the settings (PR #40).
+- **Speed up battles too** (new setting, off by default): game speed also applies to battles. The UI now calls team battles "battles", as the game does.
+- **Older game versions**: the mod also runs on game versions from before the story log rework (1.0.6000.x); option hints and the Coffee Companion window no longer throw errors there. Save anywhere is turned on there only after the save and load code checks out; otherwise it says it needs 1.0.6001 or later.
+- **Pick random events**: besides the changes each event always makes, it now also lists the changes that depend on conditions, one branch per line with the condition and its current value; random events on the Now tab show the conditions too.
+- **Time-limited story reminder**: stories whose time limit is written into their conditions, rather than set as a trigger window, are reminded too.
+- **Story map**: quest trigger conditions are complete, and conditions are joined with "and" (they used to read "or"); a quest that triggers in several places is shown as one; connecting lines are laid out more clearly (PR #39).
+- **Route map**: fixed the game freezing for a few seconds on the first search.
+- **Numbers**: fixed numbers on the duel status screen and elsewhere wrapping to a second line and being cut off at lower resolutions.
+- **Conflict warning**: when another mod changes the same game code, the warning now says some features may not work and suggests removing it if something goes wrong, instead of telling you to remove it.
+
 ## 3.3.3 (2026-11-01)
 
 - **Time-limited story reminder** (new setting; Assist and higher presets turn it on): when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left, until when, and where to go to trigger it; the Now tab marks these quests too.
