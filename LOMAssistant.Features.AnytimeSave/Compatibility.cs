@@ -28,8 +28,17 @@ public partial class AnytimeSave
 			string managed = Path.Combine(Paths.GameRootPath, "Mortal_Data", "Managed");
 			coreHash = HashFile(Path.Combine(managed, "Mortal.Core.dll"));
 			storyHash = HashFile(Path.Combine(managed, "Mortal.Story.dll"));
-			string contract = ReadResource("contract.tsv.gz");
+			// 1.0.6001 以前的游戏（回想改版前的旧版）存读档、掷骰的代码不一样：对照改版前（1.0.6000.5）的契约。
+			// 随时存档自己的代码两边都能用（回想只在新版读，见 StoryLogCompat）
+			var build = System.Text.RegularExpressions.Regex.Match(Application.version ?? "", @"(\d+)\.(\d+)\.(\d+)");
+			bool old = build.Success && new Version(int.Parse(build.Groups[1].Value), int.Parse(build.Groups[2].Value), int.Parse(build.Groups[3].Value)) < new Version(1, 0, 6001);
+			string contract = ReadResource(old ? "contract-6000.tsv.gz" : "contract.tsv.gz");
 			var differences = CompatibilityContract.Differences(CompatibilityContract.Parse(contract), CompatibilityContract.Snapshot(managed));
+			if (differences.Count != 0 && old)
+			{
+				foreach (string difference in differences) FileLogger.LogError("[随时存档] 和改版前的契约不同：" + difference);
+				return "随时存档只支持游戏 1.0.6001 及以后的版本（当前 " + Application.version + "），已停用。";
+			}
 			if (differences.Count != 0)
 			{
 				foreach (string difference in differences) FileLogger.LogError("[随时存档] 游戏改动：" + difference);

@@ -202,7 +202,7 @@ public partial class AnytimeSave : MonoBehaviour
 		var game = JsonUtility.FromJson<GameSave>(data.gameJson);
 		ApplyData.Invoke(SaveSystem.Instance, new object[] { game });
 		// 回想（1.0.6001 起写进存档）：游戏读档时在 ExecuteLoadGameData 外面另读，这里照做，不然回到的这一刻之后的记录还留着、重演时再记一遍
-		StoryLogData.Load(game);
+		StoryLogCompat.Load(game);
 		if (!string.IsNullOrEmpty(data.nativeSlot)) SaveSystem.Instance.SetSlot(data.nativeSlot);
 		PlayerStatManagerData.Instance.SetStoryScript(atTarget || data.scene == "Free" ? data.currentScript : data.rootScript);
 		if (atTarget) PlayerStatManagerData.Instance.SetStartScript(game.StartStoryScript);

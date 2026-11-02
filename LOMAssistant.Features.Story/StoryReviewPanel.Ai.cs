@@ -1220,19 +1220,11 @@ public partial class StoryReviewPanel
 	{
 		try
 		{
-			var entries = Mortal.Core.StoryLogData.Entries;
-			for (int i = entries.Count - 1; i >= 0; i--)
+			// 旧版游戏没有这份回想，当旁白
+			string speaker = StoryLogCompat.LastSpeaker();
+			if (!string.IsNullOrEmpty(speaker))
 			{
-				Mortal.Core.StoryLogEntry e = entries[i];
-				if (e.Type != Mortal.Core.StoryLogType.Story)
-				{
-					continue;
-				}
-				if (string.IsNullOrEmpty(e.Speaker))
-				{
-					return "旁白";
-				}
-				string name = Mortal.Core.LocalizationManager.Instance.LocaleResolver.GetString("Character/" + e.Speaker);
+				string name = Mortal.Core.LocalizationManager.Instance.LocaleResolver.GetString("Character/" + speaker);
 				name = TextConverter.ToSimplified(RichText.Strip(name ?? "")).Trim();
 				return name.Length > 0 && !name.StartsWith("Character/") ? name : "旁白";
 			}

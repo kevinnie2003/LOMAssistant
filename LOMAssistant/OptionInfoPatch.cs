@@ -592,36 +592,8 @@ internal static class OptionInfoPatch
 		}
 	}
 
-	// 判定记录写进游戏的回想（1.0.6001 起是 StoryLogData；旧的 Fungus NarrativeLog 不再显示）。
-	// 不写进存档：读档后清掉，Mod 卸掉后也不会在玩家存档里留东西。文字记录游戏会用单独的颜色显示
-	// 本 Mod 写进回想的文字（认出自己的记录用，回想最多 300 条，这里留多一点）
-	private static readonly HashSet<string> _ours = new HashSet<string>();
-	private static readonly AccessTools.FieldRef<StoryLogEntryView, Text> LogContent = AccessTools.FieldRefAccess<StoryLogEntryView, Text>("_contentText");
-	private static readonly AccessTools.FieldRef<StoryLogEntryView, int> LogChoiceSize = AccessTools.FieldRefAccess<StoryLogEntryView, int>("_choiceFontSize");
-
-	// 回想里的判定记录用游戏选项那一行的小字号，不和对白一样大（游戏每次显示条目都先把字号重置，再按类型改）
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(StoryLogEntryView), nameof(StoryLogEntryView.Setup))]
-	public static void LogEntrySetup_Postfix(StoryLogEntryView __instance, StoryLogEntry entry)
-	{
-		try
-		{
-			if (entry == null || entry.Type != StoryLogType.Text || entry.Text == null || !_ours.Contains(entry.Text))
-			{
-				return;
-			}
-			Text content = LogContent(__instance);
-			int small = LogChoiceSize(__instance);
-			if (content != null)
-			{
-				content.fontSize = small > 0 && small < content.fontSize ? small : Mathf.RoundToInt(content.fontSize * 0.72f);
-			}
-		}
-		catch (Exception ex)
-		{
-			FileLogger.Log("[回想] 判定记录改字号失败（已忽略）：" + ex.Message);
-		}
-	}
+	// 判定记录写进游戏的回想（1.0.6001 起是 StoryLogData，更早的版本是 Fungus 的 NarrativeLog，见 StoryLogCompat）。
+	// 1.0.6001 起不写进存档：读档后清掉，Mod 卸掉后也不会在玩家存档里留东西。文字记录游戏会用单独的颜色显示
 
 	// 同一旬里内容一样的记录只写一次：养成地图每刷新一次地点事件、每做一次行动，游戏都会把同样的条件再查一遍
 	private static readonly HashSet<string> _logged = new HashSet<string>();
@@ -638,22 +610,16 @@ internal static class OptionInfoPatch
 		GameTime now = PlayerStatManagerData.Instance?.GameTime;
 		string key = (ReferenceEquals(now, null) ? "" : now.Year + "-" + now.Month + "-" + (int)now.Stage + "|") + text;
 		// 读档时游戏清掉了不存档的记录（回想条数变少），去重表也跟着清
-		if (_logged.Count > 2000 || StoryLogData.Entries.Count < _loggedAt)
+		if (_logged.Count > 2000 || StoryLogCompat.Count < _loggedAt)
 		{
 			_logged.Clear();
 		}
 		if (text.Length > 0 && _logged.Add(key))
 		{
 			// 不经过本 Mod 界面的翻译，这里先换成界面语言（繁体、韩语、日语）
-			string shown = TextConverter.ForDisplay(text);
-			if (_ours.Count > 1000)
-			{
-				_ours.Clear();
-			}
-			_ours.Add(shown);
-			StoryLogData.AddText(shown, false);
+			StoryLogCompat.AddText(TextConverter.ForDisplay(text));
 		}
-		_loggedAt = StoryLogData.Entries.Count;
+		_loggedAt = StoryLogCompat.Count;
 	}
 }
 
