@@ -40,19 +40,85 @@ public class DeadlineReminder : MonoBehaviour
 		}
 	}
 
-	/// <summary>这一步离触发时间结束还剩几旬（0 是这一旬最后机会）；不限时间、还没开始或已经过了的返回 null。</summary>
+	/// <summary>
+	/// 这一步离触发时间结束还剩几旬（0 是这一旬最后机会）；不限时间、还没开始或已经过了的返回 null。
+	/// 时限有两种写法：任务本身的触发时间段；或者没设时间段、写在条件里（开局的「早操」「报复飞石帮」是「目前时间 ≤ 第一年五月下旬」）。两个都有取早的。
+	/// </summary>
 	internal static int? Left(MissionCheckData check)
 	{
-		if (check == null || !check.GetFieldValue<bool>("_dayCheck") || !Window(check, out GameTime start, out GameTime end))
+		if (check == null)
 		{
 			return null;
 		}
-		int? now = StoryAtlas.Rounds(PlayerStatManagerData.Instance?.GameTime), from = StoryAtlas.Rounds(start), to = StoryAtlas.Rounds(end);
-		if (now == null || to == null || now > to || (from != null && now < from))
+		int? left = null;
+		if (check.GetFieldValue<bool>("_dayCheck") && Window(check, out GameTime start, out GameTime end))
+		{
+			int? now = StoryAtlas.Rounds(PlayerStatManagerData.Instance?.GameTime), from = StoryAtlas.Rounds(start), to = StoryAtlas.Rounds(end);
+			if (now == null || to == null || now > to || (from != null && now < from))
+			{
+				return null;
+			}
+			left = to - now;
+		}
+		int? byCondition = ConditionLeft(check);
+		if (byCondition != null && byCondition >= 0)
+		{
+			left = left == null ? byCondition : System.Math.Min(left.Value, byCondition.Value);
+		}
+		return left;
+	}
+
+	// 条件里「目前时间 ≤ 某天」「某天 ≥ 目前时间」（还有 <、>、=）给的截止：还剩几旬；没有这种条件返回 null。
+	// 用「或」连起来的一组条件单看一条定不了截止，跳过
+	private static int? ConditionLeft(MissionCheckData check)
+	{
+		GameTimeData current = PlayerStatManagerData.Instance?.GetFieldValue<GameTimeData>("_gameTimeData");
+		if (current == null)
 		{
 			return null;
 		}
-		return to - now;
+		int? left = null;
+		foreach (ConditionResultItem item in check.GetFieldValue<ConditionResultItem[]>("_conditions") ?? new ConditionResultItem[0])
+		{
+			List<StatCompareItem> compares = item?.GetFieldValue<List<StatCompareItem>>("_items");
+			if (compares == null || (compares.Count > 1 && item.GetFieldValue<LogicOperatorType>("_logicOp") != LogicOperatorType.AND))
+			{
+				continue;
+			}
+			foreach (StatCompareItem compare in compares)
+			{
+				StatGroupVariable a = compare.GetFieldValue<StatGroupVariable>("_value1"), b = compare.GetFieldValue<StatGroupVariable>("_value2");
+				StatCompareType op = compare.GetFieldValue<StatCompareType>("_compareOp");
+				int? end = null, now = null;
+				if (IsTime(a, current, true) && IsTime(b, current, false))
+				{
+					now = a.GetResult();
+					end = op == StatCompareType.LessEqual || op == StatCompareType.Equal ? b.GetResult() : op == StatCompareType.Less ? b.GetResult() - 1 : (int?)null;
+				}
+				else if (IsTime(b, current, true) && IsTime(a, current, false))
+				{
+					now = b.GetResult();
+					end = op == StatCompareType.GreaterEqual || op == StatCompareType.Equal ? a.GetResult() : op == StatCompareType.Greater ? a.GetResult() - 1 : (int?)null;
+				}
+				if (end != null)
+				{
+					left = left == null ? end - now : System.Math.Min(left.Value, end.Value - now.Value);
+				}
+			}
+		}
+		return left;
+	}
+
+	// 只由一个游戏时间组成的数值：current 为 true 时要的是玩家现在的时间，false 时要的是某个固定的日子
+	private static bool IsTime(StatGroupVariable variable, GameTimeData current, bool wantCurrent)
+	{
+		List<StatValueReference> refs = variable?.GetFieldValue<List<StatValueReference>>("_value");
+		if (refs == null || refs.Count != 1 || refs[0] == null || refs[0].CheckType != StatCheckType.遊戲時間)
+		{
+			return false;
+		}
+		GameTimeData time = refs[0].GetFieldValue<GameTimeData>("_gameTime");
+		return time != null && ReferenceEquals(time, current) == wantCurrent;
 	}
 
 	// 某一旬触发的、一段时间里触发的有截止时间；每月一次的没有
@@ -103,7 +169,8 @@ public class DeadlineReminder : MonoBehaviour
 	private static void Add(List<Item> list, MissionCheckData check, string title, bool main)
 	{
 		int? left = Left(check);
-		if (left == null || left > Ahead || string.IsNullOrEmpty(check.StartScript) || !Window(check, out _, out GameTime end))
+		int? now = StoryAtlas.Rounds(PlayerStatManagerData.Instance?.GameTime);
+		if (left == null || left > Ahead || now == null || string.IsNullOrEmpty(check.StartScript))
 		{
 			return;
 		}
@@ -115,7 +182,7 @@ public class DeadlineReminder : MonoBehaviour
 		{
 			Title = TextConverter.ToSimplified(name.Length > 0 ? name : title),
 			Place = place == "無" ? "" : place,
-			Until = StoryAtlas.DateText(end),
+			Until = StoryAtlas.DateText(now.Value + left.Value),
 			Left = left.Value,
 			Main = main,
 		});
