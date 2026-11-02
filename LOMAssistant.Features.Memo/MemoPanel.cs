@@ -55,6 +55,7 @@ internal sealed class MemoPanel : MonoBehaviour
 	private GUIStyle _rowButton;
 	private GUIStyle _rowButtonSelected;
 	private GUIStyle _field;
+	private GUIStyle _numField;
 	private GUIStyle _primary;
 	private Vector2 _scroll;
 	private Vector2 _editScroll;
@@ -73,6 +74,8 @@ internal sealed class MemoPanel : MonoBehaviour
 	private int _editYear = 1;
 	private int _editMonth = 1;
 	private int _editStage = 1;
+	private string _editYearText = "1";
+	private string _editMonthText = "1";
 	private bool _editDeadline;
 	private MemoItem _confirmDelete;
 
@@ -219,6 +222,10 @@ internal sealed class MemoPanel : MonoBehaviour
 		_rowButtonSelected.normal.background = _rowButtonSelected.hover.background;
 		_field = PanelTheme.Field(scale, 13);
 		_field.normal.textColor = _field.focused.textColor = _field.hover.textColor = PanelTheme.ToastText;
+		_numField = PanelTheme.Field(scale, 12);
+		_numField.alignment = TextAnchor.MiddleCenter;
+		_numField.padding = new RectOffset(Mathf.RoundToInt(3f * scale), Mathf.RoundToInt(3f * scale), Mathf.RoundToInt(2f * scale), Mathf.RoundToInt(2f * scale));
+		_numField.normal.textColor = _numField.focused.textColor = _numField.hover.textColor = PanelTheme.ToastText;
 		_primary = PanelTheme.ToastButton(scale, 14);
 		_primary.normal.background = PanelTheme.Framed(new Color(0.36f, 0.15f, 0.12f, 0.95f), FrameEdge);
 	}
@@ -676,9 +683,9 @@ internal sealed class MemoPanel : MonoBehaviour
 
 	private void DrawDateSteppers(ref Rect r)
 	{
-		Stepper(ref r, "年", 16f * _scale, ref _editYear, 1, 99, 38f * _scale);
-		Stepper(ref r, "月", 16f * _scale, ref _editMonth, 1, 12, 32f * _scale);
-		Label(ref r, "旬", 16f * _scale);
+		Stepper(ref r, "年", ref _editYear, ref _editYearText, 1, 99);
+		Stepper(ref r, "月", ref _editMonth, ref _editMonthText, 1, 12);
+		Label(ref r, "旬", 12f * _scale);
 		string[] stages = { "上", "中", "下" };
 		for (int i = 0; i < stages.Length; i++)
 		{
@@ -711,20 +718,37 @@ internal sealed class MemoPanel : MonoBehaviour
 		r.y += 24f * _scale;
 	}
 
-	private void Stepper(ref Rect r, string label, float labelWidth, ref int value, int min, int max, float width)
+	// 年 / 月调节器：－、数字框（直接打字，越界自动夹回范围）、＋；按钮和快捷日期都会把新值写回数字框
+	private void Stepper(ref Rect r, string label, ref int value, ref string text, int min, int max)
 	{
-		Label(ref r, label, labelWidth);
-		Rect valueRect = new Rect(r.x, r.y, width, 22f * _scale);
-		if (GUI.Button(valueRect, value.ToString(), _button))
-		{
-			value = value >= max ? min : value + 1;
-		}
-		Rect down = new Rect(r.x + width + 2f * _scale, r.y, 22f * _scale, 22f * _scale);
-		if (GUI.Button(down, "－", _button))
+		Label(ref r, label, 12f * _scale);
+		float h = 22f * _scale;
+		float bw = 20f * _scale;
+		Rect minus = new Rect(r.x, r.y, bw, h);
+		Rect field = new Rect(minus.xMax + 2f * _scale, r.y - 1f * _scale, 30f * _scale, h + 2f * _scale);
+		Rect plus = new Rect(field.xMax + 2f * _scale, r.y, bw, h);
+		if (GUI.Button(minus, "－", _rowButton))
 		{
 			value = value <= min ? max : value - 1;
+			text = value.ToString();
+			GUIUtility.keyboardControl = 0;
 		}
-		r.x += width + 34f * _scale;
+		if (GUI.Button(plus, "＋", _rowButton))
+		{
+			value = value >= max ? min : value + 1;
+			text = value.ToString();
+			GUIUtility.keyboardControl = 0;
+		}
+		string typed = GUI.TextField(field, string.IsNullOrEmpty(text) ? value.ToString() : text, 2, _numField);
+		if (typed != text)
+		{
+			text = typed;
+			if (int.TryParse(typed, out int number))
+			{
+				value = Mathf.Clamp(number, min, max);
+			}
+		}
+		r.x = plus.xMax + 8f * _scale;
 	}
 
 	private void StartNew()
@@ -908,6 +932,8 @@ internal sealed class MemoPanel : MonoBehaviour
 		_editYear = rounds / 36 + 1;
 		_editMonth = rounds % 36 / 3 + 1;
 		_editStage = rounds % 3 + 1;
+		_editYearText = _editYear.ToString();
+		_editMonthText = _editMonth.ToString();
 	}
 
 	private void DrawLine(Rect rect)
