@@ -92,10 +92,10 @@ public static class ConflictDetector
 				// Harmony 实例没起名字（harmony-auto-…）时，用补丁所在的程序集找出是哪个插件
 				string name = pluginNames.TryGetValue(clash.Key, out string n) ? n : owners.TryGetValue(clash.Key, out Assembly asm) ? PluginName(asm, pluginNames) : clash.Key;
 				string methods = string.Join("、", clash.Value.Distinct().ToArray());
-				string message = $"检测到冲突的 Mod：{name}（{clash.Key}），和本 Mod 同时修改了 {clash.Value.Distinct().Count()} 处游戏代码：{methods}。可能导致骰子或选项显示异常。请删除旧版骰子大师、多功能 Mod、活侠传助手等同类 Mod 后重新覆盖安装。";
+				string message = $"检测到冲突的 Mod：{name}（{clash.Key}），和本 Mod 同时修改了 {clash.Value.Distinct().Count()} 处游戏代码：{methods}。本 Mod 的部分功能可能不生效（如骰子、选项显示）；出现问题建议删掉旧版骰子大师、多功能 Mod、活侠传助手等同类 Mod 后重新覆盖安装。";
 				LOMAssistantPlugin.LogWarning(message);
 				FileLogger.LogWarning("[冲突检测] " + message);
-				Warnings.Add($"{name} 与本 Mod 冲突（{clash.Value.Distinct().Count()} 处），请删除后重新覆盖安装");
+				Warnings.Add($"{name} 和本 Mod 改了同样的游戏代码（{clash.Value.Distinct().Count()} 处），部分功能可能不生效；出现问题建议删掉它");
 			}
 			if (clashes.Count == 0)
 			{
