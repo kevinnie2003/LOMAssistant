@@ -94,6 +94,10 @@ public static class StoryScripts
 	private static readonly Regex RollResult = new Regex(@"^local (\w+) = dicemenudialog\.ResultSelection");
 	private static readonly Regex ArmTest = new Regex(@"^(if|elseif) (\w+) == (\d+) then$");
 	private static readonly Regex Next = new Regex(@"luamanager\.(SetNextScript|SetCurrentStoryScript)\(""([^""]+)""\)");
+	// 赶路：先记下路上走完接哪段（SetCurrentTravelScript），再进「…_travel」这段过场或按地图位置抽路上的事件，
+	// 过场最后按记下的那段接下去（GetCurrentTravelScript），剧本里写的不是那段的名字
+	private static readonly Regex TravelSet = new Regex(@"luamanager\.SetCurrentTravelScript\(""([^""]+)""\)");
+	private static readonly Regex NextVar = new Regex(@"luamanager\.SetNextScript\((\w+)\)");
 	private static readonly Regex Scene = new Regex(@"luamanager\.ChangeScene\(""(\w+)""(?:, *""(\w*)"")?");
 	private static readonly Regex EndPanel = new Regex(@"endgamepanel\.Open\(""(\w+)""\)");
 	private static readonly Regex CgPanel = new Regex(@"cgpanel\.Open\(""(\w+)""\)");
@@ -181,6 +185,7 @@ public static class StoryScripts
 		var choices = new Dictionary<string, (string Kind, Dictionary<int, StoryStep> Rows)>(StringComparer.Ordinal);
 		var blocks = new List<Block>();
 		string lastRoll = null;
+		string travel = null;
 		// 下一句 say 的说话人：前面最近一次 setcharacter，说完就清掉（没设的是旁白）
 		string speaker = "";
 
@@ -305,9 +310,23 @@ public static class StoryScripts
 					script.Effects.Add((CurrentPath(blocks, choices, switches), TextConverter.ToSimplified(RichText.Strip(effect))));
 				}
 			}
+			if ((m = TravelSet.Match(line)).Success)
+			{
+				travel = m.Groups[1].Value;
+			}
 			if ((m = Next.Match(line)).Success)
 			{
-				AddExit(script, blocks, choices, switches, e => { e.Target = m.Groups[2].Value; e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
+				string target = m.Groups[2].Value;
+				if (travel != null && target.EndsWith("_travel", StringComparison.Ordinal))
+				{
+					target = travel;
+				}
+				AddExit(script, blocks, choices, switches, e => { e.Target = target; e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
+			}
+			else if (travel != null && (m = NextVar.Match(line)).Success)
+			{
+				string target = travel;
+				AddExit(script, blocks, choices, switches, e => e.Target = target);
 			}
 			if ((m = Scene.Match(line)).Success)
 			{
