@@ -163,12 +163,15 @@ internal sealed class MemoPanel : MonoBehaviour
 		EnsureRect(scale);
 		HandlePointerInput();
 
+		Rect window = ConfigManager.MemoCollapsed.Value
+			? new Rect(_rect.x, _rect.y, _rect.width, TitleBarHeight * scale + 4f)
+			: _rect;
 		Color previous = GUI.color;
 		GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp(ConfigManager.MemoOpacity.Value, 0.2f, 1f));
-		GUI.Box(_rect, GUIContent.none, _frame);
+		GUI.Box(window, GUIContent.none, _frame);
 		GUI.color = previous;
 
-		GUILayout.BeginArea(new Rect(_rect.x + 2f, _rect.y + 2f, _rect.width - 4f, _rect.height - 4f));
+		GUILayout.BeginArea(new Rect(window.x + 2f, window.y + 2f, window.width - 4f, window.height - 4f));
 		DrawTitleBar();
 		if (!ConfigManager.MemoCollapsed.Value)
 		{
@@ -187,7 +190,7 @@ internal sealed class MemoPanel : MonoBehaviour
 		{
 			DrawResizeHandle();
 		}
-		InputGuard.Report("Memo", _rect);
+		InputGuard.Report("Memo", window);
 	}
 
 	private void EnsureStyles(float scale)
@@ -247,13 +250,12 @@ internal sealed class MemoPanel : MonoBehaviour
 		}
 		Rect resize = GetResizeHandleRect();
 		Rect bar = TitleRect();
-		bool canStart = ConfigManager.MemoCollapsed.Value && _rect.Contains(e.mousePosition)
-			|| (!ConfigManager.MemoCollapsed.Value && bar.Contains(e.mousePosition)
-				&& e.mousePosition.x < bar.xMax - ButtonsWidth(_scale));
-		if (e.type == EventType.MouseDown && canStart)
+		bool overResize = !ConfigManager.MemoCollapsed.Value && resize.Contains(e.mousePosition);
+		bool overDrag = bar.Contains(e.mousePosition) && e.mousePosition.x < bar.xMax - ButtonsWidth(_scale);
+		if (e.type == EventType.MouseDown && (overResize || overDrag))
 		{
-			_resizing = !ConfigManager.MemoCollapsed.Value && resize.Contains(e.mousePosition);
-			_dragging = !_resizing;
+			_resizing = overResize;
+			_dragging = !overResize;
 			_pointerOffset = e.mousePosition - new Vector2(_rect.x, _rect.y);
 			GUIUtility.hotControl = ControlId;
 			e.Use();
@@ -290,7 +292,7 @@ internal sealed class MemoPanel : MonoBehaviour
 
 	private static float ButtonsWidth(float scale)
 	{
-		return 120f * scale;
+		return 84f * scale;
 	}
 
 	private void StopPointerInteraction()
@@ -353,13 +355,12 @@ internal sealed class MemoPanel : MonoBehaviour
 		GUI.Label(new Rect(bar.x + 4f * _scale, bar.y, bar.width - ButtonsWidth(_scale) - 8f * _scale, bar.height),
 			TextConverter.ForDisplay("备忘 " + unfinished), _title);
 		float w = 26f * _scale;
-		float x = bar.xMax - w * 4f - 3f * _scale;
+		float x = bar.xMax - w * 3f - 3f * _scale;
 		Rect[] buttons =
 		{
 			new Rect(x, bar.y + 3f * _scale, w, bar.height - 6f * _scale),
 			new Rect(x + w, bar.y + 3f * _scale, w, bar.height - 6f * _scale),
 			new Rect(x + w * 2f, bar.y + 3f * _scale, w, bar.height - 6f * _scale),
-			new Rect(x + w * 3f, bar.y + 3f * _scale, w, bar.height - 6f * _scale),
 		};
 		if (GUI.Button(buttons[0], "＋", _button))
 		{
@@ -369,12 +370,7 @@ internal sealed class MemoPanel : MonoBehaviour
 		{
 			ConfigManager.MemoCollapsed.Value = !ConfigManager.MemoCollapsed.Value;
 		}
-		if (GUI.Button(buttons[2], "存", _button))
-		{
-			MemoStore.Save();
-			Notice("已保存：", "备忘录写进 memo.json", Green);
-		}
-		if (GUI.Button(buttons[3], "×", _button))
+		if (GUI.Button(buttons[2], "×", _button))
 		{
 			_visible = false;
 		}
@@ -387,12 +383,14 @@ internal sealed class MemoPanel : MonoBehaviour
 	private void DrawList()
 	{
 		Rect area = GUILayoutUtility.GetRect(_rect.width - 4f, _rect.height - TitleBarHeight * _scale - 4f);
-		Rect body = new Rect(area.x + 3f * _scale, area.y + 3f * _scale,
-			area.width - 6f * _scale, area.height - 34f * _scale);
+		float top = 3f * _scale;
 		if (Time.unscaledTime < _noticeUntil)
 		{
 			GUI.Label(new Rect(area.x + 3f * _scale, area.y, area.width - 6f * _scale, 30f * _scale), TextConverter.ForDisplay(_notice), _text);
+			top += 30f * _scale;
 		}
+		Rect body = new Rect(area.x + 3f * _scale, area.y + top,
+			area.width - 6f * _scale, Mathf.Max(20f * _scale, area.height - top - 34f * _scale));
 		_scroll = GUI.BeginScrollView(body, _scroll, new Rect(0f, 0f, body.width - 16f * _scale, Mathf.Max(body.height, ListHeight())));
 		if (MemoStore.Items.Count == 0)
 		{
@@ -433,7 +431,7 @@ internal sealed class MemoPanel : MonoBehaviour
 	{
 		MemoTarget target = MemoTargets.Find(item.kind, item.key);
 		float height = 83f * _scale;
-		if (target == null || target.Max() <= 0)
+		if (target == null || MaxOf(target) <= 0)
 		{
 			height -= 10f * _scale;
 		}
@@ -501,10 +499,11 @@ internal sealed class MemoPanel : MonoBehaviour
 		GUI.Label(new Rect(row.x, row.y + 28f * _scale, row.width, 18f * _scale),
 			TextConverter.ForDisplay(ConditionText(item) + "　·　" + current), _dim);
 		float deadlineY = 48f * _scale;
-		if (target != null && target.Max() > 0)
+		int max = MaxOf(target);
+		if (target != null && max > 0)
 		{
 			DrawBar(new Rect(row.x, row.y + 48f * _scale, row.width - 8f * _scale, 6f * _scale),
-				Mathf.Clamp01((float)target.Now / target.Max()), met);
+				Mathf.Clamp01((float)target.Now / max), met);
 			deadlineY = 58f * _scale;
 		}
 
@@ -839,6 +838,11 @@ internal sealed class MemoPanel : MonoBehaviour
 			case MemoOp.Equal: return target.Now == item.value;
 			default: return target.Now >= item.value;
 		}
+	}
+
+	private static int MaxOf(MemoTarget target)
+	{
+		return target?.Max?.Invoke() ?? 0;
 	}
 
 	private static string ConditionText(MemoItem item)
