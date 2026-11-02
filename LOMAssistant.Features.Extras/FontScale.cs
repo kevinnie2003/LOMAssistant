@@ -16,6 +16,8 @@ namespace LOMAssistant.Features.Extras;
 /// 本 Mod 自己的窗口是 IMGUI 画的，不受影响。放大太多界面可能放不下，字会挤出框。
 /// 放大以后格子正好装下的数字（六维、锻造等级等）会被折成两行，原版设成超出就截掉，结果整个数字不见了：
 /// 放大时不截，超出格子照样画出来；没有空格的短文字（数字、一个词）不折行。
+/// 原版在 100% 也有这个毛病：分辨率低时字形宽度取整变宽，决斗状态页的六维这类正好装满格子的数字会挤到第二行，被截掉看不见。
+/// 所以纯数字（「85」「-3」「12/30」「50%」）不管放没放大都不折行、不截掉；别的文字在 100% 保持原样。
 /// </summary>
 public static class FontScale
 {
@@ -84,6 +86,11 @@ public static class FontScale
 	public static void GetGenerationSettings_Postfix(Text __instance, ref TextGenerationSettings __result)
 	{
 		float factor = GameFactor * (IsDialogue(__instance) ? DialogueFactor : 1f);
+		if (IsNumber(__instance.text))
+		{
+			__result.horizontalOverflow = HorizontalWrapMode.Overflow;
+			__result.verticalOverflow = VerticalWrapMode.Overflow;
+		}
 		if (factor == 1f)
 		{
 			return;
@@ -100,6 +107,28 @@ public static class FontScale
 				__result.horizontalOverflow = HorizontalWrapMode.Overflow;
 			}
 		}
+	}
+
+	// 纯数字：数字和 + - / % . , 这几个符号，至少一个数字
+	private static bool IsNumber(string text)
+	{
+		if (string.IsNullOrEmpty(text) || text.Length > 12)
+		{
+			return false;
+		}
+		bool digit = false;
+		foreach (char c in text)
+		{
+			if (c >= '0' && c <= '9')
+			{
+				digit = true;
+			}
+			else if (c != '+' && c != '-' && c != '/' && c != '%' && c != '.' && c != ',')
+			{
+				return false;
+			}
+		}
+		return digit;
 	}
 
 	// 没有空白的短文字：数字、「Lv.3」、一个词
