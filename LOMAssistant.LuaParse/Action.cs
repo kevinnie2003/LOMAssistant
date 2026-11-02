@@ -12,6 +12,12 @@ public class Action
 
 	public int BranchIndex { get; set; }
 
+	/// <summary>所在分支属于哪个分支判断（checkpointmanager.Switch 的检查点名）；认不出来是空的。</summary>
+	public string Checkpoint { get; set; } = "";
+
+	/// <summary>分支判断的第几支（Switch 的结果值），0 是 else；认不出来是 -1。</summary>
+	public int Arm { get; set; } = -1;
+
 	public string Content { get; set; }
 
 	public string Description { get; private set; }

@@ -43,6 +43,8 @@ public static class UiTextEnglish
 		["随机数（"] = "Random (",
 		["    一定触发："] = "    Always: ",
 		["    某些条件下："] = "    Under some conditions: ",
+		["一定触发："] = "Always: ",
+		["某些条件下："] = "Under some conditions: ",
 		["激活条件："] = "Active when: ",
 		["判定条件："] = "Checked: ",
 		["停在："] = "Stopped at: ",
@@ -832,7 +834,7 @@ public static class UiTextEnglish
 		["随时存档需要 64 位游戏。"] = "Save anywhere needs the 64-bit game.",
 		["存读档相关的游戏代码有冲突（{0}），随时存档已停用。请检查是否装了会修改游戏文件的其它 Mod，或者游戏最近有大更新、Mod 还没适配。已有的随时存档没有改动。"] = "The game's save code conflicts ({0}), so save anywhere is off. Check for other mods that change game files, or a recent big game update the mod doesn't support yet. Existing saves are untouched.",
 		["无法核验游戏版本，随时存档已停用：{0}"] = "Can't verify the game version, so save anywhere is off: {0}",
-		["{0} 与本 Mod 冲突（{1} 处），请删除后重新覆盖安装"] = "{0} conflicts with this mod ({1} places); remove it and reinstall",
+		["{0} 和本 Mod 改了同样的游戏代码（{1} 处），部分功能可能不生效；出现问题建议删掉它"] = "{0} changes the same game code as this mod ({1} places); some features may not work. If something goes wrong, removing it is recommended",
 		["检测到「{0}」的快捷键和本 Mod 撞了，本 Mod 的{1}热键已让给它（改成不绑定）。可以在设置页「热键」里另绑别的键。"] = "「{0}」 uses the same hotkeys as this mod, so this mod's {1} hotkeys were unbound. You can bind other keys in the hotkey group of the settings tab.",
 		["检测到日语补丁：F7 是它切换注音显示的键，不能改。本 Mod 用 F7 的热键已改成不绑定，可以在设置页「热键」里另绑别的键。"] = "Japanese patch found: it uses F7 for furigana and that can't be changed, so this mod's F7 hotkey was unbound. You can bind another key in the hotkey group of the settings tab.",
 		["检测到立绘替换 Mod「邪神认知污染ON」，它的 F8、F9 改不了，本 Mod 的{0}热键已让给它（改成不绑定）。可以按 Tab 打开窗口再点对应的页，或者在设置页「热键」里另绑别的键。"] = "Portrait mod 「邪神认知污染ON」 found; its F8 and F9 can't be changed, so this mod's {0} hotkeys were unbound. Press Tab and click the tab you want, or bind other keys in the hotkey group of the settings tab.",
@@ -1161,6 +1163,11 @@ public static class UiTextEnglish
 		["截止：{0}"] = "Due: {0}",
 		["请先搜索并选择一个条件。"] = "Search for a condition and pick one first.",
 		["目标值要是一个整数。"] = "The target must be a whole number.",
+		["若 {0}：{1}"] = "If {0}: {1}",
+		["否则（不满足：{0}）：{1}"] = "Otherwise (not met: {0}): {1}",
+		["否则（以下都不满足：{0}）：{1}"] = "Otherwise (none of these met: {0}): {1}",
+		["某些条件下：{0}"] = "Under some conditions: {0}",
+		["一定触发：{0}"] = "Always: {0}",
 	};
 
 	/// <summary>设置说明（配置名 → 英文）。</summary>

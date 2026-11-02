@@ -15,6 +15,11 @@ public class LuaParser
 
 	private static readonly Regex switchRegex = new Regex("checkpointmanager\\.Switch\\(([^)]*)\\)");
 
+	// 「local switch_001_result = checkpointmanager.Switch("S_Mental_GE_65")」和「if switch_001_result == 1 then」
+	private static readonly Regex switchLocalRegex = new Regex("^local (\\w+) = checkpointmanager\\.Switch\\(\"([^\"]+)\"\\)");
+
+	private static readonly Regex switchArmRegex = new Regex("^(?:if|elseif) (\\w+) == (\\d+) then");
+
 	private static readonly Regex positionRegex = new Regex("checkpointmanager\\.Position\\(([^)]*)\\)");
 
 	private static readonly Regex modifyRegex = new Regex("\\s*statmodifymanager\\.(?!GetDisplayTime)\\w+\\(.*?\\)");
@@ -356,34 +361,84 @@ public class LuaParser
 		List<Action> list = new List<Action>();
 		bool isConditional = false;
 		int branchIndex = 0;
+		// 记下每个分支判断存进哪个变量，分支里的变化就知道是哪个检查点的第几支，说明里能写出条件
+		var switches = new Dictionary<string, string>();
+		string ifCheckpoint = "", checkpoint = "";
+		int arm = -1;
 		string[] array2 = array;
 		for (int i = 0; i < array2.Length; i++)
 		{
 			string text = array2[i].Trim();
+			Match local = switchLocalRegex.Match(text);
+			if (local.Success)
+			{
+				switches[local.Groups[1].Value] = local.Groups[2].Value;
+			}
 			if (text.StartsWith("if") || text.StartsWith("elseif"))
 			{
 				isConditional = true;
 				branchIndex++;
+				Match m = switchArmRegex.Match(text);
+				checkpoint = m.Success && switches.TryGetValue(m.Groups[1].Value, out string name) ? name : "";
+				arm = checkpoint.Length > 0 ? int.Parse(m.Groups[2].Value) : -1;
+				if (text.StartsWith("if"))
+				{
+					ifCheckpoint = checkpoint;
+				}
 			}
 			else if (text == "else")
 			{
 				branchIndex++;
+				checkpoint = ifCheckpoint;
+				arm = checkpoint.Length > 0 ? 0 : -1;
 			}
 			else if (text.StartsWith("end"))
 			{
 				isConditional = false;
+				checkpoint = ifCheckpoint = "";
+				arm = -1;
 			}
 			foreach (Match item in modifyRegex.Matches(text))
 			{
-				list.Add(new Action(ActionType.ModifyAction, item.Value, isConditional, branchIndex));
+				list.Add(new Action(ActionType.ModifyAction, item.Value, isConditional, branchIndex) { Checkpoint = checkpoint, Arm = arm });
 			}
 			foreach (Match item2 in battleScenesRegex.Matches(text))
 			{
-				list.Add(new Action(ActionType.BattleScene, item2.Value, isConditional, branchIndex));
+				list.Add(new Action(ActionType.BattleScene, item2.Value, isConditional, branchIndex) { Checkpoint = checkpoint, Arm = arm });
 			}
 		}
 		luaModification[luaScriptName] = list;
 		return list;
+	}
+
+	/// <summary>
+	/// 条件分支里的变化，一支一行：「若 条件：变化」。条件取自分支判断（Switch）检查点的那一支，带当前值；
+	/// else 那支写「否则（不满足：…）」；认不出条件的（不是分支判断的 if）写「某些条件下」。
+	/// </summary>
+	public static List<string> ConditionalLines(List<Action> actions)
+	{
+		var lines = new List<string>();
+		foreach (IGrouping<int, Action> branch in actions.Where(a => a.IsConditional && !string.IsNullOrEmpty(a.Description)).GroupBy(a => a.BranchIndex))
+		{
+			Action first = branch.First();
+			string effects = string.Join("、", branch.Select(a => a.Description).Distinct().ToArray());
+			string when = first.Checkpoint.Length == 0 ? "" : RichText.Strip(DataHelper.SwitchBranchCondition(first.Checkpoint, first.Arm)).Trim();
+			// else，或者比条件条数多一的那个结果值（条件都不满足时 Switch 返回它）：写成「否则（不满足：…）」
+			bool otherwise = first.Arm == 0 || when == "以上条件都不满足";
+			if (first.Checkpoint.Length > 0 && otherwise)
+			{
+				lines.Add(LOMAssistant.Features.Story.StoryScripts.Otherwise(first.Checkpoint, true) + "：" + effects);
+			}
+			else if (when.Length == 0)
+			{
+				lines.Add("某些条件下：" + effects);
+			}
+			else
+			{
+				lines.Add("若 " + TextConverter.ToSimplifiedUnlessJapanese(when) + "：" + effects);
+			}
+		}
+		return lines;
 	}
 
 	public static string Description(List<Action> actions)

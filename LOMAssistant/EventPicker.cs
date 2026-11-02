@@ -191,7 +191,7 @@ public class EventPicker : MonoBehaviour
 				{
 					continue;
 				}
-				string effects = PositionEventCache.Instance.GetCertainEffects(data);
+				string effects = PositionEventCache.Instance.GetEffects(data);
 				var choice = new Choice { Data = data, Key = data.name, Rate = rate, Name = TextConverter.ToSimplified(DataHelper.GetEventName(data)), Effects = effects, Unread = MapEventHints.Unread(PositionEventCache.Instance.ResultScript(data)) };
 				if (condition != null)
 				{
