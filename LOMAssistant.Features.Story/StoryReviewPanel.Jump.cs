@@ -16,7 +16,7 @@ public partial class StoryReviewPanel
 	/// <summary>剧情图、路线图详情里的「跳到这里」。</summary>
 	private void JumpButton(StoryMission mission, string script)
 	{
-		if (!StoryJump.Enabled || mission == null || string.IsNullOrEmpty(script))
+		if (!StoryJump.Enabled || mission == null || mission.PlaceEntry || string.IsNullOrEmpty(script))
 		{
 			return;
 		}

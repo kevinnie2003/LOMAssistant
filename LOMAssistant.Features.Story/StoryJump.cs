@@ -662,6 +662,11 @@ public static class StoryJump
 	/// <summary>跳：先存「跳转前」，再补变化、改日期和任务进度，从目标那一段开演。</summary>
 	public static bool Execute(Plan plan, out string message)
 	{
+		if (plan?.Mission?.PlaceEntry == true)
+		{
+			message = "此地点剧情仅供查看";
+			return false;
+		}
 		if (!CanJump(out message))
 		{
 			return false;

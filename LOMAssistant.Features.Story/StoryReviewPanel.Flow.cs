@@ -314,12 +314,13 @@ public partial class StoryReviewPanel
 	{
 		var chain = new List<string>();
 		StoryScript script = StoryScripts.Get(name);
-		while (script != null && !script.Branches && script.Exits.Count == 1 && script.Exits[0].Path.Count == 0 && script.Exits[0].Target.Length > 0
+		while (script != null && !script.Branches && script.Exits.Count == 1 && script.Exits[0].Path.Count == 0 && StoryScripts.FlowTarget(script.Exits[0]).Length > 0
 			&& !script.Exits[0].ToMap && !script.Exits[0].ToTitle && script.Exits[0].MainMission.Length == 0 && !chain.Contains(script.Name) && chain.Count < 30
-			&& !(boundaries?.Contains(script.Exits[0].Target) ?? false))
+			&& !StoryPlaces.IsReturn(StoryScripts.FlowTarget(script.Exits[0])) && script.Exits[0].EventPool.Length == 0
+			&& !(boundaries?.Contains(StoryScripts.FlowTarget(script.Exits[0])) ?? false))
 		{
 			chain.Add(script.Name);
-			script = StoryScripts.Get(script.Exits[0].Target);
+			script = StoryScripts.Get(StoryScripts.FlowTarget(script.Exits[0]));
 		}
 		if (script != null && !chain.Contains(script.Name))
 		{
@@ -375,24 +376,25 @@ public partial class StoryReviewPanel
 	{
 		var graph = new FlowGraph { Entry = mission };
 		var members = group ?? new[] { mission };
-		var included = members.SelectMany(m => m.Scripts).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 		var otherStarts = new HashSet<string>(StoryAtlas.Missions.Where(m => !members.Contains(m) && m.StartScript.Length > 0).Select(m => m.StartScript), StringComparer.OrdinalIgnoreCase);
+		// 地点入口沿用已有任务归属，不能把别的任务的中段重新展开。
+		if (mission.PlaceEntry) otherStarts.UnionWith(StoryAtlas.Owner.Where(p => !members.Contains(p.Value)).Select(p => p.Key));
 		var byScript = new Dictionary<string, FlowBox>(StringComparer.OrdinalIgnoreCase);
 		var terminals = new Dictionary<string, FlowBox>(StringComparer.Ordinal);
 		var queue = new Queue<FlowBox>();
 
 		FlowBox Box(string head, int layer)
 		{
-			HashSet<string> boundaries = null;
+			var boundaries = new HashSet<string>(otherStarts, StringComparer.OrdinalIgnoreCase);
 			if (members.Length > 1)
 			{
 				if (byScript.TryGetValue(head, out FlowBox existing)) return existing;
 				// 合并入口时保留每条支路，不能把汇合前的台词吞进已有方块。
-				boundaries = new HashSet<string>(otherStarts, StringComparer.OrdinalIgnoreCase);
 				boundaries.UnionWith(members.Select(m => m.StartScript));
 				boundaries.UnionWith(byScript.Keys);
 			}
 			List<string> chain = Chain(head, out StoryScript last, boundaries);
+			if (mission.PlaceEntry) last = StoryPlaces.View(last);
 			string key = last != null ? last.Name : head;
 			if (byScript.TryGetValue(key, out FlowBox known))
 			{
@@ -403,7 +405,7 @@ public partial class StoryReviewPanel
 				graph.Cut = true;
 				return null;
 			}
-			var scripts = chain.Select(StoryScripts.Get).Where(s => s != null).ToList();
+			var scripts = chain.Select(n => mission.PlaceEntry ? StoryPlaces.View(StoryScripts.Get(n)) : StoryScripts.Get(n)).Where(s => s != null).ToList();
 			var tags = new List<string>();
 			if (last != null && last.Menu) tags.Add("选项");
 			if (last != null && last.Dice) tags.Add("掷骰");
@@ -466,40 +468,8 @@ public partial class StoryReviewPanel
 				if (first != null) graph.EntryWays.Add((member, first));
 			}
 		}
-		// 回地图以后由地图事件接着演的段落（襄阳行这类）：顺着剧本走不到，演完前面的再从这些段落接着画，
-		// 前面放一个「地图上接着」的小方块
-		var later = new Queue<string>(included.Where(n => !string.Equals(n, mission.StartScript, StringComparison.OrdinalIgnoreCase)));
-		while (true)
-		{
-			Drain();
-			string root = null;
-			while (later.Count > 0 && root == null)
-			{
-				string name = later.Dequeue();
-				if (byScript.ContainsKey(name) || otherStarts.Contains(name))
-				{
-					continue;
-				}
-				// 只从没有别的段落接进来的那几段开始
-				bool reached = included.Any(n => !string.Equals(n, name, StringComparison.OrdinalIgnoreCase) && (StoryScripts.Get(n)?.Exits.Any(x => string.Equals(x.Target, name, StringComparison.OrdinalIgnoreCase)) ?? false));
-				if (!reached)
-				{
-					root = name;
-				}
-			}
-			if (root == null || graph.Boxes.Count >= FlowLimit)
-			{
-				break;
-			}
-			int layer = graph.Boxes.Max(b => b.Layer) + 1;
-			var map = new FlowBox { Id = "map|" + root, Title = "地图上接着", Terminal = true, Layer = layer };
-			graph.Boxes.Add(map);
-			FlowBox next = Box(root, layer + 1);
-			if (next != null)
-			{
-				graph.Links.Add(new FlowLink { From = map, To = next });
-			}
-		}
+		// 只从入口沿实际去处展开，随机事件选择之后的剧本由独立入口负责。
+		Drain();
 		return Layout();
 
 		void Drain()
@@ -514,35 +484,46 @@ public partial class StoryReviewPanel
 				foreach (StoryExit exit in from.Last.Exits)
 				{
 					FlowBox to;
+					string target = StoryScripts.FlowTarget(exit);
 					if (exit.ToTitle)
 					{
 						string id = EndingId(from.Last, exit);
 						string name = StoryAtlas.Endings.FirstOrDefault(e => !e.Death && e.Id == id)?.Title ?? id;
 						to = Terminal(from, "ending:" + id, name.Length > 0 ? "结局：" + Short(name, 9) : "结局", true);
 					}
-					else if (exit.MainMission.Length > 0)
+					else if (exit.ToMap)
+					{
+						to = Terminal(from, "map", "回到地图", false);
+					}
+					else if (exit.EventPool.Length > 0)
+					{
+						to = Terminal(from, "pool:" + exit.EventPool, "随机事件", false);
+					}
+					else if (StoryPlaces.IsReturn(target))
+					{
+						to = Terminal(from, "return:" + target.ToLowerInvariant(), StoryPlaces.ReturnText(target, TextConverter.ForDisplay), false);
+					}
+					// 推进主线只是修改进度，有实际去处时仍沿原剧本走。
+					else if (target.Length == 0 && exit.MainMission.Length > 0)
 					{
 						StoryMission next = StoryAtlas.Find(exit.MainMission);
 						to = members.Length > 1 && next != null && members.Contains(next) ? Box(next.StartScript, from.Layer + 1)
 							: Terminal(from, "main:" + exit.MainMission, "主线 → " + (next != null ? Short(next.Title, 10) : exit.MainMission), false);
 						if (to == null) continue;
 					}
-					else if (exit.ToMap)
-					{
-						to = Terminal(from, "map", "回到地图", false);
-					}
-					else if (exit.Target.Length == 0)
+					else if (target.Length == 0)
 					{
 						continue;
 					}
-					else if (otherStarts.Contains(exit.Target))
+					else if (otherStarts.Contains(target))
 					{
-						StoryMission other = StoryAtlas.Missions.FirstOrDefault(m => string.Equals(m.StartScript, exit.Target, StringComparison.OrdinalIgnoreCase));
-						to = Terminal(from, "script:" + exit.Target, "接到 " + (other != null ? Short(other.Title, 10) : exit.Target), false);
+						StoryMission other = StoryAtlas.Missions.FirstOrDefault(m => string.Equals(m.StartScript, target, StringComparison.OrdinalIgnoreCase));
+						if (other == null) StoryAtlas.Owner.TryGetValue(target, out other);
+						to = Terminal(from, "script:" + target, "接到 " + (other != null ? Short(other.Title, 10) : target), false);
 					}
 					else
 					{
-						to = Box(exit.Target, from.Layer + 1);
+						to = Box(target, from.Layer + 1);
 						if (to == null)
 						{
 							continue;
@@ -643,23 +624,7 @@ public partial class StoryReviewPanel
 			{
 				link.Text = string.Join("\n", link.Labels.ToArray());
 			}
-			// 分列：每一段放在「最长的一条路」走到它的那一列（往回接的线不算），岔开以后再合流的段落排在合流处，不会挤在前面
-			for (int pass = 0; pass < graph.Boxes.Count; pass++)
-			{
-				bool moved = false;
-				foreach (FlowLink link in graph.Links.Where(l => !l.Back))
-				{
-					if (link.To.Layer < link.From.Layer + 1)
-					{
-						link.To.Layer = link.From.Layer + 1;
-						moved = true;
-					}
-				}
-				if (!moved)
-				{
-					break;
-				}
-			}
+			SetFlowLayers(graph);
 			float w = S(290), gapX = S(120), gapY = S(22);
 			float entryWidth = graph.Entry != null ? w + gapX : 0;
 			// 一列一列往右排：每个方块对着连进来的那几行去处的平均高度放，同一列里按这个高度排先后、互不重叠
@@ -702,6 +667,49 @@ public partial class StoryReviewPanel
 		}
 	}
 
+	// 只有接回当前路径上的祖先才是回边；首次发现时同列的合流不能误画成虚线。
+	private static void SetFlowLayers(FlowGraph graph)
+	{
+		var outgoing = graph.Links.ToLookup(l => l.From);
+		var visited = new HashSet<FlowBox>();
+		var active = new HashSet<FlowBox>();
+		void Visit(FlowBox box)
+		{
+			if (!visited.Add(box)) return;
+			active.Add(box);
+			foreach (FlowLink link in outgoing[box])
+			{
+				link.Back = active.Contains(link.To);
+				if (!link.Back) Visit(link.To);
+			}
+			active.Remove(box);
+		}
+		foreach (FlowBox box in graph.Boxes) Visit(box);
+		var backwards = new HashSet<(FlowBox From, FlowBox To)>(graph.Links.Where(l => l.Back).Select(l => (l.From, l.To)));
+		foreach (FlowBox box in graph.Boxes)
+		{
+			box.Layer = 0;
+			foreach (FlowWay way in box.Ways) way.Back = backwards.Contains((box, way.To));
+		}
+		// 分列：每一段放在「最长的一条路」走到它的那一列（往回接的线不算），岔开以后再合流的段落排在合流处，不会挤在前面
+		for (int pass = 0; pass < graph.Boxes.Count; pass++)
+		{
+			bool moved = false;
+			foreach (FlowLink link in graph.Links.Where(l => !l.Back))
+			{
+				if (link.To.Layer < link.From.Layer + 1)
+				{
+					link.To.Layer = link.From.Layer + 1;
+					moved = true;
+				}
+			}
+			if (!moved)
+			{
+				break;
+			}
+		}
+	}
+
 	private float HeaderHeight => S(60);
 	private float RowHeight => S(28);
 
@@ -738,10 +746,12 @@ public partial class StoryReviewPanel
 		string origin = entry == null ? "" : (string.Format(TextConverter.ForDisplay("从「{0}」剧情接入"), TextConverter.ForDisplay(entry.From.Title)) + "\n" + FlowPathText(entry.Path)).TrimEnd();
 		if (entry != null && !missionEntry) return origin;
 		if (mission.Inactive) return TextConverter.ForDisplay("由其他剧情接入");
-		bool automatic = entry == null && mission.Position == Mortal.Core.PositionType.無;
+		string place = mission.PlaceEntry ? mission.Place : StoryPlaces.EntryPlace(mission.StartScript);
+		if (place.Length == 0) place = mission.Place;
+		bool automatic = entry == null && place.Length == 0 && mission.Position == Mortal.Core.PositionType.無;
 		var parts = new List<string> { entry != null ? origin : automatic
 			? TextConverter.ForDisplay("自动触发")
-			: string.Format(TextConverter.ForDisplay("进入「{0}」"), TextConverter.ForDisplay(mission.Place)) };
+			: string.Format(TextConverter.ForDisplay(StoryPlaces.IsActivity(mission.StartScript) ? "选「{0}」" : "进入「{0}」"), TextConverter.ForDisplay(place)) };
 		// 合并后各入口日期可能不同；只在这时逐行保留日期，不能只看图上方的总范围。
 		if (FlowMissions(mission).Select(m => m.When).Distinct().Count() > 1) parts.Add(TextConverter.ForDisplay(mission.When));
 		var conditions = mission.Conditions.Where(c => c != null).Select(DataHelper.ConditionTemplate).Where(t => t.Length > 0).Select(TextConverter.ForDisplay);
@@ -808,13 +818,15 @@ public partial class StoryReviewPanel
 		return box;
 	}
 
-	// 同一去处、同一线型共用通道；实线和虚线都在起点附近汇合。
+	// 同一起点的分支就近合流，不同起点到同一去处的线在终点附近汇合。
 	private void LayoutFlowLines(FlowGraph graph)
 	{
 		graph.EntryBox = FlowEntryBox(graph);
 		var boxes = (graph.EntryBox == null ? graph.Boxes : new[] { graph.EntryBox }.Concat(graph.Boxes)).ToArray();
 		var exits = boxes.SelectMany(b => b.Ways.Select((w, i) => (From: b, Way: w, Y: b.RowsTop + (i + 0.5f) * RowHeight))).Where(e => e.Way.To != null).ToArray();
 		var byColumn = exits.ToLookup(e => e.From.Layer);
+		var shared = new HashSet<(FlowBox To, bool Back)>(exits.GroupBy(e => (e.Way.To, e.Way.Back))
+			.Where(g => g.Select(e => e.From).Distinct().Count() > 1).Select(g => g.Key));
 		var ports = new Dictionary<(FlowBox To, bool Back), float>();
 		// 入点避开同一通道中通往别处的出线高度，防止横线盖在一起。
 		foreach (var target in exits.Select(e => (e.Way.To, e.Way.Back)).Distinct())
@@ -825,48 +837,95 @@ public partial class StoryReviewPanel
 			ports[target] = Enumerable.Range(5, target.To.Terminal ? 11 : 21).Select(i => target.To.Rect.y + S(i * 2))
 				.OrderBy(y => occupied.Count(v => Mathf.Abs(y - v) < S(8))).ThenBy(y => Mathf.Abs(y - normal)).First();
 		}
-		// 按目的地直接分配线道，不再逐条比较纵向范围寻找可复用的空道。
-		var lanes = new Dictionary<int, Dictionary<(FlowBox To, bool Back), int>>();
-		int Slot(int column, FlowBox target, bool back)
-		{
-			if (!lanes.TryGetValue(column, out var slots)) lanes[column] = slots = new Dictionary<(FlowBox, bool), int>();
-			if (!slots.TryGetValue((target, back), out int slot)) slots[(target, back)] = slot = slots.Count;
-			return slot;
-		}
-		var routes = new List<(FlowBox From, FlowWay Way, int Row, int Out, int In, float Below)>();
-		float bottom = boxes.Length == 0 ? 0 : boxes.Max(b => b.Rect.yMax);
-		var detours = new Dictionary<(FlowBox To, bool Back), float>();
+		// 跨列和回接只绕过所经过的方块，优先使用附近空隙，不统一绕到整张图底部。
+		var routes = new List<(FlowBox From, FlowWay Way, int Row, bool Detour, bool Bundle, float Rail)>();
+		var rails = new List<(FlowBox From, FlowBox To, bool Back, int Left, int Right, float Y)>();
 		foreach (FlowBox box in boxes)
 			foreach (var group in box.Ways.Select((way, row) => (Way: way, Row: row)).Where(w => w.Way.To != null)
 				.GroupBy(w => (w.Way.To, w.Way.Back)))
 			{
 				FlowBox target = group.Key.To;
-				// 跨列和回接从整张图下方绕行，两端仍在列间，不能穿过中间方块。
-				bool detour = group.Key.Back || target.Layer != box.Layer + 1;
-				float below = 0;
-				if (detour && !detours.TryGetValue(group.Key, out below)) detours[group.Key] = below = bottom + S(24 + detours.Count * 16);
-				int output = detour ? Slot(box.Layer, target, group.Key.Back) : -1;
-				int input = Slot(target.Layer - 1, target, group.Key.Back);
-				foreach (var row in group) routes.Add((box, row.Way, row.Row, output, input, below));
+				bool detour = target.Layer != box.Layer + 1, bundle = shared.Contains(group.Key);
+				float rail = 0;
+				if (detour || bundle)
+				{
+					int left = Math.Min(box.Layer, target.Layer - 1), right = Math.Max(box.Layer, target.Layer - 1);
+					var obstacles = boxes.Where(b => b.Layer > left && b.Layer <= right).ToArray();
+					float sourceY = group.Average(w => box.RowsTop + (w.Row + 0.5f) * RowHeight), targetY = ports[group.Key];
+					var candidates = obstacles.SelectMany(b => new[] { b.Rect.y - S(16), b.Rect.yMax + S(16) })
+						.Concat(new[] { sourceY, targetY });
+					// 下方保留备用通道；同一去处同一线型可以共用。
+					float bottom = boxes.Max(b => b.Rect.yMax);
+					candidates = candidates.Concat(Enumerable.Range(0, rails.Count + 1).Select(i => bottom + S(16 + i * 16)));
+					rail = candidates.Where(y => y >= S(8)
+						&& obstacles.All(b => y <= b.Rect.y - S(12) || y >= b.Rect.yMax + S(12))
+						&& rails.All(r => (r.From == box && r.To == target && r.Back == group.Key.Back) || r.Right < left || right < r.Left || Mathf.Abs(r.Y - y) >= S(8))
+						&& exits.All(e => e.From.Layer < left || e.From.Layer > right || (e.Way.To == target && e.Way.Back == group.Key.Back) || Mathf.Abs(e.Y - y) >= S(8))
+						&& ports.All(p => p.Key.To.Layer - 1 < left || p.Key.To.Layer - 1 > right || p.Key == group.Key || Mathf.Abs(p.Value - y) >= S(8)))
+						.OrderBy(y => Mathf.Abs(y - sourceY) + Mathf.Abs(y - targetY)).First();
+					rails.Add((box, target, group.Key.Back, left, right, rail));
+				}
+				foreach (var row in group) routes.Add((box, row.Way, row.Row, detour, bundle, rail));
 			}
-		// 通道不够时只加宽该列间距，不循环复用线道，也不把线挤进方块。
+		// 同一去处的纵向范围先合并；互不相邻的范围复用线道，避免每增加一个目的地就加宽整列。
+		var spans = new Dictionary<(int Column, FlowBox From, FlowBox To, bool Back), (float Low, float High)>();
+		void Span(int column, FlowBox from, FlowWay way, float a, float b)
+		{
+			var key = (column, from, way.To, way.Back);
+			float low = Mathf.Min(a, b), high = Mathf.Max(a, b);
+			if (spans.TryGetValue(key, out var old)) { low = Mathf.Min(low, old.Low); high = Mathf.Max(high, old.High); }
+			spans[key] = (low, high);
+		}
+		foreach (var route in routes)
+		{
+			float y = route.From.RowsTop + (route.Row + 0.5f) * RowHeight;
+			if (route.Detour || route.Bundle) Span(route.From.Layer, route.From, route.Way, y, route.Rail);
+			Span(route.Way.To.Layer - 1, null, route.Way, route.Detour || route.Bundle ? route.Rail : y, ports[(route.Way.To, route.Way.Back)]);
+		}
+		var lanes = new Dictionary<(int Column, FlowBox From, FlowBox To, bool Back), int>();
+		var widths = new Dictionary<int, int>();
+		foreach (var column in spans.GroupBy(s => s.Key.Column))
+		{
+			var slots = new List<List<(float Low, float High)>>();
+			// 向下的长线靠近起点，向上的反过来，避免按选项顺序排成阶梯并反复交叉。
+			foreach (var span in column.OrderBy(s => s.Key.From == null && shared.Contains((s.Key.To, s.Key.Back)) ? 1 : 0)
+				.ThenBy(s => ports[(s.Key.To, s.Key.Back)] <= s.Value.Low ? 1 : 0)
+				.ThenBy(s => ports[(s.Key.To, s.Key.Back)] <= s.Value.Low ? s.Value.Low : -s.Value.High))
+			{
+				// 与已排线道相交时放在其外侧；只复用无交叉的空位，不能为压缩宽度重新织成网格。
+				int slot = slots.FindLastIndex(ranges => ranges.Any(r => span.Value.Low <= r.High + S(8) && r.Low <= span.Value.High + S(8))) + 1;
+				if (slot == slots.Count) slots.Add(new List<(float, float)>());
+				slots[slot].Add(span.Value);
+				lanes[span.Key] = slot;
+			}
+			widths[column.Key] = slots.Count;
+		}
 		float shift = 0;
+		int firstColumn = boxes.Length == 0 ? 0 : boxes.Min(b => b.Layer);
 		foreach (var column in boxes.GroupBy(b => b.Layer).OrderBy(g => g.Key))
 		{
-			if (lanes.TryGetValue(column.Key - 1, out var slots)) shift += Mathf.Max(0, S(48 + slots.Count * 16) - S(120));
+			if (widths.TryGetValue(column.Key - 1, out int count)) shift += Mathf.Max(0, S(48 + count * 16) - (column.Key == firstColumn ? 0 : S(120)));
 			foreach (FlowBox box in column) box.Rect.x += shift;
 		}
 		var columns = boxes.GroupBy(b => b.Layer).ToDictionary(g => g.Key, g => g.First().Rect.x);
-		float Lane(int column, int slot) => columns[column] + S(290 + 24 + slot * 16);
+		// 没有入口说明的图也可能回接第一列，需在左侧留出通道。
+		if (widths.ContainsKey(firstColumn - 1)) columns[firstColumn - 1] = S(24 - 290);
+		float Lane(int column, FlowBox from, FlowWay way)
+		{
+			int slot = lanes[(column, from, way.To, way.Back)];
+			return from == null && shared.Contains((way.To, way.Back))
+				? way.To.Rect.x - S(24 + (widths[column] - 1 - slot) * 16)
+				: columns[column] + S(290 + 24 + slot * 16);
+		}
 		foreach (var route in routes)
 		{
 			var from = new Vector2(route.From.Rect.xMax, route.From.RowsTop + (route.Row + 0.5f) * RowHeight);
 			FlowBox target = route.Way.To;
 			var to = new Vector2(target.Rect.x, ports[(target, route.Way.Back)]);
-			float input = Lane(target.Layer - 1, route.In);
-			route.Way.Points = route.Out < 0
+			float input = Lane(target.Layer - 1, null, route.Way);
+			route.Way.Points = !route.Detour && !route.Bundle
 				? new[] { from, new Vector2(input, from.y), new Vector2(input, to.y), to }
-				: new[] { from, new Vector2(Lane(route.From.Layer, route.Out), from.y), new Vector2(Lane(route.From.Layer, route.Out), route.Below), new Vector2(input, route.Below), new Vector2(input, to.y), to };
+				: new[] { from, new Vector2(Lane(route.From.Layer, route.From, route.Way), from.y), new Vector2(Lane(route.From.Layer, route.From, route.Way), route.Rail), new Vector2(input, route.Rail), new Vector2(input, to.y), to };
 		}
 		graph.Width += shift;
 		foreach (var route in routes)
@@ -884,18 +943,17 @@ public partial class StoryReviewPanel
 			{
 				var ranges = axis.Select(p => (p.From, Low: axis.Key.Vertical ? Mathf.Min(p.A.y, p.B.y) : Mathf.Min(p.A.x, p.B.x), High: axis.Key.Vertical ? Mathf.Max(p.A.y, p.B.y) : Mathf.Max(p.A.x, p.B.x)))
 					.OrderBy(p => p.Low).ToArray();
-				float low = ranges[0].Low, high = ranges[0].High;
-				var sources = new HashSet<FlowBox>();
-				void Add() => graph.Lines.Add((sources.ToArray(), group.Key.To, group.Key.Back,
-					axis.Key.Vertical ? new Vector2(axis.Key.Fixed, low) : new Vector2(low, axis.Key.Fixed),
-					axis.Key.Vertical ? new Vector2(axis.Key.Fixed, high) : new Vector2(high, axis.Key.Fixed)));
-				foreach (var range in ranges)
+				// 每个端点切开，选中某个起点时只高亮它真正经过的区间。
+				float[] ends = ranges.SelectMany(r => new[] { r.Low, r.High }).Distinct().OrderBy(v => v).ToArray();
+				for (int i = 1; i < ends.Length; i++)
 				{
-					if (range.Low > high) { Add(); low = range.Low; sources.Clear(); }
-					sources.Add(range.From);
-					high = Mathf.Max(high, range.High);
+					float low = ends[i - 1], high = ends[i];
+					FlowBox[] sources = ranges.Where(r => r.Low <= low && r.High >= high).Select(r => r.From).Distinct().ToArray();
+					if (sources.Length == 0) continue;
+					graph.Lines.Add((sources, group.Key.To, group.Key.Back,
+						axis.Key.Vertical ? new Vector2(axis.Key.Fixed, low) : new Vector2(low, axis.Key.Fixed),
+						axis.Key.Vertical ? new Vector2(axis.Key.Fixed, high) : new Vector2(high, axis.Key.Fixed)));
 				}
-				Add();
 			}
 		}
 		TintFlowLines(graph, boxes);
@@ -952,7 +1010,7 @@ public partial class StoryReviewPanel
 					color = Color.Lerp(InkLine, line.To.LineColor, 0.3f);
 					color.a = InkLine.a;
 				}
-				Segment(line.A, line.B, color, hot ? S(3) : S(2), line.Back);
+				Segment(line.A, line.B, color, hot ? S(3) : S(2), line.Back, true);
 				if (line.B.x == line.To.Rect.x) Fill(new Rect(line.B.x - S(7), line.B.y - S(4), S(7), S(8)), color);
 			}
 		}

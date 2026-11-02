@@ -24,6 +24,8 @@ public sealed class StoryMission
 	public string Series = "";
 	public string SeriesTitle = "";
 	public bool Main;
+	/// <summary>地点直入剧情的只读索引，不是游戏注册的任务。</summary>
+	public bool PlaceEntry;
 	/// <summary>游戏数据里没启用、不会在地图上自己触发，只能由别的剧本直接接进来（襄阳行这类）。</summary>
 	public bool Inactive;
 	public string Desc = "";
@@ -161,7 +163,7 @@ public static class StoryAtlas
 		var progress = SeriesProgress();
 		foreach (StoryMission mission in Missions)
 		{
-			var scripts = mission.Scripts.Select(StoryScripts.Get).Where(s => s != null).ToList();
+			var scripts = mission.Scripts.Select(n => mission.PlaceEntry ? StoryPlaces.View(StoryScripts.Get(n)) : StoryScripts.Get(n)).Where(s => s != null).ToList();
 			mission.Read = StoryScripts.ReadPercent(scripts.SelectMany(s => s.Lines));
 			mission.Visited = IsVisited(mission, scripts, visited, progress);
 		}
@@ -189,7 +191,7 @@ public static class StoryAtlas
 		{
 			return true;
 		}
-		return !mission.Main && !scripts.Any(s => s.Records.Count > 0) && progress.TryGetValue(mission.Series, out string current) && PassedInSeries(mission, current);
+		return !mission.Main && !mission.PlaceEntry && !scripts.Any(s => s.Records.Count > 0) && progress.TryGetValue(mission.Series, out string current) && PassedInSeries(mission, current);
 	}
 
 	// 这一局已经过了这一步：整组支线已 clear（做完最后一步，剧本里会把任务组设成 clear），或者进度已经走到组里排在它后面的那一步
@@ -205,11 +207,6 @@ public static class StoryAtlas
 	}
 
 	private static IEnumerator _steps;
-
-	// 回养成地图、开始新一旬的公共剧本（很多任务演完用 SetNextScript 接到这里）：和 ChangeScene("Free") 一样算回地图，
-	// 不再往下走。走进去的话，地图上之后演到的各种剧本都算成这个任务的，别的存档演过地图剧情就显示「这一局走过」
-	private static readonly System.Text.RegularExpressions.Regex MapStart =
-		new System.Text.RegularExpressions.Regex(@"^section_\d+_free_start_\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
 	public static void Start()
 	{
@@ -355,7 +352,7 @@ public static class StoryAtlas
 			while (todo.Count > 0 && seen.Count < 400)
 			{
 				string name = todo.Dequeue();
-				if (seen.Contains(name) || (seen.Count > 0 && (starts.Contains(name) || MapStart.IsMatch(name))))
+				if (seen.Contains(name) || (seen.Count > 0 && (starts.Contains(name) || StoryPlaces.IsReturn(name) || StoryPlaces.Entries.Any(e => string.Equals(e.Script, name, StringComparison.OrdinalIgnoreCase)))))
 				{
 					continue;
 				}
@@ -367,9 +364,9 @@ public static class StoryAtlas
 				seen.Add(name);
 				foreach (StoryExit exit in script.Exits)
 				{
-					if (exit.Target.Length > 0)
+					if (exit.Target.Length > 0 && !exit.ToMap && !exit.ToTitle && exit.EventPool.Length == 0)
 					{
-						todo.Enqueue(exit.Target);
+						todo.Enqueue(StoryScripts.FlowTarget(exit));
 					}
 				}
 			}
@@ -414,7 +411,7 @@ public static class StoryAtlas
 		// 同一任务组编号开头、又没归到别的任务的剧本，也算这条支线的（台词搜索、读过多少、剧情图、走完接到的主线都算上）
 		foreach (StoryMission mission in Missions.Where(m => !m.Main && m.Series.Length > 0))
 		{
-			var extra = names.Where(n => n.StartsWith(mission.Series + "_", StringComparison.OrdinalIgnoreCase) && !owner.ContainsKey(n)).ToList();
+			var extra = names.Where(n => n.StartsWith(mission.Series + "_", StringComparison.OrdinalIgnoreCase) && !owner.ContainsKey(n) && !StoryPlaces.IsReturn(n)).ToList();
 			if (extra.Count == 0)
 			{
 				continue;
@@ -441,6 +438,8 @@ public static class StoryAtlas
 			mission.Visited = IsVisited(mission, all, visited, progress);
 		}
 
+		StoryPlaces.AddStories(Missions, owner);
+
 		// 剧本归属，以及别的任务接进来的地方（支线怎么进入）
 		Owner.Clear();
 		foreach (var pair in owner)
@@ -449,14 +448,14 @@ public static class StoryAtlas
 		}
 		foreach (var pair in owner)
 		{
-			StoryScript s = StoryScripts.Get(pair.Key);
+			StoryScript s = pair.Value.PlaceEntry ? StoryPlaces.View(StoryScripts.Get(pair.Key)) : StoryScripts.Get(pair.Key);
 			if (s == null)
 			{
 				continue;
 			}
 			foreach (StoryExit exit in s.Exits)
 			{
-				if (exit.Target.Length == 0 || !owner.TryGetValue(exit.Target, out StoryMission into) || into == pair.Value || into.Entries.Count >= 8
+				if (exit.Target.Length == 0 || !owner.TryGetValue(StoryScripts.FlowTarget(exit), out StoryMission into) || into == pair.Value || into.Entries.Count >= 8
 					|| into.Entries.Any(e => e.From == pair.Value && e.Script == pair.Key))
 				{
 					continue;
@@ -906,7 +905,7 @@ public static class StoryAtlas
 		return TextConverter.ToSimplified(name);
 	}
 
-	private static string LibraryText(string key, string fallback)
+	internal static string LibraryText(string key, string fallback)
 	{
 		try
 		{
