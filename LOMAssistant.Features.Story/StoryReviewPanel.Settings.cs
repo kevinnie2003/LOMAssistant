@@ -106,6 +106,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.ShowItemUses, "物品说明里写用途"),
 				new SettingRow { Element = ConfigManager.OptionResultMode, Name = "选项后果", Choices = new[] { "总是显示", "鼠标悬停", "不显示" } },
 				Row(ConfigManager.ColorOptionDeltas, "选项后果加减上色"),
+				Row(ConfigManager.ShowReadMarks, "选项、骰子已读标记"),
 				Row(ConfigManager.EnableManualDiceSelection, "骰子手动选择"),
 				Row(ConfigManager.EnableStoryJump, "剧情跳转"),
 				Row(ConfigManager.FontScale, "对白文字大小（%）", 50f, 200f),

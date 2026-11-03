@@ -93,6 +93,8 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/option-hint.webp" width="640" alt="Options followed by their results and unlock conditions">
 
+- **Read marks**: dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen). Toggle **Read marks on options and dice** in the settings; the Advanced and All on presets turn it on.
+
 - **Pick random events** (off by default): when working, wandering and so on, see each event's odds and changes (changes that depend on a condition show the condition), then choose which one triggers or roll with the normal odds. Events you haven't seen yet are marked **Not seen**. Branch checks that roll a random number also let you pick the path. Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off. With **Force events whose conditions aren't met** on in settings (only the **All on** preset turns it on), those events are also folded below with what they need; clicking one triggers it regardless, without changing flags.
 
   <img src="media/event-picker.webp" width="480" alt="Pick random events: the events that can trigger, their odds and changes">

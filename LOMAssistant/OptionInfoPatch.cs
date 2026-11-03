@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx;
 using Fungus;
 using HarmonyLib;
 using LOMAssistant.Config;
+using LOMAssistant.Features.Story;
 using LOMAssistant.LuaParse;
 using Mortal.Core;
 using Mortal.Free;
@@ -158,7 +160,23 @@ internal static class OptionInfoPatch
 	{
 		// 本 Mod 自己取选项原文（剧情回顾里显示）时不加结果说明，也不算游戏弹出的菜单；
 		// 设成「鼠标悬停」「不显示」时也不接在选项后面（悬停时由 OptionHoverHint 另外显示）
-		if (Raw || !On)
+		if (Raw)
+		{
+			return;
+		}
+		// 对话选项：后续对白是否已读（单独的开关「选项、骰子已读标记」，不跟着选项提示）
+		if (key != null && key.StartsWith("O_") && ConfigManager.ShowReadMarks.Value)
+		{
+			try
+			{
+				__result += ReadMark(StoryStep.Option, key, "#73644F");
+			}
+			catch (Exception ex)
+			{
+				FileLogger.LogWarning("选项标看过没失败: " + ex.Message);
+			}
+		}
+		if (!On)
 		{
 			return;
 		}
@@ -317,12 +335,80 @@ internal static class OptionInfoPatch
 	[HarmonyPatch(typeof(DiceOption), "UpdateContent")]
 	public static void DiceOption_UpdateContent_Postfix(DiceOption __instance)
 	{
+		if (ConfigManager.ShowReadMarks.Value)
+		{
+			DiceReadMark(__instance);
+		}
 		if (!On)
 		{
 			return;
 		}
 		DiceNoWrap(__instance);
 		DiceFitToScreen(__instance);
+	}
+
+	/// <summary>
+	/// 选了这个选项（kind 为选项）或掷到这一档（kind 为掷骰）后的对白看过没，写成「　没看过」「　看过一半」「　看过」（和「判断前选走哪一支」一样）。
+	/// 算现在这段剧本里这条路上的对白；这条路直接接到别的剧本时，也算那段剧本开头不分岔的对白。没有对白、认不出的返回空串。
+	/// </summary>
+	internal static string ReadMark(string kind, string key, string color = "#9A9284")
+	{
+		string script = (LastScriptKey ?? "").Split('#')[0];
+		if (script.EndsWith(".LuaScript"))
+		{
+			script = script.Substring(0, script.Length - ".LuaScript".Length);
+		}
+		StoryScript s = StoryScripts.Get(script);
+		ReadStorySystem read = ReadStorySystem.Instance;
+		if (string.IsNullOrEmpty(key) || s == null || read == null)
+		{
+			return "";
+		}
+		bool OnArm(List<StoryStep> path) => path.Any(st => st.Kind == kind && st.Key == key);
+		var lines = s.Talk.Where(t => OnArm(t.Path)).Select(t => t.Key).ToList();
+		foreach (StoryExit exit in s.Exits.Where(e => OnArm(e.Path) && !e.ToMap && !e.ToTitle))
+		{
+			StoryScript next = StoryScripts.Get(StoryScripts.FlowTarget(exit));
+			if (next != null && !string.Equals(next.Name, s.Name, StringComparison.OrdinalIgnoreCase))
+			{
+				lines.AddRange(next.Talk.Where(t => t.Path.Count == 0).Select(t => t.Key));
+			}
+		}
+		if (lines.Count == 0)
+		{
+			return "";
+		}
+		int unread = lines.Count(k => !read.ExistKey(k));
+		return "　" + (unread == lines.Count ? RichText.Golden(TextConverter.ForDisplay("没看过"))
+			: unread > 0 ? RichText.Golden(TextConverter.ForDisplay("看过一半"))
+			: "<color=" + color + ">" + TextConverter.ForDisplay("看过") + "</color>");
+	}
+
+	/// <summary>掷骰线路标题后面写这一档的对白看过没。</summary>
+	private static void DiceReadMark(DiceOption option)
+	{
+		try
+		{
+			string key = Traverse.Create(option).Field("_sourceText").GetValue<UnityEngine.UI.Text>()?.text?.Split('|')[0] ?? "";
+			string mark = ReadMark(StoryStep.Dice, key);
+			if (mark.Length == 0)
+			{
+				return;
+			}
+			foreach (string field in new[] { "_normalText", "_highText" })
+			{
+				TMPro.TMP_Text text = Traverse.Create(option).Field(field).GetValue<TMPro.TMP_Text>();
+				if (text != null && !string.IsNullOrEmpty(text.text))
+				{
+					int end = text.text.IndexOf('\n');
+					text.text = end < 0 ? text.text + mark : text.text.Insert(end, mark);
+				}
+			}
+		}
+		catch (Exception ex)
+		{
+			FileLogger.LogWarning("骰子线路标看过没失败: " + ex.Message);
+		}
 	}
 
 	// 选中时显示的是另一个文字框（_highText，粗体字型，字宽不同），换上来时再量一次
