@@ -2,6 +2,10 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.4.2 (2026-11-03)
+
+- **Read marks on options and dice** (new setting; the Advanced and All on presets turn it on): dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen).
+
 ## 3.4.1 (2026-11-02)
 
 - **Settings apply right away**: option hints, picking dice results, the Lecture Hall display, skip turn, win now in duels and win now in battles take effect as soon as you change them, without a restart.
