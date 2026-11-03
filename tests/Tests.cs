@@ -144,6 +144,74 @@ public static class Tests
 		}
 	}
 
+	/// <summary>游戏备注压成一行后仍能查到完整名称，外层括号和未匹配的空白原样保留。</summary>
+	public static void TestFlagNameWhitespace()
+	{
+		foreach (string language in new[] { "Korean", "Japanese", "English" })
+		{
+			foreach (string[] row in NameTable("UiFlagNames", language).Where(row => row[0].Contains(" ")))
+			{
+				string expected = LOMAssistant.UiText.Translate(row[0] + " (TEST_ID) 需=1", language);
+				foreach (string space in new[] { "  ", "\r ", " \t " })
+				{
+					string source = row[0].Replace(" ", space) + " (TEST_ID) 需=1";
+					Assert(LOMAssistant.UiText.Translate(source, language) == expected, language + "：备注空白导致漏译「" + row[0] + "」");
+				}
+			}
+		}
+		string name = "南宫家宴采纳结论 1:大师兄 2:二师兄 3:三师兄";
+		string translated = "남궁세가 연회에서 채택한 결론 1:대사형 2:이사형 3:삼사형";
+		Assert(LOMAssistant.UiText.Translate(name, "Korean") == translated, "无括号的旗标备注漏译");
+		Assert(LOMAssistant.UiText.Translate("〔" + name + "〕", "Korean") == "〔" + translated + "〕", "旗标备注的外层括号丢失");
+		foreach (string language in new[] { "Korean", "Japanese", "English", "ChineseSimplified", "ChineseTraditional" })
+		{
+			string source = "UNKNOWN_ID  \r\t 9";
+			Assert(LOMAssistant.UiText.Translate(source, language) == source, "未匹配的文字不应被整理空白");
+		}
+	}
+
+	/// <summary>条件按换行或富文本拆段后，段首的连接词仍复用各语言词条。</summary>
+	public static void TestConditionConjunctionSegments()
+	{
+		foreach (string[] row in new[] { new[] { "Korean", "그리고", "또는" }, new[] { "Japanese", "AND", "OR" }, new[] { "English", "AND", "OR" } })
+		{
+			foreach (string[] word in new[] { new[] { "且", row[1] }, new[] { "或", row[2] } })
+			{
+				string source = "<b>FLAG_A</b>\n" + word[0] + " <b>FLAG_B</b>";
+				string expected = "<b>FLAG_A</b>\n" + word[1] + " <b>FLAG_B</b>";
+				Assert(LOMAssistant.UiText.Translate(source, row[0]) == expected, row[0] + "：段首连接词漏译");
+				Assert(LOMAssistant.UiText.Translate(source, "ChineseSimplified") == source, "中文条件不应变化");
+			}
+			Assert(LOMAssistant.UiText.Translate("而且 UNKNOWN_ID", row[0]) == "而且 UNKNOWN_ID", "不应替换词语内部的连接词");
+		}
+	}
+
+	/// <summary>快存悬停提示单独翻译备注表头，不把玩家备注当作表头的一部分。</summary>
+	public static void TestAnytimeMemoHeading()
+	{
+		var flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+		FieldInfo languageSetting = Mod.GetType("LOMAssistant.Config.ConfigManager").GetField("UiLanguage", flags);
+		object savedSetting = languageSetting.GetValue(null);
+		object setting = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(languageSetting.FieldType);
+		FieldInfo value = languageSetting.FieldType.GetField("m_value", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+		MethodInfo context = Mod.GetType("LOMAssistant.Features.Story.StoryReviewPanel").GetMethod("AnytimeContext", flags);
+		var summary = new LOMAssistant.Features.AnytimeSave.SaveSummary { number = 1, note = "시험 메모\nTEST_ID = 1" };
+		try
+		{
+			languageSetting.SetValue(null, setting);
+			foreach (var row in new[] { (3, "메모:"), (4, "メモ："), (5, "Note: "), (1, "备注："), (2, "備註：") })
+			{
+				value.SetValue(setting, row.Item1);
+				string actual = (string)context.Invoke(null, new object[] { summary });
+				Assert(actual.EndsWith("\n\n" + row.Item2 + summary.note), "快存备注表头或正文被改动：" + row.Item1);
+			}
+		}
+		finally
+		{
+			languageSetting.SetValue(null, savedSetting);
+		}
+	}
+
 	/// <summary>名称表共用原文、韩语、日语、英语四列；未提供的译文用 null，不重复原文键。</summary>
 	public static void TestUiNameTables()
 	{

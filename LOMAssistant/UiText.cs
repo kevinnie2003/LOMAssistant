@@ -128,12 +128,15 @@ public static class UiText
 	// 「设置名字=1」）、两个空格或整段结尾时换。备注末尾常带着 \r、\t、空格（「抢劫\t (M20013)」），中间隔着空白也算
 	private static (Regex, MatchEvaluator) FlagNames(string[][] table)
 	{
+		// 备注换行压成一行后可能留下回车或连续空格；只在名称匹配中兼容，不改其他界面文字。
+		string Key(string name) => Regex.Replace(name, @"[ \t\r]+", " ");
 		var map = new Dictionary<string, string>();
 		foreach (string[] row in table)
 		{
-			map[row[0]] = row[1];
+			map[Key(row[0])] = row[1];
 		}
-		string Alternatives(IEnumerable<string> names) => string.Join("|", names.OrderByDescending(n => n.Length).Select(Regex.Escape).ToArray());
+		string Alternatives(IEnumerable<string> names) => string.Join("|", names.OrderByDescending(n => n.Length)
+			.Select(n => Regex.Escape(n).Replace(@"\ ", @"[ \t\r]+")).ToArray());
 		var patterns = new List<string>();
 		if (map.Keys.Any(n => n.Length > 3))
 		{
@@ -144,7 +147,7 @@ public static class UiText
 			patterns.Add("(?:" + Alternatives(map.Keys.Where(n => n.Length <= 3)) + ")(?=\\s*\\(|\\s*=|\\s+[+-]?\\d|\\s{2}|\\s*$)");
 		}
 		var regex = new Regex(string.Join("|", patterns));
-		return (regex, m => map[m.Value]);
+		return (regex, m => map[Key(m.Value)]);
 	}
 
 	// 条件里的变量名（「嘴力 需>=40」「目前时间 需<=…」「好感度_三师兄 需>好感度_二师兄」）：只在条件格式里换，
@@ -246,6 +249,11 @@ public static class UiText
 				if (text == null)
 				{
 					continue;
+				}
+				// 换行、富文本拆段后，连接词可能位于段首；复用原词条，避免漏掉「且」「或」。
+				if (row[0] == " 且 " || row[0] == "\n或 ")
+				{
+					Words.Add((new Regex("^" + Regex.Escape(row[0].TrimStart())), _ => text.TrimStart()));
 				}
 				Words.Add((new Regex(Regex.Escape(row[0])), _ => text));
 			}
