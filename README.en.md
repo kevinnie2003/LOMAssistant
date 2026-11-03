@@ -70,7 +70,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 - **Romance routes**: pick a love interest on the route map to light up only her scenes and see each step, whether it is done and where to get it.
 
-- **Story map**: each quest as a flow chart. Every scene box lists its ways on (options, dice, conditions) one per row, with a line from that row to the scene it leads to; options that stay in the scene are listed too. Hover a row for the full condition and what it changes.
+- **Story map**: each quest as a flow chart. Every scene box lists its ways on (options, dice, conditions) one per row, with a line from that row to the scene it leads to; options that stay in the scene are listed too. Hover a row for the full condition and what it changes. Stories at places such as daily life in Kongtong and Qingcheng or Jiangling have story maps too, view-only.
 
   <img src="media/story-flow.webp" width="640" alt="Story map: options, conditions and destinations between story segments">
 

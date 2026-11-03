@@ -2,6 +2,13 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.4.1 (2026-11-02)
+
+- **Settings apply right away**: option hints, picking dice results, the Lecture Hall display, skip turn, win now in duels and win now in battles take effect as soon as you change them, without a restart.
+- **Location story maps** (PR #41): stories at places such as daily life in Kongtong and Qingcheng, life away from home, Jiangling, Jinxiang Palace and Snow Mountain now have story maps too. Open them from the Now tab or from a flag or stat lookup; they are view-only and can't be jumped to. Lines merge near where they start and where they end, with fewer crossings and detours, and selecting a scene lights up only the lines that belong to it.
+- **Route map**: when one main quest plays over several sections, each later section of the same chapter gets its own stop, and its details list only that section. Main quests the game leaves unnumbered get a "chapter-section" number in front of their names; the prologue reads "Prologue N".
+- **Story map and route map**: they now carry on past travel scenes and random events on the road, instead of stopping at the journey.
+
 ## 3.4.0 (2026-11-02)
 
 - **Memos** (new, F10 to show or hide): a small window floating over the game that keeps track of "get this done by that date". Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline; the window shows the current value, progress and periods left at all times, and notes at its top when a goal is met, stops being met, is about to be due or is overdue. It can be dragged, resized and collapsed, and its background follows **Tooltip opacity** in the settings (PR #40).
