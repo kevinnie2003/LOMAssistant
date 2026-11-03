@@ -450,9 +450,9 @@ public static class ConfigManager
 		MapHintsNowOnly = new ConfigElement<bool>("MapHintsNowOnly", "地图建筑事件提示只列现在点进去就会触发的主线、支线，时间不对、条件不满足的只写个数；随机事件本来就只列现在能抽到的。true=开，false=关", defaultValue: false);
 		EnableEventPicker = new ConfigElement<bool>("EnableEventPicker", "随机事件自选：剧情走到随机事件（工作、闲逛等）时先停下，列出满足条件的事件选一个，也可以选随机。true=开，false=关", defaultValue: false);
 		ForceUnmetEvents = new ConfigElement<bool>("ForceUnmetEvents", "随机事件自选里也列出出现条件没满足的事件，点了无视条件直接触发（不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
-		EnableBranchPicker = new ConfigElement<bool>("EnableBranchPicker", "判断前选走哪一支：剧情走到按条件分支的判断时，换一支能看到没读过的对白或接到别的剧情就先停下，列出每一支的条件、现在的值、对白看过没，选哪支就走哪支（先改数值，改不动直接走）。true=开，false=关", defaultValue: false);
-		BranchPickerSeen = new ConfigElement<bool>("BranchPickerSeen", "判断前选走哪一支：另一支的对白都看过了也停（只要换一支有对白或接到别的剧情）。关掉时只在有没读过的对白或接到别的剧情时停。true=开，false=关", defaultValue: false);
-		BranchChangeValues = new ConfigElement<bool>("BranchChangeValues", "选分支时把数值改到符合：判断前选走哪一支、剧情跳转按选的分支走时，先把属性、好感、旗标改到正好走这一支（改了会一直留着），改不动的再直接走。关掉时不改数值，只是这一次直接走过去。true=开，false=关", defaultValue: false);
+		EnableBranchPicker = new ConfigElement<bool>("EnableBranchPicker", "分支判定手动选择：剧情走到按条件分支的判断时，换一支能看到没读过的对白或接到别的剧情就先停下，列出每一支的条件、现在的值、对白看过没，选哪支就走哪支（先改数值，改不动直接走）。true=开，false=关", defaultValue: false);
+		BranchPickerSeen = new ConfigElement<bool>("BranchPickerSeen", "分支判定手动选择：另一支的对白都看过了也停（只要换一支有对白或接到别的剧情）。关掉时只在有没读过的对白或接到别的剧情时停。true=开，false=关", defaultValue: false);
+		BranchChangeValues = new ConfigElement<bool>("BranchChangeValues", "选分支时自动调整数值：分支判定手动选择、剧情跳转按选的分支走时，先把属性、好感、旗标改到正好走这一支（改了会一直留着），改不动的再直接走。关掉时不改数值，只是这一次直接走过去。true=开，false=关", defaultValue: false);
 		ForceUnmetOptions = new ConfigElement<bool>("ForceUnmetOptions", "条件不满足就不出现的选项也列出来（红字标「条件没满足」，悬停看条件），点了直接选；锁住的选项条件改不到时给「强行解锁」（都不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
 		EnableDuelActionForecast = new ConfigElement<bool>("EnableDuelActionForecast", "决斗中显示敌方本回合预选的行动；敌方意图较高时可能根据你的出招临场应变。默认关。true=开，false=关", defaultValue: false);
 		DuelForecastX = new ConfigElement<float>("DuelForecastX", "决斗敌方行动预测窗口的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
@@ -468,7 +468,7 @@ public static class ConfigManager
 		MemoWidth = new ConfigElement<float>("MemoWidth", "备忘录悬浮窗的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
 		MemoHeight = new ConfigElement<float>("MemoHeight", "备忘录悬浮窗的高度（占屏幕高度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
 		MemoCollapsed = new ConfigElement<bool>("MemoCollapsed", "备忘录悬浮窗是否收起成标题栏（在窗口里点，自动记录）", defaultValue: false);
-		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表全显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列）。true=开，false=关", defaultValue: true);
+		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表完整显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列）。true=开，false=关", defaultValue: true);
 		EnableOneClickUnlock = new ConfigElement<bool>("EnableOneClickUnlock", "被锁住的选项旁显示「一键设置」：把没满足的解锁条件（属性、好感、旗标）改到满足，选项当场解锁。true=开，false=关", defaultValue: true);
 		FlagNoticeSeconds = new ConfigElement<float>("FlagNoticeSeconds", "剧情旗标变化提示在屏幕上停留几秒（按真实时间，开倍速也一样；原版 1 秒）。0=按游戏原样", 4f);
 		FontScale = new ConfigElement<int>("FontScale", "剧情对白的文字大小（百分比，只放大对白框里的字，乘在「游戏文字大小」上）。100=原样，120=大两成", 100);
@@ -514,7 +514,7 @@ public static class ConfigManager
 		PanelOpacity = new ConfigElement<float>("PanelOpacity", "咖啡伴侣窗口的背景不透明度（0.3～1，1=不透明）。调低能透过窗口看到游戏画面，文字和按钮不变。默认 0.8", 0.8f);
 		PopupOpacity = new ConfigElement<float>("PopupOpacity", "提示框的底色不透明度（0.3～1，1=不透明）：地图建筑提示、剧情分支小窗、决斗敌方预选、备忘录、快进、读档进度这些浮在游戏画面上的提示。调低能透过提示框看到游戏画面，文字不变", 0.8f);
 		DialogOpacity = new ConfigElement<float>("DialogOpacity", "小窗的底色不透明度（0.3～1，1=不透明）：随机事件选择、存档备注。调低能透过小窗看到游戏画面，文字和按钮不变", 1f);
-		EnableFastStartup = new ConfigElement<bool>("EnableFastStartup", "开游戏更快：标题画面按钮浮现的开场动画加快 6 倍。true=开（默认），false=关，改后重启生效", defaultValue: true);
+		EnableFastStartup = new ConfigElement<bool>("EnableFastStartup", "启动加速：标题画面按钮浮现的开场动画加快 6 倍。true=开（默认），false=关，改后重启生效", defaultValue: true);
 		EnableFlowSpeedup = new ConfigElement<bool>("EnableFlowSpeedup", "流程提速：切场景不再写多余的全局存档副本、读档时旗标查表、快进时指令不空等、数值变化后的停顿缩到 0.2 秒（没显示的不停顿）、养成地图上行动后的等待和转场加快 3 倍、决斗回合之间不干等。默认开；只有怀疑它导致问题时才关。true=开，false=关", defaultValue: true);
 		TitlePartnerChoice = new ConfigElement<int>("TitlePartnerChoice", "标题画面显示的人物：0=跟随结局（默认），1=不显示，2=小师妹，3=龙湘，4=叶云裳，5=小兰，6=小梅，7=小竹，8=大师兄。回到标题画面时生效", 0);
 		SaveListOrder = new ConfigElement<int>("SaveListOrder", "新版存档、读档界面里手动存档的排列：0=按栏位号（默认），1=最近保存的在上面，2=按栏位号、读档页也列出所有空栏位（点空栏位在那一格开新游戏，同原版）。打开界面时都会选中并滚到上次保存的那个存档", 0);

@@ -119,7 +119,7 @@ public static class ConflictDetector
 		(ConfigManager.SkipReadKey, "一键快进已读对话"),
 		(ConfigManager.AnytimePanelKey, "随时存档页"),
 		(ConfigManager.AnytimeSaveKey, "随时存档：存新档"),
-		(ConfigManager.AnytimeLoadKey, "随时存档：读最近的"),
+		(ConfigManager.AnytimeLoadKey, "随时存档：读取最新存档"),
 		(ConfigManager.AnytimeRollbackKey, "回退到判定前"),
 	};
 

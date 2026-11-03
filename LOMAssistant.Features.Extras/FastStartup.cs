@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 namespace LOMAssistant.Features.Extras;
 
 /// <summary>
-/// 开游戏更快：标题画面「启程」等按钮慢慢浮现的开场动画（Title 场景里的 TitlePlay 时间轴，11 秒）加快播放。
+/// 启动加速：标题画面「启程」等按钮慢慢浮现的开场动画（Title 场景里的 TitlePlay 时间轴，11 秒）加快播放。
 /// 开头的 Logo 是 Unity 启动画面，放的时候游戏还没开始跑脚本（Mod 叫停也要等它放完才轮到），Mod 跳不过。
 /// 只改播放速度，动画、音乐和按钮最后的样子都不变。
 /// </summary>

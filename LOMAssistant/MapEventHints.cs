@@ -395,7 +395,7 @@ public class MapEventHints : MonoBehaviour
 				inPeriod = inPeriod && clauses.All(c => c.Ok);
 			}
 			string unseen = mission != null && !mission.Visited ? "　" + RichText.Golden("没看过") : "";
-			// 设置页「地图提示只列能触发的」：现在不能触发的一概不列，只在最后写个数
+			// 设置页「地图提示仅列可触发事件」：现在不能触发的一概不列，只在最后写个数
 			if (!now && ConfigManager.MapHintsNowOnly.Value)
 			{
 				hidden++;

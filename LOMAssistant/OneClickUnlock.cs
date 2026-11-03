@@ -353,7 +353,7 @@ internal static class OneClickUnlockPatch
 			List<ConditionSolver.Write> writes = data != null ? ConditionSolver.Satisfy(data) : null;
 			// 条件已经满足（一项都不用改）但选项还锁着也要给按钮：读随时存档时游戏在快进回放中途决定锁不锁，
 			// 那一刻的数值和停下时不同，会出现「当前已满足、选项却锁着」，点了直接解开。
-			// 条件改不到（随机、时间、物品）时，设置里打开了「强行选条件没满足的选项」就给「强行解锁」：不改数值直接解开
+			// 条件改不到（随机、时间、物品）时，设置里打开了「显示未满足条件的选项」就给「强行解锁」：不改数值直接解开
 			bool solvable = writes != null && ConfigManager.EnableOneClickUnlock.Value;
 			if (!solvable && !force)
 			{

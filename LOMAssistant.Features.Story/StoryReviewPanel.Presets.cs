@@ -102,12 +102,12 @@ public partial class StoryReviewPanel
 				(ConfigManager.EnableStoryJump, false),
 			}.Concat(Cheats(true, false)).ToArray(),
 		},
-		// 介于「辅助」和「全开」之间：比「全开」少了判断前选走哪一支、强行触发条件没满足的事件和选项，以及会让战斗、商店失去意义的作弊
+		// 介于「辅助」和「全开」之间：比「全开」少了分支判定手动选择、强制触发未满足条件的事件和选项，以及会让战斗、商店失去意义的作弊
 		new Preset
 		{
 			Name = "进阶",
 			Tagline = "建议补全剧情的老玩家选择",
-			Note = "打开分支小窗、旗标提示、随机事件自选、剧情跳转等剧情辅助，不开判断前选走哪一支和强行触发条件没满足的事件和选项；作弊只开无限修炼锻造和不花银两；讲经堂只提示达成条件，四师兄不卖全部物品",
+			Note = "打开分支小窗、旗标提示、随机事件自选、剧情跳转等剧情辅助，不开分支判定手动选择和强制触发未满足条件的事件和选项；作弊只开无限修炼锻造和不花银两；讲经堂只提示达成条件，四师兄不卖全部物品",
 			Values = new (IConfigElement, object)[]
 			{
 				(ConfigManager.ShowBranchChecks, true),
@@ -137,7 +137,7 @@ public partial class StoryReviewPanel
 		{
 			Name = "全开",
 			Tagline = "建议想收集全部剧情分支的玩家选择",
-			Note = "在「进阶」之上再打开判断前选走哪一支、强行触发条件没满足的事件和选项、四师兄卖全部物品，讲经堂全部解锁，以及战斗无敌等作弊",
+			Note = "在「进阶」之上再打开分支判定手动选择、强制触发未满足条件的事件和选项、四师兄售卖全部物品，讲经堂全部解锁，以及战斗无敌等作弊",
 			Values = new (IConfigElement, object)[]
 			{
 				(ConfigManager.ShowBranchChecks, true),

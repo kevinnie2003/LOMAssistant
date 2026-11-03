@@ -42,7 +42,7 @@ public static class GameSpeed
 	private static bool Exempt()
 	{
 		string scene = SceneManager.GetActiveScene().name;
-		// 战役默认按原速（设置「战役也按倍速」打开时照样加速）
+		// 战役默认按原速（设置「倍速作用于战役」打开时照样加速）
 		if (scene == "Battle" && !ConfigManager.GameSpeedInBattle.Value)
 		{
 			return true;

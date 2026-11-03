@@ -676,7 +676,7 @@ public static class Tests
 				// 已读对白是否停下只看设置，不能改变目的地比较。
 				type.GetField("Unread").SetValue(second, 0);
 				type.GetField("Lines").SetValue(second, 1);
-				Assert(Worth() == enabled, "同一去处的已读分支应按「看过的分支也停」设置判断");
+				Assert(Worth() == enabled, "同一去处的已读分支应按「已读分支也暂停」设置判断");
 			}
 		}
 		finally

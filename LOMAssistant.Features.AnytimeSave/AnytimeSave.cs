@@ -77,7 +77,7 @@ public partial class AnytimeSave : MonoBehaviour
 	}
 	internal static string StoreRoot => Path.Combine(SaveRoot, "AnytimeSave");
 
-	/// <summary>正在读的随时存档存的时候开着「强行选条件没满足的选项」。</summary>
+	/// <summary>正在读的随时存档存的时候开着「显示未满足条件的选项」。</summary>
 	internal bool LoadingHiddenOptions => loading != null && loading.hiddenOptions;
 
 	/// <summary>
@@ -214,7 +214,7 @@ public partial class AnytimeSave : MonoBehaviour
 	internal string PrepareScript(LuaEnvironment env, string code, string name)
 	{
 		if (!name.EndsWith(".LuaScript", StringComparison.Ordinal) || name == "tmp.LuaScript") return code;
-		// 版本核对按原剧本：「强行选条件没满足的选项」改过的剧本（见 HiddenOptions）也按改之前的算
+		// 版本核对按原剧本：「显示未满足条件的选项」改过的剧本（见 HiddenOptions）也按改之前的算
 		string original = LOMAssistant.HiddenOptions.Original(code);
 		string hash = Hash(original);
 		string shortName = name.Substring(0, name.Length - 10);
