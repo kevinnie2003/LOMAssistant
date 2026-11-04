@@ -217,8 +217,8 @@ Everything is on the settings page of the window (F8). Changes are saved immedia
 |---|---|
 | As intended | Everything listed below is off |
 | Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Lecture Hall unlock; Better battle controls; Enemy morale in battles; Unlimited training; Unlimited forging; Free forging |
-| Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Enemy move forecast; Choose battle allies |
-| All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Invincible in duels; Unhurt in battles; No ultimate cooldown; full Lecture Hall unlock display |
+| Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Choose battle allies |
+| All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Enemy move forecast; full Lecture Hall unlock display |
 
 Anything not listed does not change with presets and can be switched on its own in Settings.
 

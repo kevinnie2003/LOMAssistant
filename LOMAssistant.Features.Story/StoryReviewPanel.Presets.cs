@@ -26,7 +26,7 @@ public partial class StoryReviewPanel
 	private int _presetConfirm = -1;
 	private float _presetConfirmUntil;
 
-	// 作弊类：无限修炼锻造、不花银两从「辅助」起打开，其余只有「全开」打开（「决斗敌方不受伤」「突破属性上限」哪一档都不开）
+	// 作弊类：无限修炼锻造、不花银两从「辅助」起打开，开发装备无视剧情条件只有「全开」打开，战斗作弊都不打开（「决斗敌方不受伤」「突破属性上限」哪一档都不开）
 	private static (IConfigElement, object)[] Cheats(bool training, bool on) => new (IConfigElement, object)[]
 	{
 		(ConfigManager.BreakStatLimit, false),
@@ -34,10 +34,10 @@ public partial class StoryReviewPanel
 		(ConfigManager.CheatUnlimitedUpgrade, training),
 		(ConfigManager.CheatFreeUpgradeMoney, training),
 		(ConfigManager.CheatDevelopIgnoreStory, on),
-		(ConfigManager.CheatDuelInvincible, on),
+		(ConfigManager.CheatDuelInvincible, false),
 		(ConfigManager.CheatDuelNoDamage, false),
-		(ConfigManager.CheatBattleInvincible, on),
-		(ConfigManager.CheatBattleNoCooldown, on),
+		(ConfigManager.CheatBattleInvincible, false),
+		(ConfigManager.CheatBattleNoCooldown, false),
 	};
 
 	private static Preset[] Presets => _presets ??= new[]
@@ -136,7 +136,7 @@ public partial class StoryReviewPanel
 				(ConfigManager.EnableSkipAction, true),
 				(ConfigManager.EnableCombatAssist, true),
 				(ConfigManager.EnableBattleWin, true),
-				(ConfigManager.EnableDuelActionForecast, true),
+				(ConfigManager.EnableDuelActionForecast, false),
 				(ConfigManager.EnableLibraryDisplay, 1),
 				(ConfigManager.EnableShopAllItems, false),
 				(ConfigManager.EnableStoryJump, true),
@@ -146,7 +146,7 @@ public partial class StoryReviewPanel
 		{
 			Name = "全开",
 			Tagline = "建议想收集全部剧情分支的玩家选择",
-			Note = "在「进阶」之上再打开分支判定手动选择、强制触发未满足条件的事件和选项、四师兄售卖全部物品，讲经堂全部解锁，以及战斗无敌等作弊",
+			Note = "在「进阶」之上再打开分支判定手动选择、强制触发未满足条件的事件和选项、四师兄售卖全部物品、决斗敌方行动预测，讲经堂全部解锁，以及开发装备无视剧情条件",
 			Values = new (IConfigElement, object)[]
 			{
 				(ConfigManager.ShowBranchChecks, true),
