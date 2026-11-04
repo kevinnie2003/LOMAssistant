@@ -145,6 +145,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.BattleMorale, "战役敌军士气"),
 				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
 				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人随主角成长"),
+				Row(ConfigManager.DuelRework, "决斗玩法重做"),
 				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
 			}),
 			("存档", new List<SettingRow>

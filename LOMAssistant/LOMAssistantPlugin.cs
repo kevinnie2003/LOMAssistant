@@ -136,6 +136,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			LogInfo("战役直接获胜补丁已应用。");
 			ConfigManager.EnableSkipAction.OnValueChanged += SkipActionPatch.SettingChanged;
 			ConfigManager.EnableBattleWin.OnValueChanged += BattleWinPatch.SettingChanged;
+			ConfigManager.DuelRework.OnValueChanged += on => { if (!on) { ConfigManager.DuelReworkGuideShown.Value = false; } };
 			ConfigManager.EnableCombatAssist.OnValueChanged += CombatAssistPatch.SettingChanged;
 			// 战役开打、结束写进 Mod 日志（只记录，不改游戏）
 			TryPatchAll(typeof(BattleLogPatch));
@@ -156,6 +157,10 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(BattleCompanions));
 			TryPatchAll(typeof(BattleMorale));
 			TryPatchAll(typeof(DuelEnemyGrowth));
+			TryPatchAll(typeof(DuelEnemyTactics));
+			TryPatchAll(typeof(DuelPressure));
+			TryPatchAll(typeof(DuelPressurePanel));
+			DuelPressurePanel.Ensure(base.gameObject);
 			TryPatchAll(typeof(DuelPacePatch));
 			DuelActionForecast.Ensure(base.gameObject);
 			TryPatchAll(typeof(DuelActionForecastPatch));

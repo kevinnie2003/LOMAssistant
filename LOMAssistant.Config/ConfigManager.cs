@@ -124,6 +124,8 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> DuelEnemyGrowth;
 
+	public static ConfigElement<bool> DuelRework;
+
 	public static ConfigElement<float> DuelForecastX;
 
 	public static ConfigElement<float> DuelForecastY;
@@ -196,6 +198,7 @@ public static class ConfigManager
 	public static ConfigElement<string> PresetCustom;
 
 	public static ConfigElement<bool> PresetChooserShown;
+	public static ConfigElement<bool> DuelReworkGuideShown;
 	public static ConfigElement<int> OptionResultMode;
 	public static ConfigElement<bool> ColorOptionDeltas;
 
@@ -487,6 +490,7 @@ public static class ConfigManager
 		ForceUnmetOptions = new ConfigElement<bool>("ForceUnmetOptions", "条件不满足就不出现的选项也列出来（红字标「条件没满足」，悬停看条件），点了直接选；锁住的选项条件改不到时给「强行解锁」（都不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
 		EnableDuelActionForecast = new ConfigElement<bool>("EnableDuelActionForecast", "决斗中显示敌方本回合预选的行动；敌方意图较高时可能根据你的出招临场应变。默认关。true=开，false=关", defaultValue: false);
 		DuelEnemyGrowth = new ConfigElement<bool>("DuelEnemyGrowth", "决斗敌人随主角成长：开战时按主角六项属性总和提高敌人的血量和属性，强敌仍明显强于普通敌人。true=开，false=关", defaultValue: false);
+		DuelRework = new ConfigElement<bool>("DuelRework", "决斗玩法重做：克制对方后有额外效果（追击、让对方下回合少一个指令、让绝招落空、重创、反击等），敌我规则相同；敌人也会根据双方的气、血量和主角连续出的招调整出招。第一次进入决斗时有说明。true=开，false=关", defaultValue: false);
 		DuelForecastX = new ConfigElement<float>("DuelForecastX", "决斗敌方行动预测窗口的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
 		DuelForecastY = new ConfigElement<float>("DuelForecastY", "决斗敌方行动预测窗口的纵向位置（占屏幕高度的比例，-1=默认居中）。拖动窗口会自动保存", -1f);
 		DuelForecastWidth = new ConfigElement<float>("DuelForecastWidth", "决斗敌方行动预测窗口的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
@@ -525,6 +529,7 @@ public static class ConfigManager
 		EnableBackgroundRun = new ConfigElement<bool>("KeepRunningInBackground", "后台继续运行：切到别的窗口时游戏不暂停，背景音乐也不停。true=开，false=关（默认，游戏原本的做法：切走就停）", defaultValue: false);
 		EnableRightClickHideUI = new ConfigElement<bool>("EnableRightClickHideUI", "隐藏界面看 CG：剧情里按热键（HideUIKey，默认鼠标右键）隐藏对话框等界面和本 Mod 的窗口，只看背景、CG 和立绘，方便截图；再按一次、点左键或按其他键恢复。已不用：不想要就把 HideUIKey 设成 None", defaultValue: true);
 		PresetChooserShown = new ConfigElement<bool>("PresetChooserShown", "第一次打开咖啡伴侣窗口时的选预设弹窗已经出过（自动记录，不用改）", defaultValue: false);
+		DuelReworkGuideShown = new ConfigElement<bool>("DuelReworkGuideShown", "决斗玩法重做的说明窗口已经出过（自动记录，不用改）", defaultValue: false);
 		PresetCustom = new ConfigElement<string>("PresetCustom", "设置页「预设」里「自定义」记下的开关（从自定义换到别的预设时自动记录，点「自定义」换回来）：配置名=值，分号隔开", "");
 		LockedStats = new ConfigElement<string>("LockedStats", "数值页锁住的数值（在数值页点锁，自动记录）：数值名，逗号隔开。清空就全部解锁", "");
 		EventRules = new ConfigElement<string>("EventRules", "随机事件的「总是」「不出」（在随机事件选择框里点，自动记录）：事件编号=1 总是触发、=2 不出，分号隔开。清空就全部取消", "");
