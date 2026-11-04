@@ -134,19 +134,19 @@ public partial class StoryReviewPanel
 			}),
 			("战斗", new List<SettingRow>
 			{
+				Row(ConfigManager.DuelRework, "决斗玩法重做"),
+				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人随主角成长"),
+				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
+				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
+				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
 				Row(ConfigManager.CheatDuelInvincible, "决斗我方无敌"),
 				Row(ConfigManager.CheatDuelNoDamage, "决斗敌方不受伤"),
-				Row(ConfigManager.CheatBattleInvincible, "战役我方不受伤"),
-				Row(ConfigManager.CheatBattleNoCooldown, "战役绝招无冷却"),
-				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
 				Row(ConfigManager.EnableBattleWin, "战役直接获胜按钮"),
 				Row(ConfigManager.BattleFeel, "战役手感优化"),
 				Row(ConfigManager.BattleCompanions, "战役助战选择"),
 				Row(ConfigManager.BattleMorale, "战役敌军士气"),
-				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
-				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人随主角成长"),
-				Row(ConfigManager.DuelRework, "决斗玩法重做"),
-				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
+				Row(ConfigManager.CheatBattleInvincible, "战役我方不受伤"),
+				Row(ConfigManager.CheatBattleNoCooldown, "战役绝招无冷却"),
 			}),
 			("存档", new List<SettingRow>
 			{
