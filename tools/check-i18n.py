@@ -5,9 +5,11 @@
     python tools/check-i18n.py --update   rewrite tools/i18n-gaps.txt with today's known gaps
 
 Covers: every setting name has Korean, Japanese and English; every config option has a description in all
-three; table rows have matching placeholders; every table row has every language, and Chinese text in the
-UI files has a translation (known gaps live in tools/i18n-gaps.txt, so only new ones fail); the READMEs list
-the same features; CHANGELOGs list the same versions; version numbers agree.
+three; table rows have matching placeholders; every table row has every language, and every Chinese string
+in the code has a translation, interpolated ones included (known gaps live in tools/i18n-gaps.txt, so only
+new ones fail); the READMEs list the same features; CHANGELOGs list the same versions; version numbers agree.
+
+Text that never reaches the screen: end the line with `// i18n-ignore`.
 """
 import glob
 import os
@@ -24,12 +26,13 @@ SETTING = re.compile(r'ConfigElement<[^>]+>\("(\w+)"')
 ROW_CALL = re.compile(r'\bRow\(ConfigManager\.\w+,\s*' + STRING)
 DESCRIPTION = re.compile(r'\{\s*"(\w+)",\s*new\[\]\s*\{\s*' + STRING + r'\s*,\s*' + STRING + r'\s*\}\s*\}')
 HOLE = re.compile(r'\{\d+\}')
-DISPLAY = re.compile(r'\b(?:Label|Button|Box|ForDisplay|Notice|Toast|Golden|CloneButton|CloneInto)\(\s*(?:[^"()]*,\s*)?(?<!\$)' + STRING)
 GAPS = os.path.join('tools', 'i18n-gaps.txt')
-UI_FILES = [os.path.join('LOMAssistant.Features.Story', 'StoryReviewPanel*.cs'), os.path.join('LOMAssistant.Features.Memo', 'MemoPanel.cs'),
-            os.path.join('LOMAssistant.Features.Extras', 'SaveBrowser.cs'), os.path.join('LOMAssistant', 'EventPicker.cs'),
-            os.path.join('LOMAssistant', 'MapEventHints.cs'), os.path.join('LOMAssistant', 'OptionInfoPatch.cs')]
-LOGGING = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b')
+# 不显示给玩家：日志、自测、诊断；文字表本身；AI 提示词（自带四语言，由 AiTests 查）
+SKIP_FILES = re.compile(r'^(?:Ui(?:Text|TextEnglish|Descriptions|Traditional|ConditionNames|EventNames|FlagNames|QuestNames)\.cs'
+                        r'|Pinyin.*|SelfTest.*|Diagnostics.*|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval).*)$')
+NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|i18n-ignore')
+# 这些位置的中文是用来比较游戏数据的，不显示
+COMPARED = re.compile(r'(?:Contains|StartsWith|EndsWith|IndexOf|LastIndexOf|Replace|Split|TrimEnd|TrimStart|Trim|Regex\.\w+|IsMatch|Match)\(\s*(?:[^"()]*,\s*)?$|(?:==|!=|\bcase|\bis)\s*$')
 
 
 def read(*parts):
@@ -151,34 +154,82 @@ def check_docs(problems):
         problems.append(f'plugin version {plugin}, assembly version {assembly}')
 
 
+def read_string(line, i, interpolated, verbatim, found):
+    """Reads the literal opening at line[i]; holes in an interpolated one become {0}, {1}, ... as in the tables."""
+    j = i + 1
+    text = []
+    holes = 0
+    while j < len(line):
+        c = line[j]
+        if verbatim and line[j:j + 2] == '""':
+            text.append('\\"')
+            j += 2
+        elif not verbatim and c == '\\':
+            text.append(line[j:j + 2])
+            j += 2
+        elif c == '"':
+            return j + 1, ''.join(text)
+        elif interpolated and line[j:j + 2] in ('{{', '}}'):
+            text.append(c)
+            j += 2
+        elif interpolated and c == '{':
+            depth = 1
+            j += 1
+            while j < len(line) and depth:
+                if line[j] == '"':
+                    start = j
+                    j, inner = read_string(line, j, False, False, found)
+                    found.append((line[:start], inner))
+                    continue
+                depth += {'{': 1, '}': -1}.get(line[j], 0)
+                j += 1
+            text.append('{%d}' % holes)
+            holes += 1
+        else:
+            text.append(c)
+            j += 1
+    return j, ''.join(text)
+
+
+def literals_in(line):
+    """Every string literal on a line, as (code before it, text)."""
+    found = []
+    i = 0
+    while i < len(line):
+        if line[i:i + 2] == '//':
+            break
+        char = re.match(r"'(?:\\.|[^'\\])'", line[i:])
+        if char:
+            i += char.end()
+        elif line[i] == '"':
+            start = i
+            prefix = line[max(0, i - 2):i]
+            i, text = read_string(line, i, '$' in prefix, '@' in prefix, found)
+            found.append((line[:start].rstrip('$@'), text))
+        else:
+            i += 1
+    return found
+
+
 def display_gaps():
     """What has no translation, as `language<TAB>text` lines."""
     keys = known_keys()
     en = known_english()
     gaps = set()
-
-    def need(text):
-        if text not in keys:
-            gaps.add('Korean/Japanese\t' + text)
-        if text not in en:
-            gaps.add('English\t' + text)
-
     for path in glob.glob(os.path.join(ROOT, 'LOMAssistant*', '**', '*.cs'), recursive=True):
+        if SKIP_FILES.match(os.path.basename(path)):
+            continue
         with open(path, encoding='utf-8-sig') as f:
             for line in f:
-                for text in DISPLAY.findall(line.split(' //')[0]):
-                    if CJK.search(text):
-                        need(text)
-    for pattern in UI_FILES:
-        for path in glob.glob(os.path.join(ROOT, pattern)):
-            with open(path, encoding='utf-8-sig') as f:
-                for line in f:
-                    body = line.split(' //')[0]
-                    if LOGGING.search(body) or body.lstrip().startswith('///'):
+                if NOT_SHOWN.search(line) or line.lstrip().startswith('//'):
+                    continue
+                for before, text in literals_in(line):
+                    if not CJK.search(text) or COMPARED.search(before):
                         continue
-                    for text in re.findall(r'(?<!\$)' + STRING, body):
-                        if CJK.search(text):
-                            need(text)
+                    if text not in keys:
+                        gaps.add('Korean/Japanese\t' + text)
+                    if text not in en:
+                        gaps.add('English\t' + text)
     for key, korean, japanese in tables()['Table']:
         if not korean:
             gaps.add('Korean\t' + key)
