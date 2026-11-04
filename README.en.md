@@ -136,6 +136,7 @@ Switches in the training and combat groups of the settings page (F8):
   > ⚠️ The last two can make some story events not trigger or trigger early, and may block key main quests. Use with care and keep saves.
 - Break the 100 stat cap; training, forging and alchemy use up no attempts or points, and forging and alchemy cost no silver
 - Develop gear without story requirements (off by default): the forge and alchemy room can develop new gear and medicines before the story that unlocks them; level and sect size requirements still apply
+- Swap development items (on by default): the forge and alchemy room development screens also list other branches of the same type, so you can swap without going back to the default item when your item level and sect size are high enough
 - Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
 - Duel enemy forecast (off by default): shows the enemy's chosen move; the window can be moved and resized
 - Pinball total score; the fourth senior brother sells every item (off by default)

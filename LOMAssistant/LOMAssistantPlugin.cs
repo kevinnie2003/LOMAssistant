@@ -142,6 +142,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(PinballScorePatch));
 			LogInfo("弹珠分数补丁已应用。");
 			TryPatchAll(typeof(TrainingCheatPatch));
+			TryPatchAll(typeof(ForgeSwapPatch));
 			TryPatchAll(typeof(ItemUsePatch));
 			if (base.gameObject.GetComponent<ModPanel>() == null)
 			{

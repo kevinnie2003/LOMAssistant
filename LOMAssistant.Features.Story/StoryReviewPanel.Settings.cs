@@ -122,6 +122,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.CheatUnlimitedUpgrade, "无限锻造、炼丹"),
 				Row(ConfigManager.CheatFreeUpgradeMoney, "锻造、炼丹不花银两"),
 				Row(ConfigManager.CheatDevelopIgnoreStory, "开发装备无视剧情条件"),
+				Row(ConfigManager.ForgeDirectSwap, "开发项目直接更换"),
 				Row(ConfigManager.PinballFixedScore, "弹珠固定总分（-1=关）", -1f, 9999999f),
 				Row(ConfigManager.EnableSkipAction, "养成「空过」按钮"),
 				Row(ConfigManager.EnableMapHints, "地图建筑事件提示"),

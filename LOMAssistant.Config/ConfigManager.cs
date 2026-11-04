@@ -37,6 +37,8 @@ public static class ConfigManager
 	public static ConfigElement<bool> CheatFreeUpgradeMoney;
 	public static ConfigElement<bool> CheatDevelopIgnoreStory;
 
+	public static ConfigElement<bool> ForgeDirectSwap;
+
 	public static ConfigElement<bool> CheatDuelInvincible;
 
 	public static ConfigElement<bool> CheatDuelNoDamage;
@@ -435,6 +437,7 @@ public static class ConfigManager
 		CheatDevelopIgnoreStory = new ConfigElement<bool>("CheatDevelopIgnoreStory", "锻冶场、炼丹房开发新装备、新药时不看剧情条件（还没走到解锁它的剧情也能开发）；等级和门派规模的要求照旧。true=开，false=关", defaultValue: false);
 		CheatFreeUpgradeMoney = new ConfigElement<bool>("CheatFreeUpgradeMoney", "锻造、炼丹不消耗银两，银两不够也能升级。true=开，false=关", defaultValue: true);
 		CheatDuelInvincible = new ConfigElement<bool>("CheatDuelInvincible", "决斗中无敌：我方不受伤害。true=开，false=关", defaultValue: false);
+		ForgeDirectSwap = new ConfigElement<bool>("ForgeDirectSwap", "开发项目直接更换：锻冶场、炼丹房的开发界面显示同类的其他分支，当前项目等级和门派规模达到要求时可直接更换，无需先退回默认项目。未开发上一级的项目不显示；更换时照常返还九成点数和银两。true=开，false=关", defaultValue: true);
 		CheatDuelNoDamage = new ConfigElement<bool>("CheatDuelNoDamage", "决斗中造成伤害为 0：敌方不受伤害。true=开，false=关", defaultValue: false);
 		CheatBattleInvincible = new ConfigElement<bool>("CheatBattleInvincible", "战役中我方（主角和同伴）不会受伤：挨打、中毒都不扣血，敌人照常受伤。true=开，false=关", defaultValue: false);
 		CheatBattleNoCooldown = new ConfigElement<bool>("CheatBattleNoCooldown", "战役绝招没有冷却：放完马上又能用。true=开，false=关", defaultValue: false);
