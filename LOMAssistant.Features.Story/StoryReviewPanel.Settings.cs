@@ -294,6 +294,15 @@ public partial class StoryReviewPanel
 		_settingSections ??= BuildSettingSections();
 		string query = SearchBox(new Rect(r.x, r.y, S(420), S(36)), ref _settingsSearch);
 		DrawLanguage(new Rect(r.x + S(450), r.y, r.width - S(450), S(36)));		var area = new Rect(r.x, r.y + S(46), r.width, r.height - S(46));
+		// 预设固定在顶部，往下滚也能看到换预设后下面的选项怎么变
+		if (string.IsNullOrEmpty(query))
+		{
+			GUILayout.BeginArea(new Rect(area.x, area.y, area.width, S(44)));
+			DrawPresets();
+			GUILayout.EndArea();
+			area.y += S(46);
+			area.height -= S(46);
+		}
 		DragScroll("settings", area, ref _settingsScroll);
 		GUILayout.BeginArea(area);
 		_settingsScroll = GUILayout.BeginScrollView(_settingsScroll);
@@ -302,10 +311,6 @@ public partial class StoryReviewPanel
 		foreach (string warning in ConflictDetector.Warnings)
 		{
 			GUILayout.Label(Red("【注意】" + warning), _rich);
-		}
-		if (string.IsNullOrEmpty(query))
-		{
-			DrawPresets();
 		}
 		DrawPinballScore(rowWidth);
 		foreach (var (title, rows) in _settingSections)
