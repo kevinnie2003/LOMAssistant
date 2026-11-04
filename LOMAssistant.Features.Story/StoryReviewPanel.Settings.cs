@@ -141,6 +141,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
 				Row(ConfigManager.EnableBattleWin, "战役直接获胜按钮"),
 				Row(ConfigManager.BattleFeel, "战役手感优化"),
+				Row(ConfigManager.BattleCompanions, "战役助战选择"),
 				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
 				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
 			}),

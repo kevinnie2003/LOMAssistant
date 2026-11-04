@@ -153,6 +153,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(DuelCheatPatch));
 			TryPatchAll(typeof(BattleCheatPatch));
 			TryPatchAll(typeof(BattleFeelPatch));
+			TryPatchAll(typeof(BattleCompanions));
 			TryPatchAll(typeof(DuelPacePatch));
 			DuelActionForecast.Ensure(base.gameObject);
 			TryPatchAll(typeof(DuelActionForecastPatch));

@@ -140,6 +140,7 @@ Switches in the training and combat groups of the settings page (F8):
 - Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
 - Duel enemy forecast (off by default): shows the enemy's chosen move; the window can be moved and resized
 - Better battle controls (on by default from Assist up): fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
+- Choose battle allies (on by default from Advanced up): the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
 - Pinball total score; the fourth senior brother sells every item (off by default)
 
 Also:

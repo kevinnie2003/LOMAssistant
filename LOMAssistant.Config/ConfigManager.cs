@@ -49,6 +49,8 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> BattleFeel;
 
+	public static ConfigElement<bool> BattleCompanions;
+
 	public static ConfigElement<float> GameSpeed;
 	public static ConfigElement<bool> GameSpeedInBattle;
 
@@ -216,7 +218,7 @@ public static class ConfigManager
 	public static void Init()
 	{
 		// 配置文件已经有了、却还没有选预设弹窗这一项：是从 2.x 更新上来的老玩家，不弹
-		bool updated = false, noDeadline = false, noReadMarks = false, noFeel = false;
+		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noFeel = false;
 		try
 		{
 			if (System.IO.File.Exists(Config.ConfigFilePath))
@@ -225,6 +227,7 @@ public static class ConfigManager
 				updated = !raw.Contains("PresetChooserShown");
 				noDeadline = !raw.Contains("DeadlineReminder");
 				noReadMarks = !raw.Contains("ShowReadMarks");
+				noCompanions = !raw.Contains("BattleCompanions");
 				noFeel = !raw.Contains("BattleFeel");
 				// An old true/false fails to parse as int and would fall back to 2 (unlock all).
 				// 旧的 true/false 读不成数字会变成默认的 2（全部解锁），先改写
@@ -255,6 +258,11 @@ public static class ConfigManager
 		if (noReadMarks && EnableEventPicker.Value && ShowBranchChecks.Value)
 		{
 			ShowReadMarks.Value = true;
+		}
+		// 战役助战选择是新加的，进阶、全开打开：判断方式和上面的已读标记相同
+		if (noCompanions && EnableEventPicker.Value && ShowBranchChecks.Value)
+		{
+			BattleCompanions.Value = true;
 		}
 		// 战役手感优化是新加的，默认开；用着「原汁原味」的老玩家更新上来保持关
 		if (noFeel && !EnableOptionInfo.Value)
@@ -450,6 +458,7 @@ public static class ConfigManager
 		CheatBattleInvincible = new ConfigElement<bool>("CheatBattleInvincible", "战役中我方（主角和同伴）不会受伤：挨打、中毒都不扣血，敌人照常受伤。true=开，false=关", defaultValue: false);
 		CheatBattleNoCooldown = new ConfigElement<bool>("CheatBattleNoCooldown", "战役绝招没有冷却：放完马上又能用。true=开，false=关", defaultValue: false);
 		BattleFeel = new ConfigElement<bool>("BattleFeel", "战役手感优化：修复硬直后方向键失灵；普通攻击自动朝向最近的敌人，判定范围扩大，不消耗气力；主角脚下显示普通攻击范围；平射暗器自动瞄准最近的敌人，蓄力抛射不再落空；击杀缩短绝招冷却，连杀时缩短更多；主角绝招「奋力一击」范围扩大；掉落物拾取范围扩大；主角不再被我方的暗器、陷阱和毒雾误伤；战役结算不再扣除性情和贡献度。true=开，false=关", defaultValue: true);
+		BattleCompanions = new ConfigElement<bool>("BattleCompanions", "战役助战选择：开战面板的绝招列表加入好感度达到 40 的同伴，不再限于剧情指定的同伴。true=开，false=关", defaultValue: false);
 		GameSpeed = new ConfigElement<float>("GameSpeed", "游戏倍速（在游戏原本速度上再乘以该值；1=原速）", 1f);
 		GameSpeedInBattle = new ConfigElement<bool>("GameSpeedInBattle", "战役也按游戏倍速：true=战役也加速，false=战役按原速（默认）", defaultValue: false);
 		ActionMode = new ConfigElement<int>("ActionMode", "养成行动点：0=正常，1=不消耗（扣到剩 1 点后不再扣，可一直行动；用「空过」结束本旬），2=每旬固定 N 点（N 见 ActionsPerRound）", 0);
