@@ -29,8 +29,9 @@ HOLE = re.compile(r'\{\d+\}')
 GAPS = os.path.join('tools', 'i18n-gaps.txt')
 # 不显示给玩家：日志、自测、诊断；文字表本身；AI 提示词（自带四语言，由 AiTests 查）
 SKIP_FILES = re.compile(r'^(?:Ui(?:Text|TextEnglish|Descriptions|Traditional|ConditionNames|EventNames|FlagNames|QuestNames)\.cs'
-                        r'|Pinyin.*|SelfTest.*|Diagnostics.*|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval).*)$')
-NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|i18n-ignore')
+                        r'|Pinyin.*|SelfTest.*|Diagnostics.*|FileLogger\.cs|BattleLogPatch\.cs'
+                        r'|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval|Debug).*)$')
+NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|i18n-ignore|new Regex\(|Console\.Write')
 # 这些位置的中文是用来比较游戏数据的，不显示
 COMPARED = re.compile(r'(?:Contains|StartsWith|EndsWith|IndexOf|LastIndexOf|Replace|Split|TrimEnd|TrimStart|Trim|Regex\.\w+|IsMatch|Match)\(\s*(?:[^"()]*,\s*)?$|(?:==|!=|\bcase|\bis)\s*$')
 
@@ -154,6 +155,26 @@ def check_docs(problems):
         problems.append(f'plugin version {plugin}, assembly version {assembly}')
 
 
+# 和 UiText.Translate 一样拆开：富文本标签、换行、「 · 」、全角空格
+SPLIT = re.compile(r'</?(?:b|i|size|color|material|quad)(?:[= ][^<>]*)?>|\\n|\\r| · |　·　|　+| → ')
+NOT_TEXT = re.compile(r'^[A-Za-z]+\d*_|^\||\\[SdwWs]|\(\?|^\^')
+PLAIN = ' \t\u3000'
+
+
+def parts_of(text):
+    return [part.strip(PLAIN) for part in SPLIT.split(text) if CJK.search(part)]
+
+
+def matcher(keys):
+    """Is this text covered: whole, or part by part, by exact rows or {0} patterns."""
+    exact = set(keys)
+    patterns = [re.compile('^' + re.sub(r'\\\{\d\\\}', '(.+?)', re.escape(key)) + '$') for key in keys if '{0}' in key]
+
+    def covered(text):
+        return text in exact or all(part in exact or any(p.match(part) for p in patterns) for part in parts_of(text))
+    return covered
+
+
 def read_string(line, i, interpolated, verbatim, found):
     """Reads the literal opening at line[i]; holes in an interpolated one become {0}, {1}, ... as in the tables."""
     j = i + 1
@@ -215,6 +236,9 @@ def display_gaps():
     """What has no translation, as `language<TAB>text` lines."""
     keys = known_keys()
     en = known_english()
+    korean_ok = matcher([key for key, row in keys.items() if row[0]])
+    japanese_ok = matcher([key for key, row in keys.items() if row[1]])
+    english_ok = matcher(en)
     gaps = set()
     for path in glob.glob(os.path.join(ROOT, 'LOMAssistant*', '**', '*.cs'), recursive=True):
         if SKIP_FILES.match(os.path.basename(path)):
@@ -224,11 +248,13 @@ def display_gaps():
                 if NOT_SHOWN.search(line) or line.lstrip().startswith('//'):
                     continue
                 for before, text in literals_in(line):
-                    if not CJK.search(text) or COMPARED.search(before):
+                    if not CJK.search(text) or COMPARED.search(before) or NOT_TEXT.search(text):
                         continue
-                    if text not in keys:
-                        gaps.add('Korean/Japanese\t' + text)
-                    if text not in en:
+                    if not korean_ok(text):
+                        gaps.add('Korean\t' + text)
+                    if not japanese_ok(text):
+                        gaps.add('Japanese\t' + text)
+                    if not english_ok(text):
                         gaps.add('English\t' + text)
     for key, korean, japanese in tables()['Table']:
         if not korean:
