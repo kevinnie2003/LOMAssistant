@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  languages:
+    # 编译和游戏逻辑要游戏文件，只能在本地跑；这里查多语言覆盖、文字表和文档
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+      - name: Check language coverage
+        run: python -X utf8 tools/check-i18n.py
+      - name: Run language tests
+        shell: bash
+        run: bash tests/run-language-tests.sh
