@@ -30,7 +30,8 @@ public static class DataHelper
 				}
 				string text = FormatConditionValName(fieldValue);
 				FormatConditionValName(fieldValue2);
-				string text2 = string.Format("{0} 需{2}{3} → 当前{1}", text, fieldValue.GetResult(), compareOperator, fieldValue2.GetResult());
+				int wanted = fieldValue2.GetResult(), current = fieldValue.GetResult();
+				string text2 = string.Format("{0} 需{2}{3} → 当前{1}", text, current + FlagOption(fieldValue, current), compareOperator, wanted + FlagOption(fieldValue, wanted));
 				text2 = (item.Check() ? RichText.Green(text2) : RichText.Red(text2));
 				list.Add(text2);
 			}
@@ -98,6 +99,26 @@ public static class DataHelper
 			.Replace("標記_", ""));
 	}
 
+	/// <summary>
+	/// 旗标的数字代表选项时（备注写着「4. 西武林盟」）返回「（西武林盟）」，否则为空。
+	/// 选项名只有游戏原文，韩语、日语、英语界面不显示；放在数字后面，不影响按「 需」解析条件的代码。
+	/// </summary>
+	private static string FlagOption(StatGroupVariable variable, int value)
+	{
+		if (value < 0 || TextConverter.DisplayLanguage is UiText.Korean or UiText.Japanese or UiText.English)
+		{
+			return "";
+		}
+		var values = variable?.GetFieldValue<List<StatValueReference>>("_value");
+		if (values == null || values.Count != 1 || values[0].CheckType != StatCheckType.旗標 || values[0].GetFieldValue<bool>("_negative"))
+		{
+			return "";
+		}
+		string note = values[0].GetFieldValue<FlagData>("_flag")?.DevNote ?? "";
+		var pick = System.Text.RegularExpressions.Regex.Match(note, @"(?:^|\s)" + value + @"[.．、:：]\s*([^\s\r\n]+)");
+		return pick.Success ? "（" + TextConverter.ToSimplified(pick.Groups[1].Value) + "）" : "";
+	}
+
 	private static bool IsEnglishAlphanumeric(string s)
 	{
 		if (string.IsNullOrEmpty(s))
@@ -159,7 +180,7 @@ public static class DataHelper
 			StatGroupVariable left = item.GetFieldValue<StatGroupVariable>("_value1");
 			StatGroupVariable right = item.GetFieldValue<StatGroupVariable>("_value2");
 			string op = GetCompareOperator(item.GetFieldValue<StatCompareType>("_compareOp"));
-			string rhs = right != null && right.name.Contains("常") ? right.GetResult().ToString() : FormatConditionValName(right);
+			string rhs = right != null && right.name.Contains("常") ? right.GetResult() + FlagOption(left, right.GetResult()) : FormatConditionValName(right);
 			list.Add(FormatConditionValName(left) + " 需" + op + rhs);
 		}
 		return string.Join(" " + GetLogicOperator(condition.GetFieldValue<LogicOperatorType>("_logicOp")) + " ", list.ToArray());
