@@ -95,21 +95,21 @@ Connect a large language model with your own API key to ask about the story and 
 
 - **Read marks**: dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen). Toggle **Read marks on choices** in the settings; the Advanced and All on presets turn it on.
 
-- **Pick random events** (off by default): when working, wandering and so on, see each event's odds and changes (changes that depend on a condition show the condition), then choose which one triggers or roll with the normal odds. Events you haven't seen yet are marked **Not seen**. Branch checks that roll a random number also let you pick the path. Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off. With **Force locked events** on in settings (only the **All on** preset turns it on), those events are also folded below with what they need; clicking one triggers it regardless, without changing flags.
+- **Pick random events**: when working, wandering and so on, see each event's odds and changes (changes that depend on a condition show the condition), then choose which one triggers or roll with the normal odds. Events you haven't seen yet are marked **Not seen**. Branch checks that roll a random number also let you pick the path. Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off. With **Force locked events** on in settings (only the **All on** preset turns it on), those events are also folded below with what they need; clicking one triggers it regardless, without changing flags.
 
   <img src="media/event-picker.webp" width="480" alt="Pick random events: the events that can trigger, their odds and changes">
 
-- **Manual branch choice** (off by default; only the **All on** preset turns it on): at a story check that branches on conditions, the game stops first when another branch has unread lines or leads to a different scene. It lists each branch's conditions, current values and whether its lines were seen, and takes the branch you pick: by default values are left alone and only this one check goes that way; with **Auto-adjust for branches** on (off by default), stats, affection and flags are first changed just enough for that branch (the changes stay), and the branch is taken directly when they can't be. Checks with only one possible branch, or where other branches add nothing new, don't stop; with **Stop for seen branches too** on (off by default), it also stops when another branch has lines you've already seen. Fast-forward is stopped when it pops up.
+- **Manual branch choice**: at a story check that branches on conditions, the game stops first when another branch has unread lines or leads to a different scene. It lists each branch's conditions, current values and whether its lines were seen, and takes the branch you pick: by default values are left alone and only this one check goes that way; with **Auto-adjust for branches** on, stats, affection and flags are first changed just enough for that branch (the changes stay), and the branch is taken directly when they can't be. Checks with only one possible branch, or where other branches add nothing new, don't stop; with **Stop for seen branches too** on, it also stops when another branch has lines you've already seen. Fast-forward is stopped when it pops up.
 
 - **Map event hints**: hover over a building on the training map to see its main and side quests (can they trigger, conditions) and the odds of its random events; buildings with a quest you can trigger now stay lit. Turn on "Map hints: triggerable only" in settings to list only the quests that would trigger now; the rest are only counted. Inside a building, hover over an option such as chopping wood or training to see the random events it can roll, their odds and which you have not seen; the same goes for moving and peddling in the Go out list.
 - **Timed story reminder**: when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left, until when, and where to go to trigger it; the Now tab marks these quests too. Assist and higher presets turn it on.
 - **Memos** (F10): a small window floating over the game that keeps track of "get this done by that date". Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline; the window shows the current value, progress and periods left, and notes at its top when a goal is met, stops being met, is about to be due or is overdue. It can be dragged, resized and collapsed.
-- **Item uses** (off by default, may reveal quest names): item descriptions in the bag and shops end with what using the item does and which stories check for it or take it. Setting: "Show item uses".
-- **Branch panel** (off by default, spoilers): lists the conditions of each branch check on the left, met in green and unmet in red.
+- **Item uses** (may reveal quest names): item descriptions in the bag and shops end with what using the item does and which stories check for it or take it. Setting: "Show item uses".
+- **Branch panel** (spoilers): lists the conditions of each branch check on the left, met in green and unmet in red.
 
   <img src="media/branch-panel.webp" width="480" alt="Branch panel: met conditions in green, unmet in red">
 
-- **Flag change notices** (off by default, spoilers): a notice when the story changes a flag; how long it stays can be set.
+- **Flag change notices** (spoilers): a notice when the story changes a flag; how long it stays can be set.
 - **Checks in the backlog**: story checks, their conditions and your values are recorded in the backlog.
 - **Hide UI for CGs**: right-click in a story scene to leave only the background, CG and portraits; right-click, left-click or press any other key to restore.
 
@@ -127,30 +127,41 @@ Connect a large language model with your own API key to ask about the story and 
 - **More slots**: 100 manual saves (20 in the base game), 5 pages of legend slots (1 page of 12), and 5 extra old copies of each auto save.
 - **Save notes**, synced with Steam Cloud; notes from LOM_SaveSlotExpander are imported.
 
-### Training and combat
+### Training
 
-Switches in the training and combat groups of the settings page (F8):
+Switches in the training group of the settings page (F8):
 
 - Game speed 1x / 2x / 3x / 5x (battles and lines that advance by themselves stay at normal speed; turn on "Speed up battles too" in settings to speed up battles as well)
 - Action points: normal / not consumed / N per period
   > ⚠️ The last two can make some story events not trigger or trigger early, and may block key main quests. Use with care and keep saves.
 - Break the 100 stat cap; training, forging and alchemy use up no attempts or points, and forging and alchemy cost no silver
-- Develop gear without story requirements (off by default): the forge and alchemy room can develop new gear and medicines before the story that unlocks them; level and sect size requirements still apply
-- Swap development items (on by default): the forge and alchemy room development screens also list other branches of the same type, so you can swap without going back to the default item when your item level and sect size are high enough
-- Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
-- Duel enemy forecast (off by default): shows the enemy's chosen move; the window can be moved and resized
-- Scale duel enemies (off by default): raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones
-- Duel rework (off by default): winning a counter gives an extra effect (such as a follow-up hit, locking one of the target's commands next round, making an ultimate miss, weakening the target, or a counter), and the same rules apply to both sides. Enemies also adapt to stamina, health and the command you keep repeating. A guide appears in your first duel
-- Better battle controls (on by default from Assist up): fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
-- Choose battle allies (on by default from Advanced up): the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
-- Enemy morale in battles (on by default from Assist up): ordinary battles gain enemy morale; enemy deaths, your kills, kill streaks and defeating enemy commanders lower it, and at zero the enemy routs and you win. Battles with scripted events are not affected
-- Pinball total score; the fourth senior brother sells every item (off by default)
+- Develop gear without story requirements: the forge and alchemy room can develop new gear and medicines before the story that unlocks them; level and sect size requirements still apply
+- Swap development items: the forge and alchemy room development screens also list other branches of the same type, so you can swap without going back to the default item when your item level and sect size are high enough
+- Pinball total score; the fourth senior brother sells every item
 
 Also:
 
 - **Skip turn**: in the ESC menu on the training and study maps; uses one action without triggering events.
-- **Win now**: in the ESC menu during duels and battles.
 - **Speed-ups**: faster scene changes, loading and skipping, shorter pauses after stat changes, no idle wait between duel rounds.
+
+### Combat
+
+**Duel rework**: winning a counter gives an extra effect (such as a follow-up hit, locking one of the target's commands next round, making an ultimate miss, weakening the target, or a counter), and the same rules apply to both sides. Enemies also adapt to stamina, health and the command you keep repeating. A guide appears in your first duel
+
+<img src="media/duel-rework.webp" width="640" alt="Duel rework guide: counters are unchanged, but winning adds an effect">
+
+Switches in the combat group of the settings page (F8):
+
+- Scale duel enemies: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones
+- Duel enemy forecast: shows the enemy's chosen move; the window can be moved and resized
+- Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
+- Better battle controls: fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
+- Choose battle allies: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
+- Enemy morale in battles: ordinary battles gain enemy morale; enemy deaths, your kills, kill streaks and defeating enemy commanders lower it, and at zero the enemy routs and you win. Battles with scripted events are not affected
+
+Also:
+
+- **Win now**: in the ESC menu during duels and battles.
 - **Skill list columns**: in battle, a long skill list is split into columns.
 
 ### Stats page (F9)
@@ -178,7 +189,7 @@ Changing values or flags at random can break the story; save first.
 - **Conflict detection**: warns about conflicting old mods at the top of settings (mods that only change the same game code alongside this one and work with it aren't flagged); if another mod uses the same key, this mod gives it up.
 - **Export legend**: export this playthrough's legend as a txt at any time from Status → Legend.
 - **Faster start**: the title animation is sped up, and the installer can skip the opening logos.
-- **Also**: choose who appears on the title screen; the lecture hall shows how to reach each ending and death, or everything unlocked; the game can keep running in the background (off by default); the window's top right shows each version's changes and a red note when a new version is out.
+- **Also**: choose who appears on the title screen; the lecture hall shows how to reach each ending and death, or everything unlocked; the game can keep running in the background; the window's top right shows each version's changes and a red note when a new version is out.
 
 ## FAQ
 
@@ -202,6 +213,15 @@ Everything is on the settings page of the window (F8). Changes are saved immedia
 
 **Presets**: at the top of the settings page you can switch in one click to **As intended**, **Assist**, **Advanced** or **All on**. They only change story hints, life-sim and combat aids and cheats; saves, speed-ups, interface and hotkeys stay as they are. Changing any of those switches makes it **Custom**, which you can switch back to later. New players pick one the first time they open the window; if they don't, it stays on **Assist**.
 
+| Preset | Turned on |
+|---|---|
+| As intended | Everything listed below is off |
+| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Lecture Hall unlock; Better battle controls; Enemy morale in battles; Unlimited training; Unlimited forging; Free forging |
+| Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Enemy move forecast; Choose battle allies |
+| All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Invincible in duels; Unhurt in battles; No ultimate cooldown; full Lecture Hall unlock display |
+
+Anything not listed does not change with presets and can be switched on its own in Settings.
+
 <img src="media/presets.webp" width="640" alt="Choosing a preset: four cards saying who each one suits and what it changes">
 
 ## Building
@@ -215,4 +235,4 @@ DOTNET=/path/to/dotnet ./Installer/build-installer.sh
 
 ## Credits
 
-See the [Chinese README](README.md#致谢). This project builds on 活侠传助手 by 爱死, takes ideas from 赵活系统 and code from LOM_SaveSlotExpander. The AI Companion tab takes ideas from [江湖夜话](https://github.com/Cpjjason/jianghu-yehua) (Jianghu Yehua) by Cpjjason, another AI mod for the game that lets you chat privately with its characters, who can give you items, teach you martial arts and remember past talks ([video on Bilibili](https://www.bilibili.com/video/BV1s2nC6pE83/)). Some personality traits and habits of the characters on the AI Companion tab draw on the 活侠传 fan character card by 夏呆呆 from the 类脑 community. Thanks to [lxsb222-spec](https://github.com/lxsb222-spec), [blakceyes](https://github.com/blakceyes), [NEXTAltair](https://github.com/NEXTAltair), [pluvivanto](https://github.com/pluvivanto), [lockpick](https://github.com/lockpick) and [F1-ZX](https://github.com/F1-ZX) for their pull requests, and to [mahosalieri85-a11y](https://github.com/mahosalieri85-a11y) and [iampigcheng](https://github.com/iampigcheng) for their issues.
+See the [Chinese README](README.md#致谢). This project builds on 活侠传助手 by 爱死 and takes ideas from 赵活系统. The AI Companion tab takes ideas from [江湖夜话](https://github.com/Cpjjason/jianghu-yehua) (Jianghu Yehua) by Cpjjason, another AI mod for the game that lets you chat privately with its characters, who can give you items, teach you martial arts and remember past talks ([video on Bilibili](https://www.bilibili.com/video/BV1s2nC6pE83/)). Some personality traits and habits of the characters on the AI Companion tab draw on the 活侠传 fan character card by 夏呆呆 from the 类脑 community. Thanks to [lxsb222-spec](https://github.com/lxsb222-spec), [blakceyes](https://github.com/blakceyes), [NEXTAltair](https://github.com/NEXTAltair), [pluvivanto](https://github.com/pluvivanto), [lockpick](https://github.com/lockpick) and [F1-ZX](https://github.com/F1-ZX) for their pull requests, and to [mahosalieri85-a11y](https://github.com/mahosalieri85-a11y) and [iampigcheng](https://github.com/iampigcheng) for their issues.
