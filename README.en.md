@@ -189,7 +189,7 @@ Changing values or flags at random can break the story; save first.
 - **Conflict detection**: warns about conflicting old mods at the top of settings (mods that only change the same game code alongside this one and work with it aren't flagged); if another mod uses the same key, this mod gives it up.
 - **Export legend**: export this playthrough's legend as a txt at any time from Status → Legend.
 - **Faster start**: the title animation is sped up, and the installer can skip the opening logos.
-- **Also**: choose who appears on the title screen; the lecture hall shows how to reach each ending and death, or everything unlocked; the game can keep running in the background; the window's top right shows each version's changes and a red note when a new version is out.
+- **Also**: choose who appears on the title screen, or show everyone; the lecture hall shows how to reach each ending and death, or everything unlocked; the game can keep running in the background; the window's top right shows each version's changes and a red note when a new version is out.
 
 ## FAQ
 
