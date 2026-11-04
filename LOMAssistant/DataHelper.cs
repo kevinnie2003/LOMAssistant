@@ -477,7 +477,12 @@ public static class DataHelper
 			return false;
 		}
 		string fieldValue2 = UiQuestNames.Description(byKey.Key, byKey.GetFieldValue<string>("_desc"));
-		fieldValue2 = (fieldValue2.IsNullOrWhiteSpace() ? byKey.name : fieldValue2);
+		// 游戏没写说明的任务用路线图整理好的标题，还没读完剧本时先显示编号
+		if (fieldValue2.IsNullOrWhiteSpace())
+		{
+			string atlasTitle = LOMAssistant.Features.Story.StoryAtlas.Find(byKey.Key)?.Title;
+			fieldValue2 = string.IsNullOrEmpty(atlasTitle) ? byKey.name : atlasTitle;
+		}
 		// 用界面翻译已有的分隔符，让编号和完整任务名分别查表。
 		item = fieldValue + " · " + fieldValue2;
 		string text = byKey.Position.ToString();

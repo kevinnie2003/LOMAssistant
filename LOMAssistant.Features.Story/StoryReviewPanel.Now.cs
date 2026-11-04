@@ -45,6 +45,7 @@ public partial class StoryReviewPanel
 	}
 
 	private NowSnapshot _now;
+	private int _nowAtlas = -1;
 	private Vector2 _nowScroll;
 
 	private void DrawNow(Rect r)
@@ -55,8 +56,14 @@ public partial class StoryReviewPanel
 			GUI.Label(new Rect(r.x, r.y, r.width, S(40)), "读档进入游戏后才有内容", _muted);
 			return;
 		}
-		if (_now == null || _now.Script != (OptionInfoPatch.LastScriptKey ?? ""))
+		// 无名任务的标题来自整理好的剧情数据：打开这一页就开始整理，读完重新生成
+		if (!StoryAtlas.Ready && !StoryAtlas.Building && StoryAtlas.Status.Length == 0)
 		{
+			StoryAtlas.Start();
+		}
+		if (_now == null || _now.Script != (OptionInfoPatch.LastScriptKey ?? "") || _nowAtlas != StoryAtlas.Version)
+		{
+			_nowAtlas = StoryAtlas.Version;
 			_now = BuildNow();
 		}
 		if (GUI.Button(new Rect(r.xMax - S(130), r.y, S(130), S(36)), "刷新", _button))
