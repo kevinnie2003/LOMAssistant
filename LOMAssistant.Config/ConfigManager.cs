@@ -47,6 +47,8 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> CheatBattleNoCooldown;
 
+	public static ConfigElement<bool> BattleFeel;
+
 	public static ConfigElement<float> GameSpeed;
 	public static ConfigElement<bool> GameSpeedInBattle;
 
@@ -214,7 +216,7 @@ public static class ConfigManager
 	public static void Init()
 	{
 		// 配置文件已经有了、却还没有选预设弹窗这一项：是从 2.x 更新上来的老玩家，不弹
-		bool updated = false, noDeadline = false, noReadMarks = false;
+		bool updated = false, noDeadline = false, noReadMarks = false, noFeel = false;
 		try
 		{
 			if (System.IO.File.Exists(Config.ConfigFilePath))
@@ -223,6 +225,7 @@ public static class ConfigManager
 				updated = !raw.Contains("PresetChooserShown");
 				noDeadline = !raw.Contains("DeadlineReminder");
 				noReadMarks = !raw.Contains("ShowReadMarks");
+				noFeel = !raw.Contains("BattleFeel");
 				// An old true/false fails to parse as int and would fall back to 2 (unlock all).
 				// 旧的 true/false 读不成数字会变成默认的 2（全部解锁），先改写
 				string migrated = raw.Replace("EnableLibraryDisplay = true", "EnableLibraryDisplay = 2")
@@ -252,6 +255,11 @@ public static class ConfigManager
 		if (noReadMarks && EnableEventPicker.Value && ShowBranchChecks.Value)
 		{
 			ShowReadMarks.Value = true;
+		}
+		// 战役手感优化是新加的，默认开；用着「原汁原味」的老玩家更新上来保持关
+		if (noFeel && !EnableOptionInfo.Value)
+		{
+			BattleFeel.Value = false;
 		}
 		MigrateStoryReviewKey();
 		MigrateHideUIKey();
@@ -435,12 +443,13 @@ public static class ConfigManager
 		CheatUnlimitedTraining = new ConfigElement<bool>("CheatUnlimitedTraining", "无限修炼：修炼时不消耗可用次数和武学点（武学点是 0 时修炼不了，数值页能改）。true=开，false=关", defaultValue: true);
 		CheatUnlimitedUpgrade = new ConfigElement<bool>("CheatUnlimitedUpgrade", "无限锻造、炼丹：锻造、炼丹时不消耗可用次数和锻造点、炼丹点（点数是 0 时做不了，数值页能改）。true=开，false=关", defaultValue: true);
 		CheatDevelopIgnoreStory = new ConfigElement<bool>("CheatDevelopIgnoreStory", "锻冶场、炼丹房开发新装备、新药时不看剧情条件（还没走到解锁它的剧情也能开发）；等级和门派规模的要求照旧。true=开，false=关", defaultValue: false);
+		ForgeDirectSwap = new ConfigElement<bool>("ForgeDirectSwap", "开发项目直接更换：锻冶场、炼丹房的开发界面显示同类的其他分支，当前项目等级和门派规模达到要求时可直接更换，无需先退回默认项目。未开发上一级的项目不显示；更换时照常返还九成点数和银两。true=开，false=关", defaultValue: true);
 		CheatFreeUpgradeMoney = new ConfigElement<bool>("CheatFreeUpgradeMoney", "锻造、炼丹不消耗银两，银两不够也能升级。true=开，false=关", defaultValue: true);
 		CheatDuelInvincible = new ConfigElement<bool>("CheatDuelInvincible", "决斗中无敌：我方不受伤害。true=开，false=关", defaultValue: false);
-		ForgeDirectSwap = new ConfigElement<bool>("ForgeDirectSwap", "开发项目直接更换：锻冶场、炼丹房的开发界面显示同类的其他分支，当前项目等级和门派规模达到要求时可直接更换，无需先退回默认项目。未开发上一级的项目不显示；更换时照常返还九成点数和银两。true=开，false=关", defaultValue: true);
 		CheatDuelNoDamage = new ConfigElement<bool>("CheatDuelNoDamage", "决斗中造成伤害为 0：敌方不受伤害。true=开，false=关", defaultValue: false);
 		CheatBattleInvincible = new ConfigElement<bool>("CheatBattleInvincible", "战役中我方（主角和同伴）不会受伤：挨打、中毒都不扣血，敌人照常受伤。true=开，false=关", defaultValue: false);
 		CheatBattleNoCooldown = new ConfigElement<bool>("CheatBattleNoCooldown", "战役绝招没有冷却：放完马上又能用。true=开，false=关", defaultValue: false);
+		BattleFeel = new ConfigElement<bool>("BattleFeel", "战役手感优化：修复硬直后方向键失灵；普通攻击自动朝向最近的敌人，判定范围扩大，不消耗气力；主角脚下显示普通攻击范围；平射暗器自动瞄准最近的敌人，蓄力抛射不再落空；击杀缩短绝招冷却，连杀时缩短更多；主角绝招「奋力一击」范围扩大；掉落物拾取范围扩大；主角不再被我方的暗器、陷阱和毒雾误伤；战役结算不再扣除性情和贡献度。true=开，false=关", defaultValue: true);
 		GameSpeed = new ConfigElement<float>("GameSpeed", "游戏倍速（在游戏原本速度上再乘以该值；1=原速）", 1f);
 		GameSpeedInBattle = new ConfigElement<bool>("GameSpeedInBattle", "战役也按游戏倍速：true=战役也加速，false=战役按原速（默认）", defaultValue: false);
 		ActionMode = new ConfigElement<int>("ActionMode", "养成行动点：0=正常，1=不消耗（扣到剩 1 点后不再扣，可一直行动；用「空过」结束本旬），2=每旬固定 N 点（N 见 ActionsPerRound）", 0);
