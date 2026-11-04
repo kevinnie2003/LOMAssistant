@@ -122,6 +122,8 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> EnableDuelActionForecast;
 
+	public static ConfigElement<bool> DuelEnemyGrowth;
+
 	public static ConfigElement<float> DuelForecastX;
 
 	public static ConfigElement<float> DuelForecastY;
@@ -484,6 +486,7 @@ public static class ConfigManager
 		BranchChangeValues = new ConfigElement<bool>("BranchChangeValues", "选分支时自动调整数值：分支判定手动选择、剧情跳转按选的分支走时，先把属性、好感、旗标改到正好走这一支（改了会一直留着），改不动的再直接走。关掉时不改数值，只是这一次直接走过去。true=开，false=关", defaultValue: false);
 		ForceUnmetOptions = new ConfigElement<bool>("ForceUnmetOptions", "条件不满足就不出现的选项也列出来（红字标「条件没满足」，悬停看条件），点了直接选；锁住的选项条件改不到时给「强行解锁」（都不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
 		EnableDuelActionForecast = new ConfigElement<bool>("EnableDuelActionForecast", "决斗中显示敌方本回合预选的行动；敌方意图较高时可能根据你的出招临场应变。默认关。true=开，false=关", defaultValue: false);
+		DuelEnemyGrowth = new ConfigElement<bool>("DuelEnemyGrowth", "决斗敌人随主角成长：开战时按主角六项属性总和提高敌人的血量和属性，强敌仍明显强于普通敌人。true=开，false=关", defaultValue: false);
 		DuelForecastX = new ConfigElement<float>("DuelForecastX", "决斗敌方行动预测窗口的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
 		DuelForecastY = new ConfigElement<float>("DuelForecastY", "决斗敌方行动预测窗口的纵向位置（占屏幕高度的比例，-1=默认居中）。拖动窗口会自动保存", -1f);
 		DuelForecastWidth = new ConfigElement<float>("DuelForecastWidth", "决斗敌方行动预测窗口的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
