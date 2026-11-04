@@ -141,6 +141,7 @@ Switches in the training and combat groups of the settings page (F8):
 - Duel enemy forecast (off by default): shows the enemy's chosen move; the window can be moved and resized
 - Better battle controls (on by default from Assist up): fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
 - Choose battle allies (on by default from Advanced up): the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
+- Enemy morale in battles (on by default from Assist up): ordinary battles gain enemy morale; enemy deaths, your kills, kill streaks and defeating enemy commanders lower it, and at zero the enemy routs and you win. Battles with scripted events are not affected
 - Pinball total score; the fourth senior brother sells every item (off by default)
 
 Also:
