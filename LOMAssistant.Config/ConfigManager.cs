@@ -62,7 +62,7 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> ShowFlagChanges;
 
-	public static ConfigElement<bool> ShowBranchChecks;
+	public static ConfigElement<int> ShowBranchChecks;
 
 	public static ConfigElement<bool> EnableEventPicker;
 
@@ -240,7 +240,10 @@ public static class ConfigManager
 				// An old true/false fails to parse as int and would fall back to 2 (unlock all).
 				// 旧的 true/false 读不成数字会变成默认的 2（全部解锁），先改写
 				string migrated = raw.Replace("EnableLibraryDisplay = true", "EnableLibraryDisplay = 2")
-					.Replace("EnableLibraryDisplay = false", "EnableLibraryDisplay = 0");
+					.Replace("EnableLibraryDisplay = false", "EnableLibraryDisplay = 0")
+					// 显示分支判断从开关改成三选一，自定义预设里记的也一起改
+					.Replace("ShowBranchChecks = true", "ShowBranchChecks = 1").Replace("ShowBranchChecks = false", "ShowBranchChecks = 0")
+					.Replace("ShowBranchChecks=True", "ShowBranchChecks=1").Replace("ShowBranchChecks=False", "ShowBranchChecks=0");
 				if (migrated != raw)
 				{
 					System.IO.File.WriteAllText(Config.ConfigFilePath, migrated);
@@ -263,12 +266,12 @@ public static class ConfigManager
 			DeadlineReminder.Value = false;
 		}
 		// 选项、骰子标看过没是新加的，进阶、全开打开：用着这两档（开着随机事件自选和分支小窗）的老玩家更新上来也打开
-		if (noReadMarks && EnableEventPicker.Value && ShowBranchChecks.Value)
+		if (noReadMarks && EnableEventPicker.Value && ShowBranchChecks.Value != 0)
 		{
 			ShowReadMarks.Value = true;
 		}
 		// 战役助战选择是新加的，进阶、全开打开：判断方式和上面的已读标记相同
-		if (noCompanions && EnableEventPicker.Value && ShowBranchChecks.Value)
+		if (noCompanions && EnableEventPicker.Value && ShowBranchChecks.Value != 0)
 		{
 			BattleCompanions.Value = true;
 		}
@@ -544,7 +547,7 @@ public static class ConfigManager
 		EnableStoryReview = new ConfigElement<bool>("EnableStoryReview", "剧情回顾：游戏在剧情存档点、每旬开头自动存档时，在存档文件夹里收录这一刻的进度（LOMStory_ 开头，跟着 Steam 云同步），以后可以从这里重玩。true=开，false=关", defaultValue: true);
 		GamepadPanelButton = new ConfigElement<int>("GamepadPanelButton", "手柄开关咖啡伴侣窗口的按键：0=按下左摇杆（L3），1=按下右摇杆（R3），2=LB 和 RB 一起按", 0);
 		StoryReviewKey = new ConfigElement<KeyCode>("StoryReviewKey", "咖啡伴侣窗口（此刻、路线图、剧情图、节点存档、随时存档、收集进度、数值、设置）的热键", KeyCode.Tab);
-		ShowBranchChecks = new ConfigElement<bool>("ShowBranchChecks", "剧情走到分支判断时在屏幕上列出各分支条件（满足为绿、不满足为红，可能剧透）。true=开，false=关", defaultValue: false);
+		ShowBranchChecks = new ConfigElement<int>("ShowBranchChecks", "剧情走到分支判断时显示各分支条件（满足为绿、不满足为红，可能剧透）：0=不显示，1=小窗，2=屏幕上方提示", 0);
 		BranchPanelX = new ConfigElement<float>("BranchPanelX", "剧情分支小窗的位置（占屏幕宽度的比例，-1=默认左侧）。拖动小窗会自动保存", -1f);
 		BranchPanelY = new ConfigElement<float>("BranchPanelY", "剧情分支小窗的位置（占屏幕高度的比例，-1=默认）。拖动小窗会自动保存", -1f);
 		BranchPanelAutoHide = new ConfigElement<float>("BranchPanelAutoHide", "剧情分支小窗多少秒没有新判断就自动收起（0=不自动收起）", 15f);

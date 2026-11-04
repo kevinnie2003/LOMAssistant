@@ -105,7 +105,7 @@ Connect a large language model with your own API key to ask about the story and 
 - **Timed story reminder**: when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left, until when, and where to go to trigger it; the Now tab marks these quests too. Assist and higher presets turn it on.
 - **Memos** (F10): a small window floating over the game that keeps track of "get this done by that date". Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline; the window shows the current value, progress and periods left, and notes at its top when a goal is met, stops being met, is about to be due or is overdue. It can be dragged, resized and collapsed.
 - **Item uses** (may reveal quest names): item descriptions in the bag and shops end with what using the item does and which stories check for it or take it. Setting: "Show item uses".
-- **Branch panel** (spoilers): lists the conditions of each branch check on the left, met in green and unmet in red.
+- **Branch checks** (spoilers): lists the conditions of each branch check, in a panel on the left or as a notice at the top of the screen, met in green and unmet in red.
 
   <img src="media/branch-panel.webp" width="480" alt="Branch panel: met conditions in green, unmet in red">
 

@@ -93,7 +93,7 @@ public partial class StoryReviewPanel
 		{
 			("剧情", new List<SettingRow>
 			{
-				Row(ConfigManager.ShowBranchChecks, "显示分支判断"),
+				new SettingRow { Element = ConfigManager.ShowBranchChecks, Name = "显示分支判断", Choices = new[] { "不显示", "小窗", "上方提示" }, Dropdown = true },
 				Row(ConfigManager.ShowFlagChanges, "显示旗标变化"),
 				Row(ConfigManager.EnableEventPicker, "随机事件自选"),
 				Row(ConfigManager.ForceUnmetEvents, "强制触发未满足条件的事件"),

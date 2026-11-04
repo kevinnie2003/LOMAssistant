@@ -49,7 +49,7 @@ public partial class StoryReviewPanel
 			Note = "关掉选项提示、骰子和随机事件自选、地图提示、直接获胜、剧情跳转等辅助和全部作弊，只留随时存档、节点存档、提速这些不影响游戏的功能",
 			Values = new (IConfigElement, object)[]
 			{
-				(ConfigManager.ShowBranchChecks, false),
+				(ConfigManager.ShowBranchChecks, 0),
 				(ConfigManager.ShowFlagChanges, false),
 				(ConfigManager.EnableEventPicker, false),
 				(ConfigManager.ForceUnmetEvents, false),
@@ -82,7 +82,7 @@ public partial class StoryReviewPanel
 			Note = "选项后果、骰子自选、地图提示、空过、直接获胜按钮、无限修炼锻造和不花银两打开；分支小窗、旗标提示、随机事件自选、剧情跳转和其他作弊关闭",
 			Values = new (IConfigElement, object)[]
 			{
-				(ConfigManager.ShowBranchChecks, false),
+				(ConfigManager.ShowBranchChecks, 0),
 				(ConfigManager.ShowFlagChanges, false),
 				(ConfigManager.EnableEventPicker, false),
 				(ConfigManager.ForceUnmetEvents, false),
@@ -116,7 +116,7 @@ public partial class StoryReviewPanel
 			Note = "打开分支小窗、旗标提示、随机事件自选、剧情跳转等剧情辅助，不开分支判定手动选择和强制触发未满足条件的事件和选项；作弊只开无限修炼锻造和不花银两；讲经堂只提示达成条件，四师兄不卖全部物品",
 			Values = new (IConfigElement, object)[]
 			{
-				(ConfigManager.ShowBranchChecks, true),
+				(ConfigManager.ShowBranchChecks, 1),
 				(ConfigManager.ShowFlagChanges, true),
 				(ConfigManager.EnableEventPicker, true),
 				(ConfigManager.ForceUnmetEvents, false),
@@ -149,7 +149,7 @@ public partial class StoryReviewPanel
 			Note = "在「进阶」之上再打开分支判定手动选择、强制触发未满足条件的事件和选项、四师兄售卖全部物品、决斗敌方行动预测，讲经堂全部解锁，以及开发装备无视剧情条件",
 			Values = new (IConfigElement, object)[]
 			{
-				(ConfigManager.ShowBranchChecks, true),
+				(ConfigManager.ShowBranchChecks, 1),
 				(ConfigManager.ShowFlagChanges, true),
 				(ConfigManager.EnableEventPicker, true),
 				(ConfigManager.ForceUnmetEvents, true),

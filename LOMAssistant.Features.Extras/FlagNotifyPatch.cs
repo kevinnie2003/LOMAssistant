@@ -79,16 +79,22 @@ public static class FlagNotifyPatch
 			string label = note.Length > 0 ? note : id;
 			string message = $"【旗标】{label}  {before} → {flag.State}";
 			FileLogger.Log($"旗标变化：{id} {label} {before} -> {flag.State}");
-			StoryMainUI ui = StoryMainUI.Instance;
-			if (ui != null && ui.isActiveAndEnabled)
-			{
-				ui.DisplayMessageText(TextConverter.ForDisplay(message));
-				Linger(ui);
-			}
+			ShowNotice(message);
 		}
 		catch (Exception e)
 		{
 			FileLogger.LogWarning("旗标变化提示失败: " + e.Message);
+		}
+	}
+
+	/// <summary>屏幕上方的提示：用游戏自带的飘字，分支判断也走这里。</summary>
+	internal static void ShowNotice(string message)
+	{
+		StoryMainUI ui = StoryMainUI.Instance;
+		if (ui != null && ui.isActiveAndEnabled)
+		{
+			ui.DisplayMessageText(TextConverter.ForDisplay(message));
+			Linger(ui);
 		}
 	}
 
@@ -133,20 +139,47 @@ public static class FlagNotifyPatch
 		RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)host.transform, screen, null, out Vector2 local);
 		Active.RemoveAll(a => a == null);
 		rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+		// 游戏的飘字框宽度固定，长一点的文字换行后第二行被裁掉：改成一行放到底，不裁
 		foreach (Text label in rt.GetComponentsInChildren<Text>(true))
 		{
 			label.alignment = TextAnchor.MiddleCenter;
+			label.horizontalOverflow = HorizontalWrapMode.Overflow;
+			label.verticalOverflow = VerticalWrapMode.Overflow;
+			label.fontSize = Mathf.RoundToInt(label.fontSize * TextScale);
 		}
 		foreach (TMPro.TMP_Text label in rt.GetComponentsInChildren<TMPro.TMP_Text>(true))
 		{
 			label.alignment = TMPro.TextAlignmentOptions.Center;
+			label.enableAutoSizing = false;
+			label.enableWordWrapping = false;
+			label.overflowMode = TMPro.TextOverflowModes.Overflow;
+			label.fontSize *= TextScale;
 		}
-		rt.anchoredPosition = new Vector2(0f, local.y - Active.Count * height * 1.1f);
+		// 排在还在屏幕上的最低一条下面（按条数算会撞上先出现、还没消失的提示）；排满了整体往上挪
+		float step = height * TextScale * 1.1f;
+		float y = local.y;
+		foreach (RectTransform shown in Active)
+		{
+			y = Mathf.Min(y, shown.anchoredPosition.y - step);
+		}
+		float lowest = local.y - MaxRows * step;
+		if (y < lowest)
+		{
+			foreach (RectTransform shown in Active)
+			{
+				shown.anchoredPosition += new Vector2(0f, lowest - y);
+			}
+			y = lowest;
+		}
+		rt.anchoredPosition = new Vector2(0f, y);
 		Active.Add(rt);
 		host.StartCoroutine(Float(text, group, seconds));
 	}
 
-	// 还在屏幕上的旗标提示
+	private const float TextScale = 0.8f; // 游戏飘字的八成大小
+	private const int MaxRows = 8; // 第一条下面最多排几条
+
+	// 还在屏幕上的旗标、分支提示
 	private static readonly System.Collections.Generic.List<RectTransform> Active = new System.Collections.Generic.List<RectTransform>();
 
 	private static IEnumerator Float(FloatingText text, CanvasGroup group, float seconds)

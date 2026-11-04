@@ -10,7 +10,8 @@ using UnityEngine.SceneManagement;
 namespace LOMAssistant.Features.Extras;
 
 /// <summary>
-/// 剧情分支条件提示（F8 开关，默认关）：剧情走到分支判断（SwitchResultData.Execute）时，
+/// 剧情分支条件提示（F8 三选一：不显示、小窗、上方提示，默认不显示）。上方提示和旗标变化提示一样用游戏的飘字，
+/// 只列走到的这一支和它前面没满足的几支。小窗的说明：剧情走到分支判断（SwitchResultData.Execute）时，
 /// 在屏幕左侧的小窗里列出这一轮判断的全部分支条件，满足的绿色、不满足的红色，实际走的那个分支整行高亮。
 /// 「一轮」：几秒内接连发生的判断算同一轮，按发生顺序排列；隔了一段时间再有新判断，就清掉上一轮只显示新的
 /// （旧的记录在骰子大师的历史记录里也能看）。一段时间没有新判断会自动收起（配置 BranchPanelAutoHide）。
@@ -28,6 +29,7 @@ public static class BranchNotifyPatch
 
 	private const float GroupGap = 3f; // 距上一次判断超过这么多秒，就算新的一轮
 	private const int MaxEntries = 20;
+	private const int MaxNotices = 4; // 上方提示最多几条，多了挡画面
 	internal static readonly List<Entry> Entries = new List<Entry>();
 	internal static int Revision;
 	internal static float LastEntryTime;
@@ -39,7 +41,7 @@ public static class BranchNotifyPatch
 	[HarmonyPatch(typeof(SwitchResultData), "Execute")]
 	public static void Execute_Postfix(SwitchResultData __instance, int __result)
 	{
-		if (!ConfigManager.ShowBranchChecks.Value)
+		if (ConfigManager.ShowBranchChecks.Value == 0)
 		{
 			return;
 		}
@@ -78,6 +80,7 @@ public static class BranchNotifyPatch
 			string result = __result <= items.Count ? (items.Count > 1 ? "走第 " + __result + " 个" : "满足") : "都不满足";
 
 			var entry = new Entry { Title = label + " · " + result, Taken = __result <= items.Count ? __result - 1 : -1 };
+			var arms = new List<string>();
 			for (int i = 0; i < items.Count; i++)
 			{
 				string conditions = DataHelper.ExtractConditions(items[i], out bool _);
@@ -85,7 +88,18 @@ public static class BranchNotifyPatch
 				{
 					conditions = "无条件";
 				}
+				arms.Add(conditions);
 				entry.Lines.Add((items.Count > 1 ? (i + 1) + ". " : "") + conditions);
+			}
+			if (ConfigManager.ShowBranchChecks.Value == 2)
+			{
+				int last = entry.Taken >= 0 ? entry.Taken : arms.Count - 1;
+				for (int i = Math.Max(0, last - MaxNotices + 1); i <= last; i++)
+				{
+					FlagNotifyPatch.ShowNotice("【分支】" + arms[i]);
+				}
+				FileLogger.Log($"分支：{label} 共 {items.Count} 个，结果 {__result}");
+				return;
 			}
 			if (Time.unscaledTime - LastEntryTime > GroupGap)
 			{
@@ -158,7 +172,7 @@ public class BranchPanel : MonoBehaviour
 		{
 			return; // 一段时间没有新判断，自动收起
 		}
-		if (!_visible || !ConfigManager.ShowBranchChecks.Value || BranchNotifyPatch.Entries.Count == 0
+		if (!_visible || ConfigManager.ShowBranchChecks.Value != 1 || BranchNotifyPatch.Entries.Count == 0
 			|| SceneManager.GetActiveScene().name == "Title")
 		{
 			return;
