@@ -1,222 +1,31 @@
-English	    时限：
-English	 <color=#A3302A>→ 主线</color>
-English	 · 可能临场应变
-English	 · 太长，只画了前 
-English	 → 主线
-English	 且 | 或 |\n
-English	 个
-English	 个存档</color>
-English	 个月
-English	 个条件不满足
-English	 个都条件不满足
-English	 个？
-English	 修炼进度
-English	 值 
-English	 停止）
-English	 到 
-English	 处
-English	 字）\n
-English	 存一个。
 English	 就会触发）
-English	 层
-English	 层数
-English	 层）
-English	 开发进度
-English	 往中间 
-English	 旬
-English	 旬</color>
-English	 旬：
-English	 本层点数
-English	 本级点数
-English	 条路
-English	 次选择
-English	 段
-English	 点
-English	 点升到下一层，和在修炼界面升层一样加上这层的加成；多的点数算到下一层。\n只能升层不能降层：游戏没有撤回加成的办法，减点只减本层点数。
-English	 点升到下一级，和在
-English	 炼制进度
-English	 级
-English	 级）
-English	 被游戏更新改过了，读不了。请读普通存档，再重新存随时存档。
-English	%（开发 
-English	%（练成 
-English	(?<=^|\s)([^\s()（）]+) 需
-English	(书籍|杂物|贵重品)_(\S+?)(?= 需)
-English	- 分条写，不超过 800 字，用
-English	- 只记：玩家说过的自己的情况、打算和偏好（走哪条线、想和谁结缘、不想知道什么）；聊过哪些话题；玩家确认或拒绝过哪些修改；说好的约定；还没解决的问题。\n
-English	- 回答里说过的数字、条件、剧情结论不要当事实记，最多写「聊过某某的条件」，之后要用时会重新查。\n
-English	- 开头已经有摘要的，把它和后面的内容合在一起重写成一份。\n
-English	100 个手动存档
-English	8-1 你的对策 1. 福韫 2. 反论 3. 没什麽好说
-English	8-1 你的对策\r\n1. 福韫\r\n2. 反论\r\n3. 没什麽好说
-English	<b>{0}：{1} 个事件</b>
-English	<b>主干</b>　
-English	<b>修改提议</b>
-English	<b>支线</b>
-English	<b>攻略助手</b>
-English	<b>攻略提示</b>
-English	<b>第{0}年</b>
-English	<b>限时剧情</b>
-English	<color=#2F6B3A><b>✓ 已达成</b></color>
-English	<color=#2F6B3A><b>✓ 读完</b></color>
-English	<color=#2F6B3A>✓ 这一局走过</color>
-English	<color=#2F6B3A>已修改</color>
-English	<color=#2F6B3A>条件已满足
-English	<color=#2F6B3A>连上了</color>
-English	<color=#73644F>奖励：
-English	<color=#73644F>岔路</color>　
-English	<color=#73644F>还差条件</color>
-English	<color=#A3302A><b>主线</b></color>　
-English	<color=#A3302A><b>当前主线</b></color>
 English	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
-English	<color=#A3302A><b>终</b></color>
-English	<color=#A3302A>备注：</color>
-English	<color=#A3302A>未达成</color>
-English	<color=#A3302A>条件不满足</color>
-English	<color=#A3302A>游戏更新改过这个存档经过的剧本，读不了</color>
-English	<color=#A3302A>点了会无视条件直接触发，不改旗标，之后的剧情可能对不上</color>
-English	<color=#A3302A>读不了：
-English	<color={0}>在剧本和决斗数据里都没找到触发的地方（可能由战役、小游戏等直接触发）</color>
-English	<color={0}>还有 {1} 处</color>
 English	>剩 
 English	>已过期 
 English	>当前版本</color>
 English	>条件没满足</color>
-English	Girl1_瑞杏
-English	Girl2_葉雲裳
-English	Girl4_龍湘
-English	Girl5_小梅
-English	Girl6_小蘭
-English	Girl7_小竹
-English	Girl8_小菊
-English	Girl9_上官瑩
-English	Max_道德_性情_命运x20
-English	Relationship_Girl4_龍湘
-English	Relationship_Girl7_郁竹
-English	Relationship_Girl9_上官螢
-English	Relationship_Sister1_小師妹
-English	Relationship_Special3_葉雲舟
-English	[LOMAssistant] 写入日志失败: 
-English	[LOMAssistant] 初始化日志文件失败: 
-English	\[\s*(?:表情|mood)\s*[:：]\s*([A-Za-z_0-9]+)\s*\]
-English	\n--- 回复：输入 
-English	\n--- 查资料 
-English	\n<color=#9A9286>进过一次剧情后才能列出（事件表只在剧情场景里读得到）</color>
-English	\n\n<color=#9A9286>另有 {0} 个主线、支线现在还不能触发</color>
-English	\n\n【赵活说】\n
-English	\n\n【这次发的问题】\n
-English	\n\n之前的对白：
-English	\n\n可能临场应变
-English	\n\n这一段做过的选择：
-English	\n……（太长，后面省略）
-English	\n且 
-English	\n停在：
-English	\n存于 
-English	\n存档、提速、界面、热键等其他设置不变
-English	\n攻略提示\n
-English	\n每层练成时的加成：\n
-English	\n游戏时间：
-English	\n点名字看在哪些剧情里判定
-English	\n点名字看在哪些剧情里改动、判定
-English	\n选了以后还在这一段里，之后合回来
-English	^(?:旗标|设置)[·:：]
-English	^第(\d+)年(\d+)月
-English	^第(\d+)年(\d+)月(上|中|下)?
 English	{0} 需{2}{3} → 当前{1}
 English	{0}年{1}月{2}
 English	{0}月{1}
-English	|下一站
-English	|会议
-English	|条件
-English	· {0}
-English	← {0}
-English	→ {0}
-English	✓ {0}
-English	　<color=#2F6B3A>✓ 走过</color>
-English	　<color=#73644F>中间的主线</color>
-English	　<color=#73644F>中间的支线</color>
-English	　<color=#73644F>条件没满足</color>
-English	　<color=#73644F>读过 {0}%</color>
-English	　<color=#73644F>（其他存档）</color>
-English	　<color=#8A7E6E>留在本段</color>
-English	　<color=#A3302A>下一步</color>
-English	　<color=#A3302A>会走这一支</color>
-English	　<color=#A3302A>没看过</color>
-English	　<color=#C9A26A>上次保存</color>
-English	　<color=#C9A26A>当前进度</color>
-English	　<color=#C9A26A>最新</color>
-English	　<size={0}><color=#73644F>共 {1} 处</color></size>
-English	　·　<color=#2F6B3A>✓ 这一局走过</color>
-English	　·　<color=#A3302A><b>心上人</b></color>
-English	　·　<color=#A3302A>{0} 个结局</color>
-English	　·　对白读过 {0}%
-English	　·　读过 {0}%
-English	　到
-English	　剩 
-English	　去「
-English	　存于 
-English	　（只列前 60 处）
-English	　（只列前 {0} 面，搜得更具体些能缩小范围）
-English	　（没读过 {0} 句）
-English	　（要 
-English	、加成 
-English	、最终 
-English	、范围 
-English	。只输出摘要。
-English	。可以用数值页里的名字再试一次。
-English	。马上回到标题画面，请重新读档。
 English	」不是数字）
-English	」在哪些剧情里用到
-English	」就会触发
 English	」的新值「
 English	」相关的设置项。
 English	」看不懂）
-English	」触发
 English	」触发）
-English	」这一步要靠掷骰，按选的这条路补
-English	」里有战斗，没有真的打，按选的这条路补
-English	」？\n当前没有存档的进度会丢失。
 English	【攻略提示】
 English	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
-English	【系统提示词】（
-English	〔六道之缘・畜生〕
-English	〔六道之缘・畜生〕 ({0})
-English	〔读过 
 English	丁承烈
 English	万灵油
 English	万里鹏程
 English	三师兄
-English	三师兄的决策 1. 退隐江湖 2. 战他娘亲 3. 响应武林盟
-English	三师兄的决策\r\n1. 退隐江湖\r\n2. 战他娘亲\r\n3. 响应武林盟
 English	上中下
 English	上官隼
 English	上清宫
 English	上风观
-English	下面是《活侠传》玩家和游戏 Mod 里 AI 的一段对话。把它压缩成摘要，给接着聊的 AI 当记忆用，不是向玩家发出的回答。历史保留原有语言，游戏提供的名称和对白随游戏当前语言；中文角色标签和 Mod 标记只是内部结构。沿用已有的人物名和术语，不因中文标签把韩语等原有名称改成中文。\n
-English	不支持的存档场景
 English	不明
-English	不速之客
-English	与唐大鲸决斗後续 1. 打赢 2. 二师兄罩 3. 叶云裳罩
-English	与唐大鲸决斗後续\r\n1. 打赢\r\n2. 二师兄罩\r\n3. 叶云裳罩
 English	丐帮
-English	丐帮_向心力
-English	丐帮谈判
-English	且
-English	东西武林盟在唐门的决策 1. 护卫三师兄 2. 唐门出击
-English	东西武林盟在唐门的决策\r\n1. 护卫三师兄\r\n2. 唐门出击
-English	丢弃
 English	中药蜜饯
 English	丹霞子
-English	为止
-English	主线　
-English	主线「
-English	主线从现在这一步接不到目标任务（不在同一条路线上，或要靠别的支线接进来），中间的主线剧情没有补
-English	主线进度不满足上列条件&&性情<中庸
-English	主线进度在1-5穷途末路 or 1-4A-3反卧底之後
-English	主线进度：
-English	主线：
-English	主角提议初始门派 1. 青城派 2. 峨嵋派 3. 丐帮
-English	主角提议初始门派\r\n1. 青城派\r\n2. 峨嵋派\r\n3. 丐帮
 English	乌蚕宝衣
 English	乖乖水
 English	乘凉
@@ -240,54 +49,14 @@ English	书籍_阿摩搪墙拳
 English	二师兄
 English	云霄雷霆霹雳刀
 English	五毒秘录
-English	从
-English	从任务开头找不到走到这一段的路（可能要从别的任务接进来），任务里的变化没有补全
-English	任何木剑
-English	任何酒
-English	任何音波功
-English	任务：
-English	任意饮食物品
-English	伤亡结果 1. 死伤惨重 2. 有人死，有人伤 3. 万幸无人送命
-English	伤亡结果\r\n1. 死伤惨重\r\n2. 有人死，有人伤\r\n3. 万幸无人送命
-English	体力_轻功
 English	佛学
-English	你回程的遭遇 1. 山猪 2. 山贼 3. 小师妹
-English	你回程的遭遇\r\n1. 山猪\r\n2. 山贼\r\n3. 小师妹
-English	你好，请回复「连上了」。
-English	你的决策 1. 退隐江湖 2. 战他娘亲 3. 响应武林盟 4. 西武林盟
-English	你的决策\r\n1. 退隐江湖\r\n2. 战他娘亲\r\n3. 响应武林盟\n4. 西武林盟
 English	傳奇_001
-English	全毒药点数
 English	全真体操
-English	全部 
-English	全部 {0} 个都条件不满足
-English	六回合前胜利
-English	六回合後胜利
-English	六道之缘・畜生
-English	六道之缘・畜生 ({0})
-English	关掉
 English	兵器损毁
 English	养成地图上
-English	养成随机状态无效
-English	决战卧云冈回返同行者\r\n1.龙湘\r\n2.福韫
-English	决斗卧云岗路线 1 不跟随大师兄 2 跟随大师兄
-English	决斗卧云岗路线\r\n1 不跟随大师兄\r\n2 跟随大师兄
-English	决斗崆峒派 1. 围殴 2. 单挑决斗金乌上人
-English	决斗崆峒派\r\n1. 围殴\r\n2. 单挑决斗金乌上人
 English	出城冲锋
 English	刘颚
-English	前往武林大会路线 1. 委任师弟带队，独行江陵 2. 前往锦香宫作客
-English	前往武林大会路线\r\n1. 委任师弟带队，独行江陵\r\n2. 前往锦香宫作客
-English	剧情恢复信息不完整
-English	剧情脚本版本不匹配：{0}
-English	剧情里
-English	剧本「
-English	剧本报错（
-English	剧本报错（{0}）
-English	十二回合结束
 English	千面人魔
-English	南宫世家_锦香宫_上官世家
-English	南宫家宴采纳结论\n1:大师兄\n2:二师兄\n3:三师兄
 English	南宫护心诀
 English	南宫横
 English	南宫浅
@@ -295,28 +64,15 @@ English	南宫深
 English	南宫远
 English	南溪
 English	南蝥礜石散
-English	卧云岗回程结果 1.被金乌上人敲头 2.被申屠龙吸内力
-English	卧云岗回程结果\r\n1.被金乌上人敲头\r\n2.被申屠龙吸内力
 English	历战血书
 English	去处
 English	参观锦香宫
-English	又一个被骗
-English	反查「{0}」
-English	另有 
-English	另有 {0} 个条件不满足
 English	叶云舟
 English	同舟剑法
-English	后续: 
-English	向心力 
 English	向无忧
-English	否则（不满足：
-English	否则（以下都不满足：
 English	听云木剑
 English	听海生
-English	启用100个手动存档
-English	命运x20
 English	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
-English	咖啡伴侣日志系统已初始化。
 English	唐中翎
 English	唐升
 English	唐大鲸
@@ -329,46 +85,20 @@ English	唐芳
 English	唐衫
 English	唐铮
 English	唐门传承小剑
-English	唐门出击的结果1 1. 锦香宫加入西武林盟 2. 吼回去 3. 被吼 4. 开门迎战
-English	唐门出击的结果1\r\n1. 锦香宫加入西武林盟\r\n2. 吼回去\r\n3. 被吼\n4. 开门迎战
 English	唐门暗器总纲
 English	四师兄
-English	四师兄的决策 1. 退隐江湖 2. 战他娘亲 3. 响应武林盟
-English	四师兄的决策\r\n1. 退隐江湖\r\n2. 战他娘亲\r\n3. 响应武林盟
 English	回梦仙香
-English	回程说点什麽 1. 威胁 2. 好言相劝 3. 唱歌
-English	回程说点什麽\r\n1. 威胁\r\n2. 好言相劝\r\n3. 唱歌
-English	回答：
-English	回退到判定前（
-English	围攻唐门弟子出走结果 1. 一个也没走 2. 走了小部分 3.走了大部分 4. 走光光
-English	围攻唐门弟子出走结果\r\n1. 一个也没走\r\n2. 走了小部分\r\n3.走了大部分\r\n4. 走光光
 English	国
 English	国国
 English	地图标题：
 English	处世
-English	备忘 
-English	备忘条件回落：
-English	备忘达成：
-English	备忘过期：
-English	备忘还剩 
-English	夏侯兰树屋规格 1. 普通 2. 高级
-English	夏侯兰树屋规格\r\n1. 普通\r\n2. 高级
 English	夏灵犀
-English	大师兄不在&二师兄还在
-English	大师兄对龙湘的好感 最终决定大师兄会否和龙湘在一起。 =0，主角不攻略龙湘，龙湘会追着大师兄跑 =1，主角攻略龙湘，大师兄会退让 =2，主角攻略龙湘，大师兄会和你决斗
-English	大师兄对龙湘的好感\n最终决定大师兄会否和龙湘在一起。\r\n=0，主角不攻略龙湘，龙湘会追着大师兄跑\r\n=1，主角攻略龙湘，大师兄会退让\r\n=2，主角攻略龙湘，大师兄会和你决斗
 English	大师兄涂鸦
-English	大师兄还在
 English	大焦热神功
 English	天师剑法
-English	天赋{0} lv{1}
 English	失魂落魄
 English	夺魄峰
 English	夺魄幽灵爪
-English	好感 
-English	好感 {0} · 好感 {1}
-English	好感·
-English	好感度_(\S+?)(?= 需)
 English	好感度_万里鹏程
 English	好感度_丹霞子
 English	好感度_刘颚_赵逵_车轩辕_王二壮
@@ -379,99 +109,31 @@ English	好感度_掌门人
 English	好感度_最高唐门师兄
 English	好感度_李富贵_樊啸天
 English	好感度_解无尘
-English	委托四师兄的事情 1. 想知道小师妹过得好不好 2. 听说华山有神仙，而神仙有灵丹
-English	委托四师兄的事情\r\n1. 想知道小师妹过得好不好\r\n2. 听说华山有神仙，而神仙有灵丹
-English	存到新的随时存档（
-English	存在空栏位 
-English	存档内容为空
 English	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
-English	存档校验失败
-English	存读档相关的游戏代码有冲突（
 English	孟仙谣
 English	孟珙
-English	学问+嘴力
-English	学问_厨艺
 English	宋悲
 English	完竟剑
-English	官兵大战丐帮的结果 1:官兵优势 2:丐帮优势 3.别派人马
-English	官兵大战丐帮的结果\r\n1:官兵优势\r\n2:丐帮优势\r\n3.别派人马
 English	密密缝
-English	对决
 English	对白：
-English	小师妹南宫家宴参战 1: 参战
-English	小师妹南宫家宴参战\n1: 参战
-English	小师妹陪练
-English	小梅乱入
-English	小竹 可疑的行踪
-English	小竹回家第一区间
-English	小竹回家第二区间
-English	小竹回家触发来源\r\n1. 小梅\r\n2. 小竹
 English	小竹按摩券
 English	小菊
 English	少林金钟罩
 English	尹志平
 English	峨嵋雪芽
-English	崆峒·夺魄峰
-English	崆峒·夺魄森林
-English	崆峒·无色广场
-English	崆峒·玄功洞
-English	崆峒·窝居
-English	崆峒·铁拳巷
-English	崆峒·飞天殿
-English	崆峒·飞天殿（遇到小梅）
-English	崆峒·鹤崖
 English	崆峒四姝
-English	崆峒神威 来者何人 1. 绿色的 2. 红色的
-English	崆峒神威 来者何人\r\n1. 绿色的\r\n2. 红色的
-English	崆峒神威分支\r\n1. 小梅 \r\n2. 小竹
-English	崆峒进的门派 1.飞天门 2.夺魄门 3.玄功门 4.铁拳门
-English	崆峒进的门派\r\n1.飞天门\r\n2.夺魄门\r\n3.玄功门\r\n4.铁拳门
-English	工欲善其事
-English	已保存到随时存档 #
-English	已保存：
-English	已删除：
-English	已导出
-English	已开发项目_万灵油
-English	已开发项目_乖乖水
-English	已开发项目_回梦仙香
-English	已经把修改卡片给玩家看了（
-English	已读取随时存档 
-English	已跳到「
 English	常数_
 English	常风观
-English	年　
-English	序
 English	庭院演武
 English	开发项目等级_乌蚕宝衣
 English	开发项目等级_切鱼刀
 English	开发项目等级_唐门传承小剑
 English	开发项目等级_沥泉小剑
-English	弹珠分数：总分 {0} -> {1}（固定分数）
-English	弹珠台条件
-English	强鹤所难
-English	当前
-English	当前 
-English	当前总分 
 English	形意拳
 English	很是用力踢
-English	快进已读对话中（
 English	思想战
-English	怪胎
-English	恢复已停止：
-English	悬停地点提示
-English	悬停地点显示事件提示
-English	惜花令对大师兄评价 1. 帮大师兄说话 2 不帮大师兄说话
-English	惜花令对大师兄评价\r\n1. 帮大师兄说话\r\n2 不帮大师兄说话
 English	感情：
-English	成就_30000
-English	成就_30016
-English	成就_30020
-English	成就_30021
-English	或
 English	战斗中
-English	截止：
-English	执行次数 
-English	执行记录不一致，位置 {0}
 English	技能_不坏金身
 English	技能_九转轮回
 English	技能_任何音波功
@@ -495,65 +157,19 @@ English	技能_粹毒
 English	技能_翻浪刀法
 English	技能_道学
 English	技能_铁琵琶功
-English	抓获丐帮数量 1:两成 2:五成
-English	抓获丐帮数量\r\n1:两成\r\n2:五成
-English	抗毒_抗麻
-English	护卫三师兄第一个刺客 1. 谭霸刀 2. 方震天 3. 唐衫
-English	护卫三师兄第一个刺客\r\n1. 谭霸刀\r\n2. 方震天\r\n3. 唐衫
-English	护卫三师兄第二个刺客 1. 金乌上人 2. 火龙仙君 3. 释明 4. 店小二
-English	护卫三师兄第二个刺客\r\n1. 金乌上人\r\n2. 火龙仙君\r\n3. 释明\r\n4. 店小二
-English	拜码头
-English	拜码头 分支 1. 成功逃跑 2. 铁拳飞天混战 3. 夏侯兰抓
-English	拜码头 分支\r\n1. 成功逃跑\r\n2. 铁拳飞天混战\r\n3. 夏侯兰抓
-English	持有江湖快报
-English	指派四师兄状态 1. 青城派 2. 崆峒派 3. 丐帮 4. 中小门派
-English	指派四师兄状态\r\n1. 青城派\r\n2. 崆峒派\r\n3. 丐帮\r\n4. 中小门派
-English	挑战上官隼胜败 1. 胜利 2. 失败
-English	挑战上官隼胜败\r\n1. 胜利\r\n2. 失败
 English	挑战花中仙
 English	掌门人
-English	接到「
 English	接骨草
-English	掷出 
 English	掷石问天
-English	掷骰结果：
-English	支持肩甲状态 0:未知 1:支持 2: 反对
-English	支持肩甲状态 \n0:未知\n1:支持\n2: 反对
-English	支线 → 
-English	支线「
-English	收留小梅 (收留小梅或小竹)
-English	敌方预选 · 
-English	敌方预选\n\n
 English	数值_
 English	旁白
-English	旗标([A-Za-z][A-Za-z0-9_]*)|\(([A-Za-z][A-Za-z0-9_]*)\)(?= 需| *$)|(?<=^|\s)([A-Z][A-Za-z]*\d[A-Za-z0-9_]*)(?= 需)
-English	旗标(\w+)
 English	旗标_
-English	旗标收留小梅或小竹
-English	旗标赎回任何资产
-English	无
-English	无法核验游戏版本，随时存档已停用：
-English	无法读取：
 English	无色广场
-English	日期：
 English	日本語
-English	日语（日本語）
-English	旧槽位 
-English	时间 
 English	时间_
-English	显示选项属性增减
 English	晁和
-English	暂不能保存：
-English	暂时读不到随时存档：
 English	最近的剧本：
-English	最高
-English	最高唐门师兄
 English	有些状态补不全，之后可能出现对话对不上、分支判断出错，甚至卡住。跳之前会先存一份随时存档，跳过去以后可以回到跳转前。
-English	有新版本 
-English	本 Mod 的
-English	本层 
-English	本层修炼点数，满 
-English	本级 
 English	本草纲目
 English	杂物_万灵油
 English	杂物_中药蜜饯
@@ -581,104 +197,42 @@ English	杂物_酒
 English	杂物_降真香
 English	杂物_龙湘的碎银
 English	李富贵
-English	条件
-English	条件_心上人_小梅或小竹
-English	条件_晚安且收留小梅
-English	条件_没有攻略龙湘
 English	枯荣神功上卷
-English	查场所事件「{0}」
-English	查物品「{0}」
-English	查看「{0}」的人物志
-English	查看商店
-English	查看设置项
-English	查看设置项「{0}」
-English	查看门派经营
 English	标记_
 English	校场
 English	核枣钉
 English	梁有诗
-English	检测到「剧情随行」，它的 F6、F8、F9 快捷键和本 Mod 撞了，本 Mod 的
-English	检测到「剧情随行」，它的 F6、F8、F9 快捷键和本 Mod 撞了，本 Mod 的{0}热键已让给它（改成不绑定）。可以按 Tab 打开窗口再点对应的页，或者在设置页「热键」里另绑别的键。
-English	检测到冲突的 Mod：{0}（{1}），和本 Mod 同时修改了 {2} 处游戏代码：{3}。本 Mod 的部分功能可能不生效（如骰子、选项显示）；出现问题建议删掉旧版骰子大师、多功能 Mod、活侠传助手等同类 Mod 后重新覆盖安装。
-English	检测到立绘替换 Mod「邪神认知污染ON」，它的 F8、F9 改不了，本 Mod 的
-English	棋力
 English	樊啸天
-English	檄文结果 1. 武林公敌 2. 朝廷号令
-English	檄文结果\r\n1. 武林公敌\r\n2. 朝廷号令
 English	正在掷骰
-English	正在整理任务 {0}/{1}
-English	正在读取剧本 {0}/{1}
-English	正在读取随时存档 
 English	正在选的选项：
-English	此刻：{0}
-English	武林大会选择支持对象 1. 正道 2. 锦香宫
-English	武林大会选择支持对象\r\n1. 正道\r\n2. 锦香宫
-English	武林盟_向心力
-English	武林盟的消耗 1. 损伤轻微 2. 损伤惨重 3. 毁灭性打击
-English	武林盟的消耗\r\n1. 损伤轻微\r\n2. 损伤惨重\r\n3. 毁灭性打击
 English	段智秀
-English	段考考官\r\n1. 掌门人\r\n2. 三师兄\r\n3. 二师兄\r\n4. 大师兄
-English	每旬
-English	每旬{0}点
 English	毛二壮
 English	江湖鬼域录
-English	江陵大战前
-English	江陵大战後
 English	没有「
-English	没有任何帮手
-English	没有要改的项。
 English	沥泉小剑
 English	活侠传传奇_
-English	消耗品的数量不写进存档，这里只显示。\n
-English	混战
 English	温夫人
 English	游戏日期：
 English	火龙仙君
 English	点破云关
 English	烧刀子
-English	热键已让给它（改成不绑定）。可以按 Tab 打开窗口再点对应的页，或者在设置页「热键」里另绑别的键。
-English	热键改成不绑定
 English	焚心火印
 English	玄功洞
 English	玄烛心经
 English	玄玄如意指
 English	王二壮
 English	玩家在标题画面，还没读档进游戏。
-English	玩家没有同意修改：
-English	玩家确认了修改：
 English	玩家还没读档进游戏
-English	玩家：
 English	现在在：
-English	现在显示：
-English	现在显示：<b>{0}</b>
-English	现在显示：<b>{0}</b>（自定义）　<color=#73644F>游戏里的称号是「{1}」，清除自定义后恢复显示它</color>
 English	瑞笙
-English	生成失败：
-English	用一句话回答。
 English	申屠龙
 English	画中仙
-English	界面升级一样；多的点数算到下一级。\n只能升级不能降级，减点只减本级点数。
-English	留学 1: 青城 2: 崆峒
-English	留学\n1: 青城\n2: 崆峒
 English	白鲨语
 English	盖房子
-English	目前时间
-English	目标在现在之前，日期会往回调；中间的主线不补，之后已经走过的剧情和旗标也不会撤销
-English	直接选择骰子
-English	直接选择骰子选项
-English	看不懂服务商的回复\n
-English	看剧情图：
 English	睡丹
-English	睡丹特例
 English	石公远
-English	确定删除这 
 English	神兵帖
-English	神兵帖2 小竹的烦恼
-English	票数相同决斗胜败 1. 败 2. 胜
-English	票数相同决斗胜败\r\n1. 败\r\n2. 胜
 English	福韫
-English	离家出走路线 1. 破庙 2. 客栈
-English	离家出走路线\r\n1. 破庙\r\n2. 客栈
 English	秘笈等级_九转残篇
 English	秘笈等级_唐门暗器总纲
 English	秘笈等级_掷石问天
@@ -687,22 +241,13 @@ English	秘笈等级_江湖鬼域录
 English	秘笈等级_玄烛心经
 English	秘笈等级_玄玄如意指
 English	空过（剧情 {0}）：{1}年{2}月{3} 消耗 {4} 次行动，剩余 {5}。
-English	空过：触发任务剧情，进入剧情场景。
 English	穿心龙胆汤
-English	第
-English	第 
-English	第{0}年{1}月
 English	第{0}年{1}月{2}
-English	第一次决斗金乌上人结果 1. 胜 2. 败
-English	第一次决斗金乌上人结果\r\n1. 胜\r\n2. 败
 English	第三香
 English	简体中文
-English	算任务 {0} 每条路线
 English	粹毒
 English	繁體中文
-English	繁體中文（正體字）
 English	纳溪梅岭
-English	缺少内置资源 {0}
 English	罗汉拳谱
 English	羊羔酒
 English	翻浪刀法
@@ -710,40 +255,13 @@ English	胡椒粉丸
 English	舞影殿
 English	花音阁
 English	苏合香酒
-English	若这次没购买，将状态改为clear
 English	苦恼拳
-English	英语（English）
 English	莲花落
 English	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
 English	蒙顶露芽
-English	虎战车判断
 English	蛇形拳
-English	行动点剩 1 点后不再消耗，用 ESC「空过」结束本旬。\n
-English	补上中间的主线：
-English	西武林盟提出的人 1. 主角 2. 小菊 3. 丐帮
-English	西武林盟提出的人\r\n1. 主角\r\n2. 小菊\r\n3. 丐帮
 English	观云客
 English	解无尘
-English	解无尘VS南宫深 1. 南宫深胜 2. 解无尘胜
-English	解无尘VS南宫深\r\n1. 南宫深胜\r\n2. 解无尘胜
-English	触发过乞丐抢菜
-English	设成 
-English	设施等级（旗标 
-English	设置{0} {1}
-English	设置{0}={1}
-English	设置·
-English	说服丐帮结果 1. 马富贵协助 2. 失败 3. 丐帮加入唐门
-English	说服丐帮结果\r\n1. 马富贵协助\r\n2. 失败\r\n3. 丐帮加入唐门
-English	说服中小门派结果 1. 成功 2. 失败 3. 观望
-English	说服中小门派结果\r\n1. 成功\r\n2. 失败\r\n3. 观望
-English	说服峨嵋派结果 1. 成功 2. 失败 3. 两不相帮
-English	说服峨嵋派结果\r\n1. 成功\r\n2. 失败\r\n3. 两不相帮
-English	说服崆峒派结果 1. 成功 2. 失败
-English	说服崆峒派结果\r\n1. 成功\r\n2. 失败
-English	说服青城派结果 1.成功 2.失败
-English	说服青城派结果\r\n1.成功\r\n2.失败
-English	读取「
-English	读最近的（
 English	谭霸刀
 English	贵重品_乌蚕宝衣
 English	贵重品_切鱼刀
@@ -755,31 +273,15 @@ English	贵重品_小竹按摩券
 English	贵重品_持有江湖快报
 English	贵重品_还虚丹
 English	贵重品_连环火箭
-English	赎回任何资产
-English	走完接到主线「
-English	走第 
 English	赵活
 English	赵活磨喝乐
 English	赵逵
-English	跳到「
-English	跳转前（去「
 English	车轩辕
-English	轻功_暗器
-English	还剩 
-English	还没有随时存档。在剧情的台词、选项、掷骰时或养成界面按 
 English	还虚丹
-English	这个存档来自不兼容的游戏或 Mod 版本（存档：{0}，当前：{1}），文件没有改动
-English	这个随时存档经过的剧本 
-English	这些没找到，没放进卡片：
 English	这张地图上的场所：
 English	这段剧情的剧本：
-English	进入世外桃源的来源 1. 真正的敌人 2. 收功 3. 其他
-English	进入世外桃源的来源\r\n1. 真正的敌人\r\n2. 收功\r\n3. 其他
 English	进行中的支线：\n
-English	连不上服务商，检查网络和 API 地址\n
 English	连环火箭
-English	选项属性增减
-English	选项：
 English	邹博
 English	释明
 English	金乌上人
@@ -787,911 +289,280 @@ English	金刚腿
 English	铁冠道人
 English	铁琵琶功
 English	锁住选项
-English	间章结束 小竹
 English	间距 {0} -> {1}，controlHeight={2}，
-English	阴阳内功
 English	阿摩搪墙拳
 English	降真香
-English	随时存档只支持游戏 1.0.6001 及以后的版本（当前 
-English	随机事件</b>
-English	随机值_0_100
-English	随机值_0_30
-English	随机值_0_40
-English	随机值_0_50
-English	青城·上清宫
-English	青城·常风观
-English	青城·窝居
-English	青城·青城山镇
-English	青城留学 云裳给申屠龙的秘笈 1. 雪球 2. 盘古 3. 斩天
-English	青城留学 云裳给申屠龙的秘笈\r\n1. 雪球\r\n2. 盘古\r\n3. 斩天
-English	韩语（한국어）
-English	题目文件读不了：{0}
 English	马富贵
 English	龙渊
 English	龙湘的碎银
-English	（主线）
 English	（从场所判断玩家在唐门还是崆峒等地，不要只凭身份猜；任务触发的场所不在这里面，就是不在这张地图上，要先回到那里）\n
 English	（任务 
-English	（前面聊过的内容摘要）
 English	（可以触发）
 English	（可选：
 English	（在「
 English	（开 / 关）
-English	（待确认）
 English	（数值页和设置页里都没有这一项）
 English	（新值「
 English	（条件已满足，去 
-English	（查了很多资料还没整理出答案，换个具体点的问法再问一次吧。）
 English	（用 script 查它，按选项文字对上分岔）\n
-English	（结果 
-English	（缓存命中 
-English	（自定义）
-English	（要 
-English	（记下了）
 English	（设置项「
-English	（重启游戏后生效）
-English	），0 是还没建。
-English	），已停用。
-English	），玩家点确认才会改。告诉玩家去确认，不要说已经改好了。
-English	），输出 
-English	），随时存档已停用。请检查是否装了会修改游戏文件的其它 Mod，或者游戏最近有大更新、Mod 还没适配。已有的随时存档没有改动。
-English	，停止原因 
-English	，去「
 English	，各档：
-English	，我方 {0} 人、敌方 {1} 人，游戏速度 {2}
-English	，我方剩 {0} 人、敌方剩 {1} 人，游戏速度 {2}
 English	，改后重启游戏生效
-English	，要查 
-English	，让它根据查到的资料直接写
-English	，重写也是空的
-English	，门人血量设成 {0}
-English	，限时取胜 {0}、全灭判负 {1}，限时 {2} 秒
-English	，默认血量 {0}
-English	：本级开发点数，满 
 English	：现在 
-English	：还没开发或已经满级。
-Japanese	8-1 你的对策 1. 福韫 2. 反论 3. 没什麽好说
-Japanese	8-1 你的对策\r\n1. 福韫\r\n2. 反论\r\n3. 没什麽好说
-Japanese	Max_道德_性情_命运x20
-Japanese	{0}/{1}级
-Japanese	{0}：本级开发点数，满 {1} 点升到下一级，和在{2}界面升级一样；多的点数算到下一级。
-Japanese	{0}：还没开发或已经满级。
-Japanese	· {0}
-Japanese	→ 主线
-Japanese	【旗标】{0}  {1} → {2}
-Japanese	〔六道之缘・畜生〕
-Japanese	〔六道之缘・畜生〕 ({0})
+Japanese	 就会触发）
+Japanese	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
+Japanese	>剩 
+Japanese	>已过期 
+Japanese	>当前版本</color>
+Japanese	>条件没满足</color>
+Japanese	{0} 需{2}{3} → 当前{1}
+Japanese	{0}年{1}月{2}
+Japanese	{0}月{1}
+Japanese	」不是数字）
+Japanese	」的新值「
+Japanese	」相关的设置项。
+Japanese	」看不懂）
+Japanese	」触发）
+Japanese	【攻略提示】
+Japanese	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
 Japanese	丁承烈
 Japanese	万里鹏程
 Japanese	三师兄
-Japanese	三师兄的决策 1. 退隐江湖 2. 战他娘亲 3. 响应武林盟
-Japanese	三师兄的决策\r\n1. 退隐江湖\r\n2. 战他娘亲\r\n3. 响应武林盟
-Japanese	上官萤
+Japanese	上中下
 Japanese	上官隼
-Japanese	不支持的存档场景
-Japanese	不速之客
-Japanese	与唐大鲸决斗後续 1. 打赢 2. 二师兄罩 3. 叶云裳罩
-Japanese	与唐大鲸决斗後续\r\n1. 打赢\r\n2. 二师兄罩\r\n3. 叶云裳罩
-Japanese	丐帮_向心力
-Japanese	丐帮谈判
-Japanese	东西武林盟在唐门的决策 1. 护卫三师兄 2. 唐门出击
-Japanese	东西武林盟在唐门的决策\r\n1. 护卫三师兄\r\n2. 唐门出击
+Japanese	上风观
+Japanese	不明
 Japanese	中殿
 Japanese	中药蜜饯
 Japanese	丹霞子
-Japanese	主线 → {0}
-Japanese	主线推进到「{0}」
-Japanese	主线进度不满足上列条件&&性情<中庸
-Japanese	主线进度在1-5穷途末路 or 1-4A-3反卧底之後
-Japanese	主角提议初始门派 1. 青城派 2. 峨嵋派 3. 丐帮
-Japanese	主角提议初始门派\r\n1. 青城派\r\n2. 峨嵋派\r\n3. 丐帮
-Japanese	之前的对白：
 Japanese	乖乖水
+Japanese	乘凉
 Japanese	书房
-Japanese	书籍_少林金钟罩
-Japanese	书籍_手抄仙鹤迷踪拳
-Japanese	书籍_本草纲目
-Japanese	书籍_江湖鬼域录
-Japanese	书籍_飞天脚
 Japanese	事件：
 Japanese	二师兄
-Japanese	任何木剑
-Japanese	任何酒
-Japanese	任何音波功
-Japanese	任意饮食物品
-Japanese	伙房
-Japanese	伤亡结果 1. 死伤惨重 2. 有人死，有人伤 3. 万幸无人送命
-Japanese	伤亡结果\r\n1. 死伤惨重\r\n2. 有人死，有人伤\r\n3. 万幸无人送命
-Japanese	体力
-Japanese	体力_轻功
-Japanese	你回程的遭遇 1. 山猪 2. 山贼 3. 小师妹
-Japanese	你回程的遭遇\r\n1. 山猪\r\n2. 山贼\r\n3. 小师妹
-Japanese	你的决策 1. 退隐江湖 2. 战他娘亲 3. 响应武林盟 4. 西武林盟
-Japanese	你的决策\r\n1. 退隐江湖\r\n2. 战他娘亲\r\n3. 响应武林盟\n4. 西武林盟
-Japanese	停在：{0}
-Japanese	全毒药点数
+Japanese	傳奇_001
 Japanese	全真体操
-Japanese	全部 {0} 个都条件不满足
-Japanese	六回合前胜利
-Japanese	六回合後胜利
-Japanese	六道之缘・畜生
-Japanese	六道之缘・畜生 ({0})
-Japanese	共 {0} 个，最多保留 {1} 个，超过自动删最旧的，有备注的不删（设置页可改）。鼠标停在存档上看当时的剧情和对白。
-Japanese	养成界面初始化超时
-Japanese	养成随机状态无效
-Japanese	内力
-Japanese	决战卧云冈回返同行者\r\n1.龙湘\r\n2.福韫
-Japanese	决斗卧云岗路线 1 不跟随大师兄 2 跟随大师兄
-Japanese	决斗卧云岗路线\r\n1 不跟随大师兄\r\n2 跟随大师兄
-Japanese	决斗崆峒派 1. 围殴 2. 单挑决斗金乌上人
-Japanese	决斗崆峒派\r\n1. 围殴\r\n2. 单挑决斗金乌上人
+Japanese	养成地图上
+Japanese	出城冲锋
 Japanese	刘颚
-Japanese	前往武林大会路线 1. 委任师弟带队，独行江陵 2. 前往锦香宫作客
-Japanese	前往武林大会路线\r\n1. 委任师弟带队，独行江陵\r\n2. 前往锦香宫作客
-Japanese	剧情恢复信息不完整
-Japanese	剧情脚本版本不匹配：{0}
-Japanese	剧情里拿不到、原版商店也不卖，像是没做完的书。
-Japanese	剧本报错（{0}）
 Japanese	医馆
-Japanese	十二回合结束
 Japanese	千面人魔
-Japanese	南宫世家_锦香宫_上官世家
-Japanese	南宫家宴采纳结论\n1:大师兄\n2:二师兄\n3:三师兄
 Japanese	南宫横
 Japanese	南宫浅
 Japanese	南宫深
 Japanese	南宫远
 Japanese	南溪
 Japanese	南蝥礜石散
-Japanese	卧云岗回程结果 1.被金乌上人敲头 2.被申屠龙吸内力
-Japanese	卧云岗回程结果\r\n1.被金乌上人敲头\r\n2.被申屠龙吸内力
-Japanese	厨艺
-Japanese	又一个被骗
-Japanese	反查「{0}」
-Japanese	另有 {0} 个条件不满足
-Japanese	只能升层不能降层：游戏没有撤回加成的办法，减点只减本层点数。
-Japanese	只能升级不能降级，减点只减本级点数。
+Japanese	去处
+Japanese	参观锦香宫
 Japanese	可能的结果：
 Japanese	叶云舟
 Japanese	叶云裳
-Japanese	名声
 Japanese	后山
 Japanese	向无忧
-Japanese	否则
 Japanese	听海生
-Japanese	命运x20
+Japanese	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Japanese	唐中翎
 Japanese	唐升
 Japanese	唐大鲸
 Japanese	唐娇娇
 Japanese	唐守鸿
 Japanese	唐小楼
-Japanese	唐布衣
 Japanese	唐惟元
 Japanese	唐杉
 Japanese	唐芳
 Japanese	唐衫
 Japanese	唐铮
-Japanese	唐门出击的结果1 1. 锦香宫加入西武林盟 2. 吼回去 3. 被吼 4. 开门迎战
-Japanese	唐门出击的结果1\r\n1. 锦香宫加入西武林盟\r\n2. 吼回去\r\n3. 被吼\n4. 开门迎战
-Japanese	唐默铃
 Japanese	商铺
 Japanese	四师兄
-Japanese	四师兄的决策 1. 退隐江湖 2. 战他娘亲 3. 响应武林盟
-Japanese	四师兄的决策\r\n1. 退隐江湖\r\n2. 战他娘亲\r\n3. 响应武林盟
-Japanese	回到标题（结局）
 Japanese	回梦仙香
-Japanese	回程说点什麽 1. 威胁 2. 好言相劝 3. 唱歌
-Japanese	回程说点什麽\r\n1. 威胁\r\n2. 好言相劝\r\n3. 唱歌
-Japanese	围攻唐门弟子出走结果 1. 一个也没走 2. 走了小部分 3.走了大部分 4. 走光光
-Japanese	围攻唐门弟子出走结果\r\n1. 一个也没走\r\n2. 走了小部分\r\n3.走了大部分\r\n4. 走光光
-Japanese	夏侯兰
-Japanese	夏侯兰树屋规格 1. 普通 2. 高级
-Japanese	夏侯兰树屋规格\r\n1. 普通\r\n2. 高级
+Japanese	国
+Japanese	国国
+Japanese	地图标题：
 Japanese	夏灵犀
 Japanese	大师兄
-Japanese	大师兄不在&二师兄还在
-Japanese	大师兄对龙湘的好感 最终决定大师兄会否和龙湘在一起。 =0，主角不攻略龙湘，龙湘会追着大师兄跑 =1，主角攻略龙湘，大师兄会退让 =2，主角攻略龙湘，大师兄会和你决斗
-Japanese	大师兄对龙湘的好感\n最终决定大师兄会否和龙湘在一起。\r\n=0，主角不攻略龙湘，龙湘会追着大师兄跑\r\n=1，主角攻略龙湘，大师兄会退让\r\n=2，主角攻略龙湘，大师兄会和你决斗
 Japanese	大师兄涂鸦
-Japanese	大师兄还在
 Japanese	失魂落魄
 Japanese	女弟子
-Japanese	女弟子房
-Japanese	好感 {0} · 好感 {1}
-Japanese	好感度
-Japanese	好感度_万里鹏程
-Japanese	好感度_刘颚_赵逵_车轩辕_王二壮
-Japanese	好感度_刘颚_赵逵_车轩辕_王二壮_最高
-Japanese	好感度_大师兄
-Japanese	好感度_掌门人
-Japanese	好感度_最高唐门师兄
-Japanese	好感度_李富贵_樊啸天
-Japanese	好感度_王二壮
-Japanese	委托四师兄的事情 1. 想知道小师妹过得好不好 2. 听说华山有神仙，而神仙有灵丹
-Japanese	委托四师兄的事情\r\n1. 想知道小师妹过得好不好\r\n2. 听说华山有神仙，而神仙有灵丹
-Japanese	娘化
-Japanese	存档内容为空
-Japanese	存档校验失败
-Japanese	存读档相关的游戏代码有冲突（{0}），随时存档已停用。请检查是否装了会修改游戏文件的其它 Mod，或者游戏最近有大更新、Mod 还没适配。已有的随时存档没有改动。
+Japanese	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
 Japanese	孟仙谣
 Japanese	孟珙
-Japanese	学问+嘴力
-Japanese	学问_厨艺
 Japanese	守卫
 Japanese	宋悲
-Japanese	完竟剑
-Japanese	官兵大战丐帮的结果 1:官兵优势 2:丐帮优势 3.别派人马
-Japanese	官兵大战丐帮的结果\r\n1:官兵优势\r\n2:丐帮优势\r\n3.别派人马
 Japanese	密密缝
+Japanese	对白：
 Japanese	小兰
 Japanese	小师妹
-Japanese	小师妹南宫家宴参战 1: 参战
-Japanese	小师妹南宫家宴参战\n1: 参战
-Japanese	小师妹陪练
 Japanese	小梅
-Japanese	小梅乱入
 Japanese	小竹
-Japanese	小竹 可疑的行踪
-Japanese	小竹回家第一区间
-Japanese	小竹回家第二区间
-Japanese	小竹回家触发来源\r\n1. 小梅\r\n2. 小竹
 Japanese	小菊
 Japanese	少林金钟罩
 Japanese	尹志平
 Japanese	峨嵋雪芽
 Japanese	崆峒四姝
-Japanese	崆峒派留学
-Japanese	崆峒神威 来者何人 1. 绿色的 2. 红色的
-Japanese	崆峒神威 来者何人\r\n1. 绿色的\r\n2. 红色的
-Japanese	崆峒神威分支\r\n1. 小梅 \r\n2. 小竹
-Japanese	崆峒进的门派 1.飞天门 2.夺魄门 3.玄功门 4.铁拳门
-Japanese	崆峒进的门派\r\n1.飞天门\r\n2.夺魄门\r\n3.玄功门\r\n4.铁拳门
 Japanese	工作
-Japanese	工欲善其事
-Japanese	已删除随时存档
-Japanese	已导出
-Japanese	已开发项目_回梦仙香
-Japanese	已经练满。
-Japanese	弹珠台条件
-Japanese	强鹤所难
-Japanese	当前
+Japanese	常数_
+Japanese	庭院演武
 Japanese	形意拳
-Japanese	心相
-Japanese	性情
-Japanese	怪胎
-Japanese	恢复已停止：{0}。请从标题界面重新读档。
-Japanese	恢复超时
-Japanese	惜花令对大师兄评价 1. 帮大师兄说话 2 不帮大师兄说话
-Japanese	惜花令对大师兄评价\r\n1. 帮大师兄说话\r\n2 不帮大师兄说话
-Japanese	成就_30000
-Japanese	成就_30016
-Japanese	成就_30020
-Japanese	成就_30021
-Japanese	或
-Japanese	战斗之后接到「{0}」
+Japanese	感情：
+Japanese	战斗中
 Japanese	房间
-Japanese	手抄仙鹤迷踪拳
-Japanese	执行记录不一致，位置 {0}
-Japanese	技能
-Japanese	技能_任何音波功
-Japanese	技能_佛学_道学
-Japanese	技能_核枣钉
-Japanese	抓获丐帮数量 1:两成 2:五成
-Japanese	抓获丐帮数量\r\n1:两成\r\n2:五成
-Japanese	抗毒
-Japanese	抗毒_抗麻
-Japanese	抗麻
-Japanese	护卫三师兄第一个刺客 1. 谭霸刀 2. 方震天 3. 唐衫
-Japanese	护卫三师兄第一个刺客\r\n1. 谭霸刀\r\n2. 方震天\r\n3. 唐衫
-Japanese	护卫三师兄第二个刺客 1. 金乌上人 2. 火龙仙君 3. 释明 4. 店小二
-Japanese	护卫三师兄第二个刺客\r\n1. 金乌上人\r\n2. 火龙仙君\r\n3. 释明\r\n4. 店小二
-Japanese	拜码头
-Japanese	拜码头 分支 1. 成功逃跑 2. 铁拳飞天混战 3. 夏侯兰抓
-Japanese	拜码头 分支\r\n1. 成功逃跑\r\n2. 铁拳飞天混战\r\n3. 夏侯兰抓
-Japanese	拳掌
-Japanese	持有江湖快报
-Japanese	指派四师兄状态 1. 青城派 2. 崆峒派 3. 丐帮 4. 中小门派
-Japanese	指派四师兄状态\r\n1. 青城派\r\n2. 崆峒派\r\n3. 丐帮\r\n4. 中小门派
-Japanese	挑战上官隼胜败 1. 胜利 2. 失败
-Japanese	挑战上官隼胜败\r\n1. 胜利\r\n2. 失败
+Japanese	挑战花中仙
 Japanese	掌门人
-Japanese	接到「{0}」
 Japanese	接骨草
-Japanese	提前拿到会让六月后山事件出 bug，剧情需要时游戏会自己给。
-Japanese	支持肩甲状态 0:未知 1:支持 2: 反对
-Japanese	支持肩甲状态 \n0:未知\n1:支持\n2: 反对
-Japanese	收留小梅 (收留小梅或小竹)
-Japanese	敌
-Japanese	旗标收留小梅或小竹
-Japanese	旗标赎回任何资产
-Japanese	无
-Japanese	无法核验游戏版本，随时存档已停用：{0}
-Japanese	旧槽位 {0}
+Japanese	数值_
+Japanese	旁白
+Japanese	旗标_
+Japanese	日本語
+Japanese	时间_
 Japanese	晁和
-Japanese	最高
-Japanese	最高唐门师兄
-Japanese	本层修炼点数，满 {0} 点升到下一层，和在修炼界面升层一样加上这层的加成；多的点数算到下一层。
+Japanese	最近的剧本：
+Japanese	有些状态补不全，之后可能出现对话对不上、分支判断出错，甚至卡住。跳之前会先存一份随时存档，跳过去以后可以回到跳转前。
 Japanese	本草纲目
-Japanese	杂物
-Japanese	杂物_中药蜜饯
-Japanese	杂物_任何木剑
-Japanese	杂物_任何酒
-Japanese	杂物_任意饮食物品
-Japanese	杂物_穿心龙胆汤
-Japanese	杂物_肉乾
-Japanese	杂物_酒
 Japanese	李富贵
-Japanese	条件_心上人_小梅或小竹
-Japanese	条件_晚安且收留小梅
-Japanese	条件_没有攻略龙湘
-Japanese	查场所事件「{0}」
-Japanese	查物品「{0}」
-Japanese	查看「{0}」的人物志
-Japanese	查看商店
-Japanese	查看设置项
-Japanese	查看设置项「{0}」
-Japanese	查看门派经营
-Japanese	标题场景加载超时
+Japanese	标记_
 Japanese	树下
 Japanese	校场
 Japanese	核枣钉
 Japanese	梁有诗
-Japanese	检测到「{0}」的快捷键和本 Mod 撞了，本 Mod 的{1}热键已让给它（改成不绑定）。可以在设置页「热键」里另绑别的键。
-Japanese	检测到「剧情随行」，它的 F6、F8、F9 快捷键和本 Mod 撞了，本 Mod 的{0}热键已让给它（改成不绑定）。可以按 Tab 打开窗口再点对应的页，或者在设置页「热键」里另绑别的键。
-Japanese	检测到立绘替换 Mod「邪神认知污染ON」，它的 F8、F9 改不了，本 Mod 的{0}热键已让给它（改成不绑定）。可以按 Tab 打开窗口再点对应的页，或者在设置页「热键」里另绑别的键。
-Japanese	棋力
 Japanese	概率：{0}（基础{1}）
 Japanese	樊啸天
-Japanese	檄文结果 1. 武林公敌 2. 朝廷号令
-Japanese	檄文结果\r\n1. 武林公敌\r\n2. 朝廷号令
-Japanese	此刻：{0}
-Japanese	武林大会选择支持对象 1. 正道 2. 锦香宫
-Japanese	武林大会选择支持对象\r\n1. 正道\r\n2. 锦香宫
-Japanese	武林盟
-Japanese	武林盟_向心力
-Japanese	武林盟的消耗 1. 损伤轻微 2. 损伤惨重 3. 毁灭性打击
-Japanese	武林盟的消耗\r\n1. 损伤轻微\r\n2. 损伤惨重\r\n3. 毁灭性打击
+Japanese	正在掷骰
+Japanese	正在选的选项：
 Japanese	段智秀
-Japanese	段考考官\r\n1. 掌门人\r\n2. 三师兄\r\n3. 二师兄\r\n4. 大师兄
-Japanese	每旬{0}点
 Japanese	毛二壮
 Japanese	江湖鬼域录
-Japanese	江陵大战前
-Japanese	江陵大战後
-Japanese	没有任何帮手
-Japanese	消耗品的数量不写进存档，这里只显示。
+Japanese	没有「
+Japanese	活侠传传奇_
 Japanese	温夫人
-Japanese	游戏里没有这一层的数据，不能改。
-Japanese	游戏里的称号是「{0}」，清除自定义后恢复显示它
+Japanese	游戏日期：
 Japanese	火龙仙君
-Japanese	炼丹房
 Japanese	焚心火印
-Japanese	無
-Japanese	狼毒散
-Japanese	猴儿酒
 Japanese	玄功洞
 Japanese	玄玄如意指
-Japanese	玉霄神匕
 Japanese	王二壮
-Japanese	现在显示：
-Japanese	现在显示：{0}
-Japanese	现在显示：{0}（自定义）
-Japanese	瑞杏
+Japanese	玩家在标题画面，还没读档进游戏。
+Japanese	玩家还没读档进游戏
+Japanese	现在在：
 Japanese	瑞笙
-Japanese	甘蔗
 Japanese	申屠龙
-Japanese	画中仙
-Japanese	留学 1: 青城 2: 崆峒
-Japanese	留学\n1: 青城\n2: 崆峒
-Japanese	眼下还有要事在身，不能虚度光阴。
+Japanese	盖房子
 Japanese	睡丹
-Japanese	睡丹特例
 Japanese	石公远
-Japanese	石灰粉
 Japanese	神兵帖
-Japanese	神兵帖2 小竹的烦恼
-Japanese	票数相同决斗胜败 1. 败 2. 胜
-Japanese	票数相同决斗胜败\r\n1. 败\r\n2. 胜
 Japanese	福韫
-Japanese	离家出走路线 1. 破庙 2. 客栈
-Japanese	离家出走路线\r\n1. 破庙\r\n2. 客栈
-Japanese	秘笈等级_江湖鬼域录
-Japanese	秘笈等级_飞天脚
+Japanese	空过（剧情 {0}）：{1}年{2}月{3} 消耗 {4} 次行动，剩余 {5}。
 Japanese	空过：{0} 消耗 1 次行动，剩余 {1}。
-Japanese	空过：触发任务剧情，进入剧情场景。
-Japanese	第 {0} 条路
-Japanese	第{0}/{1}层
-Japanese	第{0}层无数据
-Japanese	第一次决斗金乌上人结果 1. 胜 2. 败
-Japanese	第一次决斗金乌上人结果\r\n1. 胜\r\n2. 败
+Japanese	第{0}年{1}月{2}
 Japanese	第三香
-Japanese	算任务 {0} 每条路线
-Japanese	结局
-Japanese	缺少内置资源 {0}
+Japanese	简体中文
+Japanese	繁體中文
 Japanese	羊羔酒
 Japanese	翻浪刀法
 Japanese	胡椒粉丸
-Japanese	自己
 Japanese	自由
-Japanese	舞
-Japanese	若这次没购买，将状态改为clear
-Japanese	虎战车判断
-Japanese	虞小梅
+Japanese	舞影殿
+Japanese	花音阁
+Japanese	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
 Japanese	蛇形拳
-Japanese	西武林盟提出的人 1. 主角 2. 小菊 3. 丐帮
-Japanese	西武林盟提出的人\r\n1. 主角\r\n2. 小菊\r\n3. 丐帮
 Japanese	观云客
 Japanese	解无尘
-Japanese	解无尘VS南宫深 1. 南宫深胜 2. 解无尘胜
-Japanese	解无尘VS南宫深\r\n1. 南宫深胜\r\n2. 解无尘胜
-Japanese	触发过乞丐抢菜
-Japanese	设施等级（旗标 {0}），0 是还没建。
-Japanese	说服丐帮结果 1. 马富贵协助 2. 失败 3. 丐帮加入唐门
-Japanese	说服丐帮结果\r\n1. 马富贵协助\r\n2. 失败\r\n3. 丐帮加入唐门
-Japanese	说服中小门派结果 1. 成功 2. 失败 3. 观望
-Japanese	说服中小门派结果\r\n1. 成功\r\n2. 失败\r\n3. 观望
-Japanese	说服峨嵋派结果 1. 成功 2. 失败 3. 两不相帮
-Japanese	说服峨嵋派结果\r\n1. 成功\r\n2. 失败\r\n3. 两不相帮
-Japanese	说服崆峒派结果 1. 成功 2. 失败
-Japanese	说服崆峒派结果\r\n1. 成功\r\n2. 失败
-Japanese	说服青城派结果 1.成功 2.失败
-Japanese	说服青城派结果\r\n1.成功\r\n2.失败
-Japanese	谭霸刀
-Japanese	豆沙包
-Japanese	贵重品
-Japanese	贵重品_大师兄涂鸦
-Japanese	贵重品_完竟剑
-Japanese	贵重品_持有江湖快报
-Japanese	贵重品_连环火箭
-Japanese	赎回任何资产
 Japanese	赵活
 Japanese	赵逵
 Japanese	车轩辕
-Japanese	轻功_暗器
-Japanese	这一段做过的选择：
-Japanese	这个存档来自不兼容的游戏或 Mod 版本（存档：{0}，当前：{1}），文件没有改动
-Japanese	进入世外桃源的来源 1. 真正的敌人 2. 收功 3. 其他
-Japanese	进入世外桃源的来源\r\n1. 真正的敌人\r\n2. 收功\r\n3. 其他
-Japanese	连环火箭
-Japanese	這會兒有些晚了，改日再說吧。
-Japanese	道学
-Japanese	邹博
-Japanese	郁竹
-Japanese	酒
+Japanese	这张地图上的场所：
+Japanese	这段剧情的剧本：
+Japanese	进行中的支线：\n
 Japanese	释明
 Japanese	金乌上人
-Japanese	金念珠
 Japanese	铁冠道人
+Japanese	锁住选项
 Japanese	锻造房
 Japanese	门派大门
-Japanese	间章结束 小竹
-Japanese	阴阳内功
+Japanese	间距 {0} -> {1}，controlHeight={2}，
 Japanese	降真香
-Japanese	随时存档需要 64 位游戏。
-Japanese	随机值_0_100
-Japanese	随机值_0_30
-Japanese	随机值_0_40
-Japanese	随机值_0_50
-Japanese	雪山行
-Japanese	青城派留学
-Japanese	青城留学 云裳给申屠龙的秘笈 1. 雪球 2. 盘古 3. 斩天
-Japanese	青城留学 云裳给申屠龙的秘笈\r\n1. 雪球\r\n2. 盘古\r\n3. 斩天
-Japanese	题目文件读不了：{0}
-Japanese	马富贵
-Japanese	魏菊
 Japanese	龙渊
 Japanese	龙湘
-Japanese	（自定义）
-Japanese	（这一段里接着往下）
-Japanese	（需 {0}）
-Korean/Japanese	    时限：
-Korean/Japanese	 <color=#A3302A>→ 主线</color>
-Korean/Japanese	 · 可能临场应变
-Korean/Japanese	 · 太长，只画了前 
-Korean/Japanese	 → 主线
-Korean/Japanese	 且 | 或 |\n
-Korean/Japanese	 个
-Korean/Japanese	 个存档</color>
-Korean/Japanese	 个月
-Korean/Japanese	 个条件不满足
-Korean/Japanese	 个都条件不满足
-Korean/Japanese	 个？
-Korean/Japanese	 修炼进度
-Korean/Japanese	 值 
-Korean/Japanese	 停止）
-Korean/Japanese	 到 
-Korean/Japanese	 处
-Korean/Japanese	 字）\n
-Korean/Japanese	 存一个。
-Korean/Japanese	 就会触发）
-Korean/Japanese	 层
-Korean/Japanese	 层数
-Korean/Japanese	 层）
-Korean/Japanese	 开发进度
-Korean/Japanese	 旬
-Korean/Japanese	 旬</color>
-Korean/Japanese	 旬：
-Korean/Japanese	 本层点数
-Korean/Japanese	 本级点数
-Korean/Japanese	 条路
-Korean/Japanese	 次选择
-Korean/Japanese	 段
-Korean/Japanese	 点
-Korean/Japanese	 点升到下一层，和在修炼界面升层一样加上这层的加成；多的点数算到下一层。\n只能升层不能降层：游戏没有撤回加成的办法，减点只减本层点数。
-Korean/Japanese	 点升到下一级，和在
-Korean/Japanese	 炼制进度
-Korean/Japanese	 级
-Korean/Japanese	 级）
-Korean/Japanese	 被游戏更新改过了，读不了。请读普通存档，再重新存随时存档。
-Korean/Japanese	%（开发 
-Korean/Japanese	%（练成 
-Korean/Japanese	(?<=^|\s)([^\s()（）]+) 需
-Korean/Japanese	(书籍|杂物|贵重品)_(\S+?)(?= 需)
-Korean/Japanese	- 分条写，不超过 800 字，用
-Korean/Japanese	- 只记：玩家说过的自己的情况、打算和偏好（走哪条线、想和谁结缘、不想知道什么）；聊过哪些话题；玩家确认或拒绝过哪些修改；说好的约定；还没解决的问题。\n
-Korean/Japanese	- 回答里说过的数字、条件、剧情结论不要当事实记，最多写「聊过某某的条件」，之后要用时会重新查。\n
-Korean/Japanese	- 开头已经有摘要的，把它和后面的内容合在一起重写成一份。\n
-Korean/Japanese	100 个手动存档
-Korean/Japanese	<b>{0}：{1} 个事件</b>
-Korean/Japanese	<b>主干</b>　
-Korean/Japanese	<b>修改提议</b>
-Korean/Japanese	<b>支线</b>
-Korean/Japanese	<b>攻略助手</b>
-Korean/Japanese	<b>攻略提示</b>
-Korean/Japanese	<b>第{0}年</b>
-Korean/Japanese	<b>限时剧情</b>
-Korean/Japanese	<color=#2F6B3A><b>✓ 已达成</b></color>
-Korean/Japanese	<color=#2F6B3A><b>✓ 读完</b></color>
-Korean/Japanese	<color=#2F6B3A>✓ 这一局走过</color>
-Korean/Japanese	<color=#2F6B3A>已修改</color>
-Korean/Japanese	<color=#2F6B3A>条件已满足
-Korean/Japanese	<color=#2F6B3A>连上了</color>
-Korean/Japanese	<color=#73644F>奖励：
-Korean/Japanese	<color=#73644F>岔路</color>　
-Korean/Japanese	<color=#73644F>还差条件</color>
-Korean/Japanese	<color=#A3302A><b>主线</b></color>　
-Korean/Japanese	<color=#A3302A><b>当前主线</b></color>
-Korean/Japanese	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
-Korean/Japanese	<color=#A3302A><b>终</b></color>
-Korean/Japanese	<color=#A3302A>备注：</color>
-Korean/Japanese	<color=#A3302A>未达成</color>
-Korean/Japanese	<color=#A3302A>条件不满足</color>
-Korean/Japanese	<color=#A3302A>游戏更新改过这个存档经过的剧本，读不了</color>
-Korean/Japanese	<color=#A3302A>点了会无视条件直接触发，不改旗标，之后的剧情可能对不上</color>
-Korean/Japanese	<color=#A3302A>读不了：
-Korean/Japanese	<color={0}>在剧本和决斗数据里都没找到触发的地方（可能由战役、小游戏等直接触发）</color>
-Korean/Japanese	<color={0}>还有 {1} 处</color>
-Korean/Japanese	>剩 
-Korean/Japanese	>已过期 
-Korean/Japanese	>当前版本</color>
-Korean/Japanese	>条件没满足</color>
-Korean/Japanese	Girl1_瑞杏
-Korean/Japanese	Girl2_葉雲裳
-Korean/Japanese	Girl4_龍湘
-Korean/Japanese	Girl5_小梅
-Korean/Japanese	Girl6_小蘭
-Korean/Japanese	Girl7_小竹
-Korean/Japanese	Girl8_小菊
-Korean/Japanese	Girl9_上官瑩
-Korean/Japanese	Relationship_Girl4_龍湘
-Korean/Japanese	Relationship_Girl7_郁竹
-Korean/Japanese	Relationship_Girl9_上官螢
-Korean/Japanese	Relationship_Sister1_小師妹
-Korean/Japanese	Relationship_Special3_葉雲舟
-Korean/Japanese	[LOMAssistant] 写入日志失败: 
-Korean/Japanese	[LOMAssistant] 初始化日志文件失败: 
-Korean/Japanese	\[\s*(?:表情|mood)\s*[:：]\s*([A-Za-z_0-9]+)\s*\]
-Korean/Japanese	\n--- 回复：输入 
-Korean/Japanese	\n--- 查资料 
-Korean/Japanese	\n<color=#9A9286>进过一次剧情后才能列出（事件表只在剧情场景里读得到）</color>
-Korean/Japanese	\n\n<color=#9A9286>另有 {0} 个主线、支线现在还不能触发</color>
-Korean/Japanese	\n\n【赵活说】\n
-Korean/Japanese	\n\n【这次发的问题】\n
-Korean/Japanese	\n\n之前的对白：
-Korean/Japanese	\n\n可能临场应变
-Korean/Japanese	\n\n这一段做过的选择：
-Korean/Japanese	\n……（太长，后面省略）
-Korean/Japanese	\n且 
-Korean/Japanese	\n停在：
-Korean/Japanese	\n存于 
-Korean/Japanese	\n存档、提速、界面、热键等其他设置不变
-Korean/Japanese	\n攻略提示\n
-Korean/Japanese	\n每层练成时的加成：\n
-Korean/Japanese	\n游戏时间：
-Korean/Japanese	\n点名字看在哪些剧情里判定
-Korean/Japanese	\n点名字看在哪些剧情里改动、判定
-Korean/Japanese	\n选了以后还在这一段里，之后合回来
-Korean/Japanese	^(?:旗标|设置)[·:：]
-Korean/Japanese	^第(\d+)年(\d+)月
-Korean/Japanese	^第(\d+)年(\d+)月(上|中|下)?
-Korean/Japanese	{0} 需{2}{3} → 当前{1}
-Korean/Japanese	{0}年{1}月{2}
-Korean/Japanese	{0}月{1}
-Korean/Japanese	|下一站
-Korean/Japanese	|会议
-Korean/Japanese	|条件
-Korean/Japanese	　<color=#2F6B3A>✓ 走过</color>
-Korean/Japanese	　<color=#73644F>中间的主线</color>
-Korean/Japanese	　<color=#73644F>中间的支线</color>
-Korean/Japanese	　<color=#73644F>条件没满足</color>
-Korean/Japanese	　<color=#73644F>读过 {0}%</color>
-Korean/Japanese	　<color=#73644F>（其他存档）</color>
-Korean/Japanese	　<color=#8A7E6E>留在本段</color>
-Korean/Japanese	　<color=#A3302A>下一步</color>
-Korean/Japanese	　<color=#A3302A>会走这一支</color>
-Korean/Japanese	　<color=#A3302A>没看过</color>
-Korean/Japanese	　<color=#C9A26A>上次保存</color>
-Korean/Japanese	　<color=#C9A26A>当前进度</color>
-Korean/Japanese	　<color=#C9A26A>最新</color>
-Korean/Japanese	　<size={0}><color=#73644F>共 {1} 处</color></size>
-Korean/Japanese	　·　<color=#2F6B3A>✓ 这一局走过</color>
-Korean/Japanese	　·　<color=#A3302A><b>心上人</b></color>
-Korean/Japanese	　·　<color=#A3302A>{0} 个结局</color>
-Korean/Japanese	　·　对白读过 {0}%
-Korean/Japanese	　·　读过 {0}%
-Korean/Japanese	　到
-Korean/Japanese	　剩 
-Korean/Japanese	　去「
-Korean/Japanese	　存于 
-Korean/Japanese	　（只列前 60 处）
-Korean/Japanese	　（只列前 {0} 面，搜得更具体些能缩小范围）
-Korean/Japanese	　（没读过 {0} 句）
-Korean/Japanese	　（要 
-Korean/Japanese	、加成 
-Korean/Japanese	、最终 
-Korean/Japanese	、范围 
-Korean/Japanese	。只输出摘要。
-Korean/Japanese	。可以用数值页里的名字再试一次。
-Korean/Japanese	。马上回到标题画面，请重新读档。
-Korean/Japanese	」不是数字）
-Korean/Japanese	」在哪些剧情里用到
-Korean/Japanese	」就会触发
-Korean/Japanese	」的新值「
-Korean/Japanese	」相关的设置项。
-Korean/Japanese	」看不懂）
-Korean/Japanese	」触发
-Korean/Japanese	」触发）
-Korean/Japanese	」这一步要靠掷骰，按选的这条路补
-Korean/Japanese	」里有战斗，没有真的打，按选的这条路补
-Korean/Japanese	」？\n当前没有存档的进度会丢失。
-Korean/Japanese	【攻略提示】
-Korean/Japanese	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
-Korean/Japanese	【系统提示词】（
-Korean/Japanese	〔读过 
-Korean/Japanese	上中下
-Korean/Japanese	上风观
-Korean/Japanese	下面是《活侠传》玩家和游戏 Mod 里 AI 的一段对话。把它压缩成摘要，给接着聊的 AI 当记忆用，不是向玩家发出的回答。历史保留原有语言，游戏提供的名称和对白随游戏当前语言；中文角色标签和 Mod 标记只是内部结构。沿用已有的人物名和术语，不因中文标签把韩语等原有名称改成中文。\n
-Korean/Japanese	不明
-Korean/Japanese	且
-Korean/Japanese	丢弃
-Korean/Japanese	为止
-Korean/Japanese	主线　
-Korean/Japanese	主线「
-Korean/Japanese	主线从现在这一步接不到目标任务（不在同一条路线上，或要靠别的支线接进来），中间的主线剧情没有补
-Korean/Japanese	主线进度：
-Korean/Japanese	主线：
-Korean/Japanese	乘凉
-Korean/Japanese	从
-Korean/Japanese	从任务开头找不到走到这一段的路（可能要从别的任务接进来），任务里的变化没有补全
-Korean/Japanese	任务：
-Korean/Japanese	你好，请回复「连上了」。
-Korean/Japanese	傳奇_001
-Korean/Japanese	全部 
-Korean/Japanese	关掉
-Korean/Japanese	养成地图上
-Korean/Japanese	出城冲锋
-Korean/Japanese	剧情里
-Korean/Japanese	剧本「
-Korean/Japanese	剧本报错（
-Korean/Japanese	去处
-Korean/Japanese	参观锦香宫
-Korean/Japanese	另有 
-Korean/Japanese	后续: 
-Korean/Japanese	否则（不满足：
-Korean/Japanese	否则（以下都不满足：
-Korean/Japanese	启用100个手动存档
-Korean/Japanese	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
-Korean/Japanese	咖啡伴侣日志系统已初始化。
-Korean/Japanese	回答：
-Korean/Japanese	回退到判定前（
-Korean/Japanese	国
-Korean/Japanese	国国
-Korean/Japanese	地图标题：
-Korean/Japanese	备忘 
-Korean/Japanese	备忘条件回落：
-Korean/Japanese	备忘达成：
-Korean/Japanese	备忘过期：
-Korean/Japanese	备忘还剩 
-Korean/Japanese	天赋{0} lv{1}
-Korean/Japanese	好感 
-Korean/Japanese	好感·
-Korean/Japanese	好感度_(\S+?)(?= 需)
-Korean/Japanese	存到新的随时存档（
-Korean/Japanese	存在空栏位 
-Korean/Japanese	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
-Korean/Japanese	存读档相关的游戏代码有冲突（
-Korean/Japanese	对决
-Korean/Japanese	对白：
-Korean/Japanese	崆峒·夺魄峰
-Korean/Japanese	崆峒·夺魄森林
-Korean/Japanese	崆峒·无色广场
-Korean/Japanese	崆峒·玄功洞
-Korean/Japanese	崆峒·窝居
-Korean/Japanese	崆峒·铁拳巷
-Korean/Japanese	崆峒·飞天殿
-Korean/Japanese	崆峒·飞天殿（遇到小梅）
-Korean/Japanese	崆峒·鹤崖
-Korean/Japanese	已保存到随时存档 #
-Korean/Japanese	已保存：
-Korean/Japanese	已删除：
-Korean/Japanese	已经把修改卡片给玩家看了（
-Korean/Japanese	已读取随时存档 
-Korean/Japanese	已跳到「
-Korean/Japanese	常数_
-Korean/Japanese	年　
-Korean/Japanese	序
-Korean/Japanese	庭院演武
-Korean/Japanese	弹珠分数：总分 {0} -> {1}（固定分数）
-Korean/Japanese	当前 
-Korean/Japanese	当前总分 
-Korean/Japanese	快进已读对话中（
-Korean/Japanese	恢复已停止：
-Korean/Japanese	悬停地点提示
-Korean/Japanese	悬停地点显示事件提示
-Korean/Japanese	感情：
-Korean/Japanese	战斗中
-Korean/Japanese	截止：
-Korean/Japanese	执行次数 
-Korean/Japanese	挑战花中仙
-Korean/Japanese	接到「
-Korean/Japanese	掷出 
-Korean/Japanese	掷骰结果：
-Korean/Japanese	支线 → 
-Korean/Japanese	支线「
-Korean/Japanese	敌方预选 · 
-Korean/Japanese	敌方预选\n\n
-Korean/Japanese	数值_
-Korean/Japanese	旁白
-Korean/Japanese	旗标([A-Za-z][A-Za-z0-9_]*)|\(([A-Za-z][A-Za-z0-9_]*)\)(?= 需| *$)|(?<=^|\s)([A-Z][A-Za-z]*\d[A-Za-z0-9_]*)(?= 需)
-Korean/Japanese	旗标(\w+)
-Korean/Japanese	旗标_
-Korean/Japanese	无法核验游戏版本，随时存档已停用：
-Korean/Japanese	无法读取：
-Korean/Japanese	日期：
-Korean/Japanese	日本語
-Korean/Japanese	日语（日本語）
-Korean/Japanese	旧槽位 
-Korean/Japanese	时间 
-Korean/Japanese	显示选项属性增减
-Korean/Japanese	暂不能保存：
-Korean/Japanese	暂时读不到随时存档：
-Korean/Japanese	最近的剧本：
-Korean/Japanese	有些状态补不全，之后可能出现对话对不上、分支判断出错，甚至卡住。跳之前会先存一份随时存档，跳过去以后可以回到跳转前。
-Korean/Japanese	有新版本 
-Korean/Japanese	本 Mod 的
-Korean/Japanese	本层 
-Korean/Japanese	本层修炼点数，满 
-Korean/Japanese	本级 
-Korean/Japanese	条件
-Korean/Japanese	标记_
-Korean/Japanese	检测到「剧情随行」，它的 F6、F8、F9 快捷键和本 Mod 撞了，本 Mod 的
-Korean/Japanese	检测到冲突的 Mod：{0}（{1}），和本 Mod 同时修改了 {2} 处游戏代码：{3}。本 Mod 的部分功能可能不生效（如骰子、选项显示）；出现问题建议删掉旧版骰子大师、多功能 Mod、活侠传助手等同类 Mod 后重新覆盖安装。
-Korean/Japanese	检测到日语补丁：F7 是它切换注音显示的键，不能改。本 Mod 用 F7 的热键已改成不绑定，可以在设置页「热键」里另绑别的键。
-Korean/Japanese	检测到立绘替换 Mod「邪神认知污染ON」，它的 F8、F9 改不了，本 Mod 的
-Korean/Japanese	正在掷骰
-Korean/Japanese	正在整理任务 {0}/{1}
-Korean/Japanese	正在读取剧本 {0}/{1}
-Korean/Japanese	正在读取随时存档 
-Korean/Japanese	正在选的选项：
-Korean/Japanese	每旬
-Korean/Japanese	没有「
-Korean/Japanese	没有要改的项。
-Korean/Japanese	活侠传传奇_
-Korean/Japanese	消耗品的数量不写进存档，这里只显示。\n
-Korean/Japanese	混战
-Korean/Japanese	游戏日期：
-Korean/Japanese	热键已让给它（改成不绑定）。可以按 Tab 打开窗口再点对应的页，或者在设置页「热键」里另绑别的键。
-Korean/Japanese	热键改成不绑定
-Korean/Japanese	玩家在标题画面，还没读档进游戏。
-Korean/Japanese	玩家没有同意修改：
-Korean/Japanese	玩家确认了修改：
-Korean/Japanese	玩家还没读档进游戏
-Korean/Japanese	玩家：
-Korean/Japanese	现在在：
-Korean/Japanese	现在显示：<b>{0}</b>
-Korean/Japanese	现在显示：<b>{0}</b>（自定义）　<color=#73644F>游戏里的称号是「{1}」，清除自定义后恢复显示它</color>
-Korean/Japanese	生成失败：
-Korean/Japanese	用一句话回答。
-Korean/Japanese	界面升级一样；多的点数算到下一级。\n只能升级不能降级，减点只减本级点数。
-Korean/Japanese	盖房子
-Korean/Japanese	目标在现在之前，日期会往回调；中间的主线不补，之后已经走过的剧情和旗标也不会撤销
-Korean/Japanese	直接选择骰子
-Korean/Japanese	直接选择骰子选项
-Korean/Japanese	看不懂服务商的回复\n
-Korean/Japanese	看剧情图：
-Korean/Japanese	确定删除这 
-Korean/Japanese	空过（剧情 {0}）：{1}年{2}月{3} 消耗 {4} 次行动，剩余 {5}。
-Korean/Japanese	第
-Korean/Japanese	第 
-Korean/Japanese	第{0}年{1}月
-Korean/Japanese	第{0}年{1}月{2}
-Korean/Japanese	简体中文
-Korean/Japanese	繁體中文
-Korean/Japanese	繁體中文（正體字）
-Korean/Japanese	舞影殿
-Korean/Japanese	花音阁
-Korean/Japanese	英语（English）
-Korean/Japanese	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
-Korean/Japanese	行动点剩 1 点后不再消耗，用 ESC「空过」结束本旬。\n
-Korean/Japanese	补上中间的主线：
-Korean/Japanese	设成 
-Korean/Japanese	设施等级（旗标 
-Korean/Japanese	设置{0} {1}
-Korean/Japanese	设置{0}={1}
-Korean/Japanese	设置·
-Korean/Japanese	读取「
-Korean/Japanese	读最近的（
-Korean/Japanese	走完接到主线「
-Korean/Japanese	走第 
-Korean/Japanese	跳到「
-Korean/Japanese	跳转前（去「
-Korean/Japanese	还剩 
-Korean/Japanese	还没有随时存档。在剧情的台词、选项、掷骰时或养成界面按 
-Korean/Japanese	这个随时存档经过的剧本 
-Korean/Japanese	这些没找到，没放进卡片：
-Korean/Japanese	这张地图上的场所：
-Korean/Japanese	这段剧情的剧本：
-Korean/Japanese	进行中的支线：\n
-Korean/Japanese	连不上服务商，检查网络和 API 地址\n
-Korean/Japanese	选项属性增减
-Korean/Japanese	选项：
-Korean/Japanese	锁住选项
-Korean/Japanese	间距 {0} -> {1}，controlHeight={2}，
-Korean/Japanese	随时存档只支持游戏 1.0.6001 及以后的版本（当前 
-Korean/Japanese	随机事件</b>
-Korean/Japanese	青城·上清宫
-Korean/Japanese	青城·常风观
-Korean/Japanese	青城·窝居
-Korean/Japanese	青城·青城山镇
-Korean/Japanese	韩语（한국어）
-Korean/Japanese	（主线）
-Korean/Japanese	（从场所判断玩家在唐门还是崆峒等地，不要只凭身份猜；任务触发的场所不在这里面，就是不在这张地图上，要先回到那里）\n
-Korean/Japanese	（任务 
-Korean/Japanese	（前面聊过的内容摘要）
-Korean/Japanese	（可以触发）
-Korean/Japanese	（可选：
-Korean/Japanese	（在「
-Korean/Japanese	（开 / 关）
-Korean/Japanese	（待确认）
-Korean/Japanese	（数值页和设置页里都没有这一项）
-Korean/Japanese	（新值「
-Korean/Japanese	（条件已满足，去 
-Korean/Japanese	（查了很多资料还没整理出答案，换个具体点的问法再问一次吧。）
-Korean/Japanese	（用 script 查它，按选项文字对上分岔）\n
-Korean/Japanese	（结果 
-Korean/Japanese	（缓存命中 
-Korean/Japanese	（要 
-Korean/Japanese	（记下了）
-Korean/Japanese	（设置项「
-Korean/Japanese	（重启游戏后生效）
-Korean/Japanese	），0 是还没建。
-Korean/Japanese	），已停用。
-Korean/Japanese	），玩家点确认才会改。告诉玩家去确认，不要说已经改好了。
-Korean/Japanese	），输出 
-Korean/Japanese	），随时存档已停用。请检查是否装了会修改游戏文件的其它 Mod，或者游戏最近有大更新、Mod 还没适配。已有的随时存档没有改动。
-Korean/Japanese	，停止原因 
-Korean/Japanese	，去「
-Korean/Japanese	，各档：
-Korean/Japanese	，我方 {0} 人、敌方 {1} 人，游戏速度 {2}
-Korean/Japanese	，我方剩 {0} 人、敌方剩 {1} 人，游戏速度 {2}
-Korean/Japanese	，改后重启游戏生效
-Korean/Japanese	，要查 
-Korean/Japanese	，让它根据查到的资料直接写
-Korean/Japanese	，重写也是空的
-Korean/Japanese	，门人血量设成 {0}
-Korean/Japanese	，限时取胜 {0}、全灭判负 {1}，限时 {2} 秒
-Korean/Japanese	，默认血量 {0}
-Korean/Japanese	：本级开发点数，满 
-Korean/Japanese	：现在 
-Korean/Japanese	：还没开发或已经满级。
+Japanese	（从场所判断玩家在唐门还是崆峒等地，不要只凭身份猜；任务触发的场所不在这里面，就是不在这张地图上，要先回到那里）\n
+Japanese	（任务 
+Japanese	（可以触发）
+Japanese	（可选：
+Japanese	（在「
+Japanese	（开 / 关）
+Japanese	（数值页和设置页里都没有这一项）
+Japanese	（新值「
+Japanese	（条件已满足，去 
+Japanese	（用 script 查它，按选项文字对上分岔）\n
+Japanese	（设置项「
+Japanese	，各档：
+Japanese	，改后重启游戏生效
+Japanese	：现在 
+Korean	 就会触发）
+Korean	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
+Korean	>剩 
+Korean	>已过期 
+Korean	>当前版本</color>
+Korean	>条件没满足</color>
+Korean	{0} 需{2}{3} → 当前{1}
+Korean	{0}年{1}月{2}
+Korean	{0}月{1}
+Korean	」不是数字）
+Korean	」的新值「
+Korean	」相关的设置项。
+Korean	」看不懂）
+Korean	」触发）
+Korean	【攻略提示】
+Korean	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
+Korean	上中下
+Korean	不明
+Korean	傳奇_001
+Korean	养成地图上
+Korean	去处
+Korean	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
+Korean	国
+Korean	国国
+Korean	地图标题：
+Korean	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+Korean	对白：
+Korean	常数_
+Korean	感情：
+Korean	战斗中
+Korean	数值_
+Korean	旁白
+Korean	旗标_
+Korean	日本語
+Korean	最近的剧本：
+Korean	有些状态补不全，之后可能出现对话对不上、分支判断出错，甚至卡住。跳之前会先存一份随时存档，跳过去以后可以回到跳转前。
+Korean	标记_
+Korean	正在掷骰
+Korean	正在选的选项：
+Korean	没有「
+Korean	活侠传传奇_
+Korean	游戏日期：
+Korean	玩家在标题画面，还没读档进游戏。
+Korean	玩家还没读档进游戏
+Korean	现在在：
+Korean	空过（剧情 {0}）：{1}年{2}月{3} 消耗 {4} 次行动，剩余 {5}。
+Korean	第{0}年{1}月{2}
+Korean	简体中文
+Korean	繁體中文
+Korean	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
+Korean	这张地图上的场所：
+Korean	这段剧情的剧本：
+Korean	进行中的支线：\n
+Korean	锁住选项
+Korean	间距 {0} -> {1}，controlHeight={2}，
+Korean	（从场所判断玩家在唐门还是崆峒等地，不要只凭身份猜；任务触发的场所不在这里面，就是不在这张地图上，要先回到那里）\n
+Korean	（任务 
+Korean	（可以触发）
+Korean	（可选：
+Korean	（在「
+Korean	（开 / 关）
+Korean	（数值页和设置页里都没有这一项）
+Korean	（新值「
+Korean	（条件已满足，去 
+Korean	（用 script 查它，按选项文字对上分岔）\n
+Korean	（设置项「
+Korean	，各档：
+Korean	，改后重启游戏生效
+Korean	：现在 

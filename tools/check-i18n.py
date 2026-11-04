@@ -6,10 +6,11 @@
 
 Covers: every setting name has Korean, Japanese and English; every config option has a description in all
 three; table rows have matching placeholders; every table row has every language, and every Chinese string
-in the code has a translation, interpolated ones included (known gaps live in tools/i18n-gaps.txt, so only
-new ones fail); the READMEs list the same features; CHANGELOGs list the same versions; version numbers agree.
+in the code has a translation, interpolated ones included; the READMEs list the same features; CHANGELOGs list
+the same versions; version numbers agree.
 
-Text that never reaches the screen: end the line with `// i18n-ignore`.
+tools/i18n-gaps.txt lists what is known and accepted, so only new gaps fail. If a new string never reaches the
+screen, run --update to accept it; the code itself needs no markers.
 """
 import glob
 import os
@@ -21,6 +22,7 @@ CJK = re.compile(r'[一-鿿]')
 STRING = r'"((?:[^"\\]|\\.)*)"'
 STRING_OR_NULL = r'(?:' + STRING + r'|null)'
 ROW = re.compile(r'new\[\]\s*\{\s*' + STRING + r'\s*,\s*' + STRING_OR_NULL + r'\s*,\s*' + STRING_OR_NULL + r'\s*\}')
+NAME_ROW = re.compile(r'new\[\]\s*\{\s*' + STRING + r'\s*,\s*' + STRING_OR_NULL + r'\s*,\s*' + STRING_OR_NULL + r'\s*,\s*' + STRING_OR_NULL + r'\s*\}')
 ENTRY = re.compile(r'\[' + STRING + r'\]\s*=\s*' + STRING)
 SETTING = re.compile(r'ConfigElement<[^>]+>\("(\w+)"')
 ROW_CALL = re.compile(r'\bRow\(ConfigManager\.\w+,\s*' + STRING)
@@ -29,11 +31,19 @@ HOLE = re.compile(r'\{\d+\}')
 GAPS = os.path.join('tools', 'i18n-gaps.txt')
 # 不显示给玩家：日志、自测、诊断；文字表本身；AI 提示词（自带四语言，由 AiTests 查）
 SKIP_FILES = re.compile(r'^(?:Ui(?:Text|TextEnglish|Descriptions|Traditional|ConditionNames|EventNames|FlagNames|QuestNames)\.cs'
-                        r'|Pinyin.*|SelfTest.*|Diagnostics.*|FileLogger\.cs|BattleLogPatch\.cs'
-                        r'|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval|Debug).*)$')
-NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|i18n-ignore|new Regex\(|Console\.Write')
+                        r'|Pinyin.*|SelfTest.*|Diagnostics.*|FileLogger\.cs|BattleLogPatch\.cs|StoryWorkbenchCompat\.cs'
+                        r'|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval|Debug|Chat).*)$')
+NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|new Regex\(|Console\.Write')
 # 这些位置的中文是用来比较游戏数据的，不显示
 COMPARED = re.compile(r'(?:Contains|StartsWith|EndsWith|IndexOf|LastIndexOf|Replace|Split|TrimEnd|TrimStart|Trim|Regex\.\w+|IsMatch|Match)\(\s*(?:[^"()]*,\s*)?$|(?:==|!=|\bcase|\bis)\s*$')
+
+
+# 设置页一格放得下的宽度：缩到八成字号后，英文约 26 个字母；其他文字一个字算两个字母
+NAME_WIDTH = 26
+
+
+def width(text):
+    return sum(1 if ord(c) < 128 else 2 for c in text)
 
 
 def read(*parts):
@@ -86,24 +96,39 @@ def check_tables(problems):
                 problems.append(f'UiTextEnglish.{name}: placeholders differ: {key} -> {value}')
 
 
+def name_rows():
+    """The four-column name tables: null there just means nobody has translated it yet."""
+    rows = []
+    for name in ('UiFlagNames', 'UiConditionNames', 'UiQuestNames', 'UiEventNames'):
+        rows += NAME_ROW.findall(read('LOMAssistant', name + '.cs'))
+    return rows
+
+
 def known_keys():
     keys = {}
     for table in tables().values():
         for key, korean, japanese in table:
-            keys[key] = (korean, japanese)
+            keys[key] = (korean or keys.get(key, ('', ''))[0], japanese or keys.get(key, ('', ''))[1])
+    for key, korean, japanese, _ in name_rows():
+        had = keys.get(key, ('', ''))
+        keys[key] = (had[0] or korean, had[1] or japanese)
     return keys
 
 
 def known_english():
     en = english()
-    return {key for name in ('Terms', 'Table') for key, _ in en[name]}
+    return {key for name in ('Terms', 'Table') for key, _ in en[name]} | {row[0] for row in name_rows() if row[3]}
 
 
 def check_settings(problems):
     keys = known_keys()
     en = known_english()
     code = read('LOMAssistant.Features.Story', 'StoryReviewPanel.Settings.cs')
+    en_names = {key: value for table in ('Terms', 'Table') for key, value in english()[table]}
     for name in ROW_CALL.findall(code):
+        for label, value in (('Korean', keys.get(name, ('', ''))[0]), ('Japanese', keys.get(name, ('', ''))[1]), ('English', en_names.get(name))):
+            if value and width(value) > NAME_WIDTH:
+                problems.append(f'setting name too long for its row ({label}, {width(value)} > {NAME_WIDTH}): {value}')
         if name not in keys or not keys[name][0]:
             problems.append(f'setting name has no Korean: {name}')
         if name not in keys or not keys[name][1]:
@@ -170,8 +195,11 @@ def matcher(keys):
     exact = set(keys)
     patterns = [re.compile('^' + re.sub(r'\\\{\d\\\}', '(.+?)', re.escape(key)) + '$') for key in keys if '{0}' in key]
 
+    # 拼接句的片段（「当前 」+ 数值）：只要整句以 {0} 句式进了表，片段就算覆盖
+    sentences = '\n'.join(key for key in keys if '{0}' in key)
+
     def covered(text):
-        return text in exact or all(part in exact or any(p.match(part) for p in patterns) for part in parts_of(text))
+        return text in exact or all(part in exact or part in sentences or any(p.match(part) for p in patterns) for part in parts_of(text))
     return covered
 
 
@@ -256,7 +284,8 @@ def display_gaps():
                         gaps.add('Japanese\t' + text)
                     if not english_ok(text):
                         gaps.add('English\t' + text)
-    for key, korean, japanese in tables()['Table']:
+    for key, _, _ in tables()['Table']:
+        korean, japanese = keys.get(key, ('', ''))
         if not korean:
             gaps.add('Korean\t' + key)
         if not japanese:
