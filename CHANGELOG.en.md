@@ -2,6 +2,17 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.5.0 (2026-11-04)
+
+- **Duel rework** (new setting, in testing, off by default): winning a counter gives an extra effect (such as a follow-up hit, locking one of the target's commands next round, making an ultimate miss, weakening the target, or a counter), and the same rules apply to both sides. Enemies also adapt to stamina, health and the command you keep repeating. A guide appears in your first duel. Balance may be off, and this mode may be rebuilt or removed later. Feedback is welcome.
+- **Scale duel enemies** (new setting, off by default): raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones.
+- **Better battle controls** (new setting; the Assist preset and up turn it on): fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution.
+- **Choose battle allies** (new setting; the Advanced and All on presets turn it on): the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names.
+- **Enemy morale in battles** (new setting; the Assist preset and up turn it on): ordinary battles gain enemy morale; enemy deaths, your kills, kill streaks and defeating enemy commanders lower it, and at zero the enemy routs and you win. Battles with scripted events are not affected.
+- **Swap development items** (new setting, on by default): the forge and alchemy room development screens also list other branches of the same type, so you can swap without going back to the default item when your item level and sect size are high enough.
+- **Settings page**: presets stay pinned at the top while you scroll; the combat group is reordered with duels first and battles after.
+- **Languages**: filled in Korean, Japanese and English interface text and fixed untranslated Korean flag names (PR #42).
+
 ## 3.4.2 (2026-11-03)
 
 - **Read marks on options and dice** (new setting; the Advanced and All on presets turn it on): dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen).
