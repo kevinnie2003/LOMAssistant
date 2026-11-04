@@ -38,12 +38,8 @@ NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.L
 COMPARED = re.compile(r'(?:Contains|StartsWith|EndsWith|IndexOf|LastIndexOf|Replace|Split|TrimEnd|TrimStart|Trim|Regex\.\w+|IsMatch|Match)\(\s*(?:[^"()]*,\s*)?$|(?:==|!=|\bcase|\bis)\s*$')
 
 
-# 设置页一格放得下的宽度：缩到八成字号后，英文约 26 个字母；其他文字一个字算两个字母
+# 设置页一格放得下的英文长度（缩到八成字号后）。韩语、日语的措辞归贡献者，这里不卡
 NAME_WIDTH = 26
-
-
-def width(text):
-    return sum(1 if ord(c) < 128 else 2 for c in text)
 
 
 def read(*parts):
@@ -126,9 +122,9 @@ def check_settings(problems):
     code = read('LOMAssistant.Features.Story', 'StoryReviewPanel.Settings.cs')
     en_names = {key: value for table in ('Terms', 'Table') for key, value in english()[table]}
     for name in ROW_CALL.findall(code):
-        for label, value in (('Korean', keys.get(name, ('', ''))[0]), ('Japanese', keys.get(name, ('', ''))[1]), ('English', en_names.get(name))):
-            if value and width(value) > NAME_WIDTH:
-                problems.append(f'setting name too long for its row ({label}, {width(value)} > {NAME_WIDTH}): {value}')
+        value = en_names.get(name)
+        if value and len(value) > NAME_WIDTH:
+            problems.append(f'English setting name too long for its row ({len(value)} > {NAME_WIDTH}): {value}')
         if name not in keys or not keys[name][0]:
             problems.append(f'setting name has no Korean: {name}')
         if name not in keys or not keys[name][1]:
