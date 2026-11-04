@@ -2,6 +2,15 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.5.1 (2026-11-04)
+
+- **Show branch checks**: now a choice of Never, Panel or Top notice. If it was on, it becomes Panel. Top notice appears at the top of the screen like flag change notices.
+- **Title screen character**: new Everyone option shows all the characters together on the title screen.
+- **Numbers in conditions**: when a flag number stands for an option, the option name appears after it. Chinese interface only.
+- **Now page**: missions the game leaves unnamed use their route map title instead of just an ID.
+- **Flag change notices**: text is 80% of its former size, long text is no longer cut off, and notices shown together no longer overlap.
+- **Presets**: Enemy move forecast is on only in All on. All on no longer turns on Invincible in duels, Unhurt in battles or No ultimate cooldown; turn them on in Settings if you want them.
+
 ## 3.5.0 (2026-11-04)
 
 - **Duel rework** (new setting, in testing, off by default): winning a counter gives an extra effect (such as a follow-up hit, locking one of the target's commands next round, making an ultimate miss, weakening the target, or a counter), and the same rules apply to both sides. Enemies also adapt to stamina, health and the command you keep repeating. A guide appears in your first duel. Balance may be off, and this mode may be rebuilt or removed later. Feedback is welcome.
