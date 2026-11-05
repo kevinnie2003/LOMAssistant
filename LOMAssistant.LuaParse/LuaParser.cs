@@ -289,28 +289,82 @@ public class LuaParser
 	private void AddActionsToList(string blockContent, Regex regex, ActionType actionType, List<Action> actionList)
 	{
 		string[] array = blockContent.Split(new string[3] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-		bool isConditional = false;
-		int branchIndex = 0;
-		string[] array2 = array;
-		foreach (string text in array2)
+		var scope = new BranchScope();
+		foreach (string text in array)
 		{
-			string text2 = text.Trim();
-			if (text2.StartsWith("if") || text2.StartsWith("elseif"))
-			{
-				isConditional = true;
-				branchIndex++;
-			}
-			else if (text2 == "else")
-			{
-				branchIndex++;
-			}
-			else if (text2.StartsWith("end"))
-			{
-				isConditional = false;
-			}
+			scope.Step(text.Trim());
 			foreach (Match item in regex.Matches(text))
 			{
-				actionList.Add(new Action(actionType, item.Value.Trim(), isConditional, branchIndex));
+				actionList.Add(new Action(actionType, item.Value.Trim(), scope.Conditional, scope.Branch) { Checkpoint = scope.Checkpoint, Arm = scope.Arm });
+			}
+		}
+	}
+
+	/// <summary>
+	/// 逐行走 Lua 的 if/elseif/else/end，记下当前在哪个判断的哪一支。判断可以嵌套：内层 end 之后回到外层那一支，
+	/// 外层后面的效果仍只属于这一支。从分支中间截出来的片段可能先碰到 elseif/else，这时当成新开的一支。
+	/// </summary>
+	private sealed class BranchScope
+	{
+		private sealed class Frame
+		{
+			public int Branch;
+			public string IfCheckpoint = "", Checkpoint = "";
+			public int Arm = -1;
+		}
+
+		private readonly Stack<Frame> frames = new Stack<Frame>();
+
+		// 记下每个分支判断存进哪个变量，分支里的变化就知道是哪个检查点的第几支，说明里能写出条件
+		private readonly Dictionary<string, string> switches = new Dictionary<string, string>();
+
+		private int count;
+
+		public bool Conditional => frames.Count > 0;
+
+		public int Branch => frames.Count > 0 ? frames.Peek().Branch : 0;
+
+		public string Checkpoint => frames.Count > 0 ? frames.Peek().Checkpoint : "";
+
+		public int Arm => frames.Count > 0 ? frames.Peek().Arm : -1;
+
+		public void Step(string line)
+		{
+			Match local = switchLocalRegex.Match(line);
+			if (local.Success)
+			{
+				switches[local.Groups[1].Value] = local.Groups[2].Value;
+			}
+			if (line.StartsWith("if ") || line.StartsWith("elseif "))
+			{
+				if (line.StartsWith("if ") || frames.Count == 0)
+				{
+					frames.Push(new Frame());
+				}
+				Frame top = frames.Peek();
+				top.Branch = ++count;
+				Match m = switchArmRegex.Match(line);
+				top.Checkpoint = m.Success && switches.TryGetValue(m.Groups[1].Value, out string name) ? name : "";
+				top.Arm = top.Checkpoint.Length > 0 ? int.Parse(m.Groups[2].Value) : -1;
+				if (line.StartsWith("if "))
+				{
+					top.IfCheckpoint = top.Checkpoint;
+				}
+			}
+			else if (line == "else")
+			{
+				if (frames.Count == 0)
+				{
+					frames.Push(new Frame());
+				}
+				Frame top = frames.Peek();
+				top.Branch = ++count;
+				top.Checkpoint = top.IfCheckpoint;
+				top.Arm = top.Checkpoint.Length > 0 ? 0 : -1;
+			}
+			else if ((line == "end" || line.StartsWith("end ")) && frames.Count > 0)
+			{
+				frames.Pop();
 			}
 		}
 	}
@@ -359,52 +413,19 @@ public class LuaParser
 		}
 		string[] array = DataHelper.LoadLuaScript(luaScriptName).Split(new string[3] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 		List<Action> list = new List<Action>();
-		bool isConditional = false;
-		int branchIndex = 0;
-		// 记下每个分支判断存进哪个变量，分支里的变化就知道是哪个检查点的第几支，说明里能写出条件
-		var switches = new Dictionary<string, string>();
-		string ifCheckpoint = "", checkpoint = "";
-		int arm = -1;
+		var scope = new BranchScope();
 		string[] array2 = array;
 		for (int i = 0; i < array2.Length; i++)
 		{
 			string text = array2[i].Trim();
-			Match local = switchLocalRegex.Match(text);
-			if (local.Success)
-			{
-				switches[local.Groups[1].Value] = local.Groups[2].Value;
-			}
-			if (text.StartsWith("if") || text.StartsWith("elseif"))
-			{
-				isConditional = true;
-				branchIndex++;
-				Match m = switchArmRegex.Match(text);
-				checkpoint = m.Success && switches.TryGetValue(m.Groups[1].Value, out string name) ? name : "";
-				arm = checkpoint.Length > 0 ? int.Parse(m.Groups[2].Value) : -1;
-				if (text.StartsWith("if"))
-				{
-					ifCheckpoint = checkpoint;
-				}
-			}
-			else if (text == "else")
-			{
-				branchIndex++;
-				checkpoint = ifCheckpoint;
-				arm = checkpoint.Length > 0 ? 0 : -1;
-			}
-			else if (text.StartsWith("end"))
-			{
-				isConditional = false;
-				checkpoint = ifCheckpoint = "";
-				arm = -1;
-			}
+			scope.Step(text);
 			foreach (Match item in modifyRegex.Matches(text))
 			{
-				list.Add(new Action(ActionType.ModifyAction, item.Value, isConditional, branchIndex) { Checkpoint = checkpoint, Arm = arm });
+				list.Add(new Action(ActionType.ModifyAction, item.Value, scope.Conditional, scope.Branch) { Checkpoint = scope.Checkpoint, Arm = scope.Arm });
 			}
 			foreach (Match item2 in battleScenesRegex.Matches(text))
 			{
-				list.Add(new Action(ActionType.BattleScene, item2.Value, isConditional, branchIndex) { Checkpoint = checkpoint, Arm = arm });
+				list.Add(new Action(ActionType.BattleScene, item2.Value, scope.Conditional, scope.Branch) { Checkpoint = scope.Checkpoint, Arm = scope.Arm });
 			}
 		}
 		luaModification[luaScriptName] = list;
