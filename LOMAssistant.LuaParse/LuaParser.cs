@@ -439,10 +439,10 @@ public class LuaParser
 	public static List<string> ConditionalLines(List<Action> actions)
 	{
 		var lines = new List<string>();
-		foreach (IGrouping<int, Action> branch in actions.Where(a => a.IsConditional && !string.IsNullOrEmpty(a.Description)).GroupBy(a => a.BranchIndex))
+		foreach (var branch in Effects(actions).Where(r => r.Branch != 0).GroupBy(r => r.Branch))
 		{
-			Action first = branch.First();
-			string effects = string.Join("、", branch.Select(a => a.Description).Distinct().ToArray());
+			Action first = branch.First().First;
+			string effects = string.Join("、", branch.Select(r => r.Text).ToArray());
 			string when = first.Checkpoint.Length == 0 ? "" : RichText.Strip(DataHelper.SwitchBranchCondition(first.Checkpoint, first.Arm)).Trim();
 			// else，或者比条件条数多一的那个结果值（条件都不满足时 Switch 返回它）：写成「否则（不满足：…）」
 			bool otherwise = first.Arm == 0 || when == "以上条件都不满足";
@@ -462,6 +462,55 @@ public class LuaParser
 		return lines;
 	}
 
+	/// <summary>
+	/// 每一支（0 是不分支的部分）要显示的效果，按出现顺序。同一支里重复的加减都会执行，合成一条写总数；
+	/// 依赖当前数值的按实际增量写，拿不到数值时写 Action.Description。其余相同的说明只留一条。
+	/// </summary>
+	private static List<(int Branch, Action First, string Text)> Effects(List<Action> actions)
+	{
+		var rows = new List<(int Branch, Action First, string Text)>();
+		var totals = new Dictionary<(int, string), int>();
+		var rowOf = new Dictionary<(int, string), int>();
+		int Total(int branch, string key) => totals.TryGetValue((branch, key), out int total) ? total : 0;
+		foreach (Action action in actions.Where(a => !string.IsNullOrEmpty(a.Description)))
+		{
+			int branch = action.IsConditional ? action.BranchIndex : 0;
+			int? actual = null;
+			if (action.Key != null)
+			{
+				try
+				{
+					actual = action.Actual(key => Total(0, key) + (branch != 0 ? Total(branch, key) : 0));
+				}
+				catch (Exception e)
+				{
+					FileLogger.LogWarning("效果预览读取当前数值失败: " + e.Message);
+				}
+			}
+			if (actual == null)
+			{
+				if (!rows.Any(r => r.Branch == branch && r.Text == action.Description))
+				{
+					rows.Add((branch, action, action.Description));
+				}
+				continue;
+			}
+			var slot = (branch, action.Key);
+			int sum = Total(branch, action.Key) + actual.Value;
+			totals[slot] = sum;
+			if (rowOf.TryGetValue(slot, out int row))
+			{
+				rows[row] = (branch, rows[row].First, action.Shown(sum));
+			}
+			else
+			{
+				rowOf[slot] = rows.Count;
+				rows.Add((branch, action, action.Shown(sum)));
+			}
+		}
+		return rows;
+	}
+
 	public static string Description(List<Action> actions) => FormatDescription(actions, text => text);
 
 	internal static string DisplayDescription(List<Action> actions) =>
@@ -469,15 +518,12 @@ public class LuaParser
 
 	private static string FormatDescription(List<Action> actions, Func<string, string> format)
 	{
-		List<string> list = (from action in actions
-			where !action.IsConditional
-			select action.Description into description
-			where !string.IsNullOrEmpty(description)
-			select description).Distinct().Select(format).ToList();
-		List<string> list2 = (from action in actions
-			where action.IsConditional && !string.IsNullOrEmpty(action.Description)
-			group action.Description by action.BranchIndex into g
-			select string.Join("、", g.Distinct().Select(format))).ToList();
+		var rows = Effects(actions);
+		List<string> list = rows.Where(r => r.Branch == 0).Select(r => format(r.Text)).ToList();
+		List<string> list2 = (from r in rows
+			where r.Branch != 0
+			group r.Text by r.Branch into g
+			select string.Join("、", g.Select(format))).ToList();
 		List<string> list3 = new List<string>();
 		if (list.Count > 0)
 		{

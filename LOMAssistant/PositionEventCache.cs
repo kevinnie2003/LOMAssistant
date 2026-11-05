@@ -16,8 +16,6 @@ public class PositionEventCache
 
 	private readonly Dictionary<PositionEventData, string> eventKeyCache;
 
-	private readonly Dictionary<PositionEventData, string> eventDescCache;
-
 	private readonly Dictionary<PositionEventData, string> scriptPrefixCache;
 
 	public static PositionEventCache Instance => instance.Value;
@@ -26,7 +24,6 @@ public class PositionEventCache
 	{
 		positionEventDataCache = new Dictionary<string, List<PositionEventData>>();
 		eventKeyCache = new Dictionary<PositionEventData, string>();
-		eventDescCache = new Dictionary<PositionEventData, string>();
 		scriptPrefixCache = new Dictionary<PositionEventData, string>();
 	}
 
@@ -57,12 +54,7 @@ public class PositionEventCache
 
 	public string GetPositionEventDesc(PositionEventData eventData)
 	{
-		if (!eventDescCache.TryGetValue(eventData, out var value))
-		{
-			value = GenerateStaticDesc(eventData);
-			eventDescCache[eventData] = value;
-		}
-		return GenerateDynamicDesc(eventData) + "\n" + value;
+		return GenerateDynamicDesc(eventData) + "\n" + GenerateStaticDesc(eventData);
 	}
 
 	public int GetPositionEventRate(PositionEventData eventData)
@@ -287,7 +279,10 @@ public class PositionEventCache
 		List<LOMAssistant.LuaParse.Action> source = LuaParser.Instance.ExtractActionsFromLua(luaScriptName);
 		List<LOMAssistant.LuaParse.Action> actions = source.Where((LOMAssistant.LuaParse.Action a) => !a.IsConditional).ToList();
 		string text = LuaParser.Description(actions);
-		stringBuilder.AppendLine("    一定触发：" + text);
+		if (!string.IsNullOrEmpty(text))
+		{
+			stringBuilder.AppendLine("    一定触发：" + text);
+		}
 		foreach (string line in LuaParser.ConditionalLines(source))
 		{
 			stringBuilder.AppendLine("    " + line);
