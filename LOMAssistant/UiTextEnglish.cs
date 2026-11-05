@@ -34,6 +34,7 @@ public static class UiTextEnglish
 		["以上条件都不满足"] = "None of the above",
 		["；解锁后："] = "; once unlocked: ",
 		["：触发剧情"] = ": starts a scene",
+		["触发剧情"] = "starts a scene",
 		["位置："] = "Place: ",
 		["时间: "] = "Time: ",
 		["条件:"] = "Conditions:",
