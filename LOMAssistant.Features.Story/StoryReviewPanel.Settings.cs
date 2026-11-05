@@ -170,6 +170,7 @@ public partial class StoryReviewPanel
 				new SettingRow { Element = ConfigManager.EnableLibraryDisplay, Name = "讲经堂解锁显示", Choices = new[] { "关", "仅提示", "全部解锁" }, Dropdown = true },
 				Row(ConfigManager.EnableShopAllItems, "四师兄售卖全部物品"),
 				new SettingRow { Element = ConfigManager.TitlePartnerChoice, Name = "标题画面人物", Choices = LOMAssistant.Features.Extras.TitlePartnerPatch.Names, Dropdown = true },
+				Row(ConfigManager.TitleGallery, "标题画面鉴赏按钮"),
 			}),
 			// Mod 自己的设置：窗口的样子、日志、更新检查（界面语言在搜索框右边）
 			("咖啡伴侣", new List<SettingRow>

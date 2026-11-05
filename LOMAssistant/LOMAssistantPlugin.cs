@@ -222,6 +222,8 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			LeanTweenGuard.Install();
 			TryPatchAll(typeof(ReadStoryKeeper));
 			TryPatchAll(typeof(TitlePartnerPatch));
+			LOMAssistant.Features.Extras.Gallery.Ensure(base.gameObject);
+			TryPatchAll(typeof(LOMAssistant.Features.Extras.GalleryPatch));
 			TryPatchAll(typeof(SettingsDiagnosticsButton));
 			TryPatchAll(typeof(InputGuardActionGate));
 			TryPatchAll(typeof(InputGuardDialogGate));
