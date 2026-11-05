@@ -424,6 +424,10 @@ public sealed partial class Gallery
 		List<Figure> figures = query.Length == 0 ? _figures : _figures.Where(f => TextConverter.ToSimplified(f.Name).Contains(query) || f.Folder.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
 		float listHeight = (panel.yMax - y - S(170f)) / 2f;
 		var figureBox = new Rect(x, y, width, listHeight);
+		if (figureBox.Contains(Event.current.mousePosition))
+		{
+			_figureScroll.y -= GamepadCursor.ScrollDelta().y;
+		}
 		_figureScroll = GUI.BeginScrollView(figureBox, _figureScroll, new Rect(0f, 0f, width - S(20f), figures.Count * S(36f)));
 		for (int i = 0; i < figures.Count; i++)
 		{
@@ -440,6 +444,10 @@ public sealed partial class Gallery
 		GUI.Label(new Rect(x, y, width, S(28f)), TextConverter.ForDisplay("差分"), _muted);
 		y += S(30f);
 		var moodBox = new Rect(x, y, width, listHeight - S(38f));
+		if (moodBox.Contains(Event.current.mousePosition))
+		{
+			_moodScroll.y -= GamepadCursor.ScrollDelta().y;
+		}
 		List<string> moods = _selected != null && _figure != null && _figure.Folder == _selected.Folder ? _figure.Moods : new List<string>();
 		_moodScroll = GUI.BeginScrollView(moodBox, _moodScroll, new Rect(0f, 0f, width - S(20f), moods.Count * S(36f)));
 		for (int i = 0; i < moods.Count; i++)

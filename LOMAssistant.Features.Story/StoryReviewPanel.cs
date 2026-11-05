@@ -51,7 +51,10 @@ public partial class StoryReviewPanel : MonoBehaviour
 	private int _escFrame = -10;
 
 	/// <summary>窗口开着（或刚被 Esc、右键关掉的这一两帧）：Esc 和右键归窗口用，不交给游戏。</summary>
-	public static bool OwnsEscape
+	public static bool OwnsEscape => PanelOwnsEscape || LOMAssistant.Features.Extras.Gallery.IsOpen;
+
+	/// <summary>只看这个窗口自己，不算鉴赏。</summary>
+	internal static bool PanelOwnsEscape
 	{
 		get
 		{
@@ -165,7 +168,7 @@ public partial class StoryReviewPanel : MonoBehaviour
 			}
 			GamepadCursor.Update(_windowRect);
 		}
-		else
+		else if (!LOMAssistant.Features.Extras.Gallery.IsOpen)
 		{
 			GamepadCursor.Release();
 		}

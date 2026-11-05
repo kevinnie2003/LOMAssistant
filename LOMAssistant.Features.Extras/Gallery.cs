@@ -49,6 +49,8 @@ public sealed partial class Gallery : MonoBehaviour
 
 	private const int PictureTab = 0, MusicTab = 1, StageTab = 2;
 
+	private static readonly int[] TabOrder = { PictureTab, StageTab, MusicTab };
+
 	private const int Columns = 4, Rows = 3, TrackColumns = 3;
 
 	private const float HintSeconds = 3f;
@@ -71,6 +73,11 @@ public sealed partial class Gallery : MonoBehaviour
 	private static readonly Regex Word = new Regex(@"[A-Za-z0-9_]{4,}");
 
 	private static Gallery _instance;
+	private static Button _titleButton;
+	private static int _closedFrame = -10;
+
+	/// <summary>鉴赏开着（或刚关掉的这一帧）：Esc、右键和手柄归鉴赏用，不交给游戏。</summary>
+	internal static bool IsOpen => (_instance != null && _instance._open) || Time.frameCount - _closedFrame <= 1;
 	private static HashSet<string> _known;
 
 	private static string RecordPath => Path.Combine(Paths.ConfigPath, "LOMAssistant_Gallery.txt");
@@ -151,6 +158,28 @@ public sealed partial class Gallery : MonoBehaviour
 		Button button = copy.GetComponentInChildren<Button>(true);
 		button.onClick = new Button.ButtonClickedEvent();
 		button.onClick.AddListener(Open);
+		_titleButton = button;
+		// 游戏打开讲经堂等面板时会停用这组按钮，鉴赏也要一起停用
+		Traverse buttons = Traverse.Create(title).Field("_buttons");
+		buttons.SetValue(buttons.GetValue<Button[]>().Append(button).ToArray());
+		// 标题按钮的上下是写死的，复制来的按钮要接进去，手柄才走得到
+		Navigation above = library.navigation;
+		FileLogger.Log("[鉴赏] 标题按钮的导航方式: " + above.mode);
+		if (above.mode == Navigation.Mode.Explicit)
+		{
+			Selectable below = above.selectOnDown;
+			Navigation own = above;
+			own.selectOnUp = library;
+			button.navigation = own;
+			above.selectOnDown = button;
+			library.navigation = above;
+			if (below != null)
+			{
+				Navigation next = below.navigation;
+				next.selectOnUp = button;
+				below.navigation = next;
+			}
+		}
 		Text text = copy.GetComponentsInChildren<Text>(true).FirstOrDefault(t => t.name == "Text");
 		if (text != null)
 		{
@@ -189,9 +218,16 @@ public sealed partial class Gallery : MonoBehaviour
 	private void Close()
 	{
 		_open = false;
+		_closedFrame = Time.frameCount;
 		_viewing = -1;
 		Trim(new HashSet<string>());
 		CloseStage();
+		GamepadCursor.Release();
+		// 用手柄操作时点击会清掉 uGUI 的选中，选回来才能继续用十字键
+		if (_titleButton != null)
+		{
+			_titleButton.Select();
+		}
 		if (_musicChanged)
 		{
 			_musicChanged = false;
@@ -454,11 +490,13 @@ public sealed partial class Gallery : MonoBehaviour
 
 	private void Update()
 	{
-		if (!_open || StoryReviewPanel.OwnsEscape)
+		if (!_open || StoryReviewPanel.PanelOwnsEscape)
 		{
 			return;
 		}
-		bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) || (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame);
+		Gamepad pad = Gamepad.current;
+		bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) || (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
+			|| (pad != null && pad.buttonEast.wasPressedThisFrame);
 		if (back)
 		{
 			if (StageBack())
@@ -475,6 +513,16 @@ public sealed partial class Gallery : MonoBehaviour
 			}
 			return;
 		}
+		// 手柄：和咖啡伴侣窗口一样用摇杆移动指针、A 点击，LB / RB 切换页
+		if (pad != null)
+		{
+			GamepadCursor.Update(new Rect(0f, 0f, Screen.width, Screen.height));
+			int step = _pictures != null && _viewing < 0 && !_hideUi && !_pickingBack ? GamepadCursor.ShoulderStep(pad) : 0;
+			if (step != 0)
+			{
+				SwitchTab((Array.IndexOf(TabOrder, _tab) + step + TabOrder.Length) % TabOrder.Length);
+			}
+		}
 		if (_viewing >= 0 && Keyboard.current != null)
 		{
 			if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
@@ -485,6 +533,18 @@ public sealed partial class Gallery : MonoBehaviour
 			{
 				Step(1);
 			}
+		}
+	}
+
+	private void SwitchTab(int index)
+	{
+		if (TabOrder[index] == StageTab)
+		{
+			OpenStage();
+		}
+		else
+		{
+			_tab = TabOrder[index];
 		}
 	}
 
