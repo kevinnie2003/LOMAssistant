@@ -251,8 +251,14 @@ public partial class StoryReviewPanel
 		// 文字竖直居中、每个控件一样高（和设置页一样），一行里的字和框才对得齐
 		GUIStyle line = Middle(_label);
 		GUIStyle muted = Middle(_muted);
-		// 能锁的行在加减按钮前面多一个锁：附加值那一栏（如「(+5)」）让出位置，后面的按钮和别的行对齐
-		float nameWidth = S(120), extraWidth = row.LockStat != null ? S(80) - S(36) - _button.margin.left : S(80);
+		// 能锁的行在加减按钮前面多一个锁：附加值那一栏（如「(+5)」）让出位置，后面的按钮和别的行对齐；
+		// 一行还有富余时用上富余的宽度，好放下称号
+		float nameWidth = S(120), extraWidth = S(80);
+		if (row.LockStat != null)
+		{
+			float spare = width - S(10) - _card.padding.horizontal - nameWidth - S(52) - S(36) - S(58) * 2 - S(72) - S(50) - _button.margin.left * 8;
+			extraWidth = Mathf.Max(S(80) - S(36) - _button.margin.left, Mathf.Min(spare, S(120)));
+		}
 		string displayName = TextConverter.ForDisplay(row.Name);
 		string fittedName = Fit(displayName, line, nameWidth);
 		// 旗标、物品的名字能点，点了看它在哪些剧情里用到（标题后面有提示）
@@ -273,13 +279,14 @@ public partial class StoryReviewPanel
 		GUILayout.Label(row.NoValue ? "—" : row.Of > 0 ? value + "/" + row.Of : value.ToString(), line, GUILayout.Width(S(52)), Ctl());
 		string extra = row.Extra?.Invoke() ?? "";
 		// 后面的说明（旗标的中文说明）也能点
-		if (row.Uses != null ? GUILayout.Button(Fit(extra, muted, extraWidth), muted, GUILayout.Width(extraWidth), Ctl()) : DrawLabel(Fit(extra, muted, extraWidth), muted, extraWidth))
+		string fittedExtra = Fit(extra, muted, extraWidth);
+		if (row.Uses != null ? GUILayout.Button(fittedExtra, muted, GUILayout.Width(extraWidth), Ctl()) : DrawLabel(fittedExtra, muted, extraWidth))
 		{
 			_usageRow = row;
 			_usageScroll = Vector2.zero;
 		}
 		Rect extraRect = GUILayoutUtility.GetLastRect();
-		string full = row.Name + (row.Note.Length > 0 ? "\n" + row.Note : "") + (row.Uses == null ? "" : row.Id.StartsWith("rel:") ? "\n点名字看在哪些剧情里判定" : "\n点名字看在哪些剧情里改动、判定");
+		string full = row.Name + (fittedExtra != TextConverter.ForDisplay(extra) ? " " + extra : "") + (row.Note.Length > 0 ? "\n" + row.Note : "") + (row.Uses == null ? "" : row.Id.StartsWith("rel:") ? "\n点名字看在哪些剧情里判定" : "\n点名字看在哪些剧情里改动、判定");
 		if (full != row.Name || fittedName != displayName)
 		{
 			Hover(nameRect, full);
@@ -875,9 +882,28 @@ public partial class StoryReviewPanel
 					string who = Localized("PlayerInfo/Lover/" + s.FinalValue, "");
 					return who.Length > 0 ? "(" + who + ")" : "";
 				}
-				return s.AdditionValue != 0 ? "(" + s.AdditionValue.ToString("+0;-0") + ")" : "";
+				string addition = s.AdditionValue != 0 ? "(" + s.AdditionValue.ToString("+0;-0") + ")" : "";
+				if (type == GameStatType.心理衛生 || type == GameStatType.性情 || type == GameStatType.處世 || type == GameStatType.修養 || type == GameStatType.道德 || type == GameStatType.陰陽內功)
+				{
+					string tier = StatTier(s);
+					return tier.Length > 0 ? ("(" + TextConverter.ForDisplay(tier) + ") " + addition).TrimEnd() : addition;
+				}
+				return addition;
 			},
 		};
+	}
+
+	/// <summary>数值现在是哪一档称号，分档算法和游戏角色面板相同；数值超出范围时按两头的称号算。</summary>
+	private static string StatTier(GameStat stat)
+	{
+		int levels = stat.LevelLength;
+		if (levels == 0 || stat.Max < levels)
+		{
+			return "";
+		}
+		int value = Mathf.Clamp(stat.FinalValue, 0, stat.Max);
+		int level = Mathf.Clamp(GameStatUtils.GetGameStatLevel(value, stat.Max, levels), 0, levels - 1);
+		return Localized(stat.GetLevelText(level), "");
 	}
 
 	private static string Localized(string key, string fallback)
