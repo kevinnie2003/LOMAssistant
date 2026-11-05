@@ -2,6 +2,15 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.6.0 (2026-11-05)
+
+- **Gallery** (new setting, on by default): a new Gallery button on the title screen with CG, Portraits and Music pages. Gamepads are supported.
+  - CG: story pictures you have seen and ending CGs, sorted by type and viewable full screen. All scene images are open, and a switch on the page shows locked content.
+  - Portraits: pick a scene or unlocked CG as the background, place characters, change variants, then drag, resize, flip and reorder them. The UI can be hidden for screenshots.
+  - Music: all 39 tracks from both official soundtrack albums.
+- **Effect previews**: effects after a nested check now stay in the right branch instead of counting as Always; moves toward 50, mood-based gains and the affection cap show the actual change from current values; repeated gains in one branch are merged into a total; effects set by a variable read "varies".
+- **Translation**: fixed untranslated text in option results and conditional scene notes.
+
 ## 3.5.2 (2026-11-05)
 
 - **Death-on-defeat notice** (new setting, on from Assist up): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death. Deaths caused by options are not shown. The notice contains spoilers.
