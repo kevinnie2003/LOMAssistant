@@ -8,7 +8,7 @@ using UnityEngine;
 namespace LOMAssistant.Features.Extras;
 
 /// <summary>
-/// 锁定心相、四种性格（性情、处世、修养、道德）、阴阳、银两：咖啡伴侣窗口「数值」页这几行各有个小锁，点一下锁住，
+/// 锁定心相、四种性格（性情、处世、修养、道德）、阴阳、银两、贡献度：咖啡伴侣窗口「数值」页这几行各有个小锁，点一下锁住，
 /// 游戏里的剧情、选项、修炼等对它的增减都不生效；这一页的加减、设定照常能改。再点一下解锁。
 /// 锁住哪几项记在配置里，重启游戏、换存档都还锁着；读档、开新档时照常读入存档里的值，之后再锁住。
 /// </summary>
@@ -18,7 +18,7 @@ public static class MoodLockPatch
 	public static readonly GameStatType[] Lockable =
 	{
 		GameStatType.心理衛生, GameStatType.性情, GameStatType.處世, GameStatType.修養, GameStatType.道德,
-		GameStatType.陰陽內功, GameStatType.銀兩,
+		GameStatType.陰陽內功, GameStatType.銀兩, GameStatType.個人貢獻度,
 	};
 
 	/// <summary>被锁住的数值，从配置 LockedStats 读出。</summary>
