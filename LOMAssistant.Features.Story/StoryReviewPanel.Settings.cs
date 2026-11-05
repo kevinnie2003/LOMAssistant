@@ -137,6 +137,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.DuelRework, "决斗玩法重做"),
 				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人随主角成长"),
 				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
+				Row(ConfigManager.FightDeathHint, "战斗失败死亡提示"),
 				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
 				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
 				Row(ConfigManager.CheatDuelInvincible, "决斗我方无敌"),

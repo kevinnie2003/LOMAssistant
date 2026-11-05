@@ -70,6 +70,7 @@ public partial class StoryReviewPanel
 				(ConfigManager.EnableCombatAssist, false),
 				(ConfigManager.EnableBattleWin, false),
 				(ConfigManager.EnableDuelActionForecast, false),
+				(ConfigManager.FightDeathHint, false),
 				(ConfigManager.EnableLibraryDisplay, 0),
 				(ConfigManager.EnableShopAllItems, false),
 				(ConfigManager.EnableStoryJump, false),
@@ -79,7 +80,7 @@ public partial class StoryReviewPanel
 		{
 			Name = "辅助",
 			Tagline = "建议多周目玩家选择",
-			Note = "选项后果、骰子自选、地图提示、空过、直接获胜按钮、无限修炼锻造和不花银两打开；分支小窗、旗标提示、随机事件自选、剧情跳转和其他作弊关闭",
+			Note = "选项后果、骰子自选、地图提示、空过、直接获胜按钮、战斗失败死亡提示、无限修炼锻造和不花银两打开；分支小窗、旗标提示、随机事件自选、剧情跳转和其他作弊关闭",
 			Values = new (IConfigElement, object)[]
 			{
 				(ConfigManager.ShowBranchChecks, 0),
@@ -103,6 +104,7 @@ public partial class StoryReviewPanel
 				(ConfigManager.EnableCombatAssist, true),
 				(ConfigManager.EnableBattleWin, true),
 				(ConfigManager.EnableDuelActionForecast, false),
+				(ConfigManager.FightDeathHint, true),
 				(ConfigManager.EnableLibraryDisplay, 1),
 				(ConfigManager.EnableShopAllItems, false),
 				(ConfigManager.EnableStoryJump, false),
@@ -137,6 +139,7 @@ public partial class StoryReviewPanel
 				(ConfigManager.EnableCombatAssist, true),
 				(ConfigManager.EnableBattleWin, true),
 				(ConfigManager.EnableDuelActionForecast, false),
+				(ConfigManager.FightDeathHint, true),
 				(ConfigManager.EnableLibraryDisplay, 1),
 				(ConfigManager.EnableShopAllItems, false),
 				(ConfigManager.EnableStoryJump, true),
@@ -170,6 +173,7 @@ public partial class StoryReviewPanel
 				(ConfigManager.EnableCombatAssist, true),
 				(ConfigManager.EnableBattleWin, true),
 				(ConfigManager.EnableDuelActionForecast, true),
+				(ConfigManager.FightDeathHint, true),
 				(ConfigManager.EnableLibraryDisplay, 2),
 				(ConfigManager.EnableShopAllItems, true),
 				(ConfigManager.EnableStoryJump, true),
