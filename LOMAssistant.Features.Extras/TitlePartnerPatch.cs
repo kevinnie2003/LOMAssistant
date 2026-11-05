@@ -21,10 +21,10 @@ public static class TitlePartnerPatch
 		("_titleGirl3", 0f, 0f),
 		("_titleBrother1", 0f, 0f),
 		("_titleGirl5", 196f, 34f),
-		("_titleGirl2", 80f, -51f),
-		("_titleSister", 280f, -57f),
-		("_titleGirl6", 15f, -114f),
-		("_titleGirl8", -183f, -74f),
+		("_titleGirl2", 96f, -81f),
+		("_titleSister", 15f, -114f),
+		("_titleGirl6", -135f, -24f),
+		("_titleGirl8", 280f, -57f),
 	};
 
 	internal static readonly string[] Names = { "跟随结局", "不显示", "小师妹", "龙湘", "叶云裳", "小兰", "小梅", "小竹", "大师兄", "全部显示" };
@@ -69,6 +69,8 @@ public static class TitlePartnerPatch
 			longxiang.fillOrigin = (int)UnityEngine.UI.Image.OriginHorizontal.Right;
 			longxiang.fillAmount = 0.7f;
 		}
+		// 地上插的那把剑会隔开小竹和小梅
+		fields.Field("_titleGirl3").GetValue<UnityEngine.GameObject>()?.transform.parent.Find("Sword")?.gameObject.SetActive(false);
 		// 和游戏显示小梅时一样，主角由她的画面代替
 		fields.Field("_titlePlayer").GetValue<UnityEngine.GameObject>()?.SetActive(false);
 	}
