@@ -21,10 +21,10 @@ public static class TitlePartnerPatch
 		("_titleGirl3", 0f, 0f),
 		("_titleBrother1", 0f, 0f),
 		("_titleGirl5", 196f, 34f),
-		("_titleGirl2", 55f, -51f),
-		("_titleSister", -144f, -58f),
-		("_titleGirl6", 11f, -94f),
-		("_titleGirl8", -218f, -82f),
+		("_titleGirl2", 80f, -51f),
+		("_titleSister", 280f, -57f),
+		("_titleGirl6", 15f, -114f),
+		("_titleGirl8", -183f, -74f),
 	};
 
 	internal static readonly string[] Names = { "跟随结局", "不显示", "小师妹", "龙湘", "叶云裳", "小兰", "小梅", "小竹", "大师兄", "全部显示" };
