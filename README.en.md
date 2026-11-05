@@ -154,6 +154,7 @@ Switches in the combat group of the settings page (F8):
 
 - Scale duel enemies: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones
 - Duel enemy forecast: shows the enemy's chosen move; the window can be moved and resized
+- Death-on-defeat notice (spoilers): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death; deaths caused by options are not shown
 - Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
 - Better battle controls: fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
 - Choose battle allies: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
@@ -170,7 +171,7 @@ Stats, martial arts, sects, relationships (everyone), talents, training and craf
 
 - **Books and items**: set the count directly; quests advance as if bought in a shop. Hover over a martial manual to see what each layer adds when learned; learned layers are ticked.
 - **Stats** can be set below the bonus from manuals and the like, even below zero, and stay there through later story changes and loading.
-- Your **love interest** is shown by name; mood, the four personality stats, yin-yang and silver each have a **lock** that keeps story and options from changing them; locks stay on across restarts and saves.
+- Your **love interest** is shown by name; mood, the four personality stats and yin-yang show their current title after the value. These, silver and contribution each have a **lock** that keeps story and options from changing them; locks stay on across restarts and saves.
 - **Titles**: pick any title or write your own.
 - **Flags**: over a thousand, grouped by sect favour, characters, story and more.
 - **Reverse lookup**: click a flag, book or item to list the scenes that change or check it; click a name under relationships to list the scenes that check it. Each links to the story map.
@@ -216,7 +217,7 @@ Everything is on the settings page of the window (F8). Changes are saved immedia
 | Preset | Turned on |
 |---|---|
 | As intended | Everything listed below is off |
-| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Lecture Hall unlock; Better battle controls; Enemy morale in battles; Unlimited training; Unlimited forging; Free forging |
+| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Death-on-defeat notice; Lecture Hall unlock; Better battle controls; Enemy morale in battles; Unlimited training; Unlimited forging; Free forging |
 | Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Choose battle allies |
 | All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Enemy move forecast; full Lecture Hall unlock display |
 

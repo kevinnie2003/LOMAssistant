@@ -2,6 +2,13 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.5.2 (2026-11-05)
+
+- **Death-on-defeat notice** (new setting, on from Assist up): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death. Deaths caused by options are not shown. The notice contains spoilers.
+- **Stats tab titles**: mood, the four personality stats and yin-yang show their current title after the value.
+- **Contribution lock**: Contribution on the Stats tab gets a lock like the mood lock, which keeps story and options from changing it.
+- **Translation**: location names and branch notices are now translated into Korean, Japanese and English.
+
 ## 3.5.1 (2026-11-04)
 
 - **Show branch checks**: now a choice of Never, Panel or Top notice. If it was on, it becomes Panel. Top notice appears at the top of the screen like flag change notices.
