@@ -247,7 +247,7 @@ public partial class StoryReviewPanel
 					string result = RichText.Strip(OptionInfoPatch.OptionNote(option.Key)).Trim();
 					if (result.Length == 0)
 					{
-						result = RichText.Strip(TextConverter.ToSimplifiedUnlessJapanese(LuaParser.Description(option.Value))).Trim();
+						result = LuaParser.DisplayDescription(option.Value).Trim();
 					}
 					// 选项文字里已经被选项提示接上了「(结果)」，去掉，结果单独写在下面
 					if (result.Length > 0 && text.EndsWith(result + ")"))

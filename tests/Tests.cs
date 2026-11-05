@@ -11,6 +11,43 @@ namespace LOMAssistant.Tests;
 
 public static partial class Tests
 {
+	/// <summary>多分支选项先逐项翻译，再拼接编号和后续说明；原始描述仍可供内部比较。</summary>
+	public static void TestOptionEffectBranches()
+	{
+		const BindingFlags flags = BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+		FieldInfo language = Mod.GetType("LOMAssistant.Config.ConfigManager").GetField("UiLanguage", flags);
+		object saved = language.GetValue(null);
+		object setting = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(language.FieldType);
+		var actions = new List<LuaParse.Action>();
+		void Add(string description, int branch)
+		{
+			var action = new LuaParse.Action(LuaParse.ActionType.BattleScene, "Combat", branch > 0, branch);
+			typeof(LuaParse.Action).GetProperty("Description").SetValue(action, description);
+			actions.Add(action);
+		}
+		Add("设置称号 8", 0);
+		Add("남궁심好感 +2", 1);
+		Add("银两 +2000", 2);
+		try
+		{
+			language.SetValue(null, setting);
+			language.FieldType.GetField("m_value", flags).SetValue(setting, 3);
+			string shown = (string)typeof(LuaParse.LuaParser).GetMethod("DisplayDescription", flags).Invoke(null, new object[] { actions });
+			Assert(shown.Contains("칭호 8") && shown.Contains("이어서: ①남궁심 호감 +2") && shown.Contains("②은자 +2000") && !Regex.IsMatch(shown, @"[\u3400-\u9fff]"), shown);
+			Assert(LuaParse.LuaParser.Description(actions) == "设置称号 8；后续: ①남궁심好感 +2 ②银两 +2000", "原始描述或分支编号改变");
+			foreach (var row in new[] { (3, "스토리 발생"), (4, "ストーリー発生"), (5, "starts a scene") })
+			{
+				language.FieldType.GetField("m_value", flags).SetValue(setting, row.Item1);
+				string jump = TextConverter.ForDisplay("若 心相 需<30：触发剧情");
+				Assert(jump.Contains("30") && jump.Contains(row.Item2), jump);
+			}
+		}
+		finally
+		{
+			language.SetValue(null, saved);
+		}
+	}
+
 	/// <summary>快存悬停提示单独翻译备注表头，不把玩家备注当作表头的一部分。</summary>
 	public static void TestAnytimeMemoHeading()
 	{

@@ -441,17 +441,22 @@ public class LuaParser
 		return lines;
 	}
 
-	public static string Description(List<Action> actions)
+	public static string Description(List<Action> actions) => FormatDescription(actions, text => text);
+
+	internal static string DisplayDescription(List<Action> actions) =>
+		FormatDescription(actions, text => TextConverter.ForDisplay(RichText.Strip(TextConverter.ToSimplifiedUnlessJapanese(text))));
+
+	private static string FormatDescription(List<Action> actions, Func<string, string> format)
 	{
 		List<string> list = (from action in actions
 			where !action.IsConditional
 			select action.Description into description
 			where !string.IsNullOrEmpty(description)
-			select description).Distinct().ToList();
+			select description).Distinct().Select(format).ToList();
 		List<string> list2 = (from action in actions
 			where action.IsConditional && !string.IsNullOrEmpty(action.Description)
 			group action.Description by action.BranchIndex into g
-			select string.Join("、", g.Distinct())).ToList();
+			select string.Join("、", g.Distinct().Select(format))).ToList();
 		List<string> list3 = new List<string>();
 		if (list.Count > 0)
 		{
@@ -459,7 +464,7 @@ public class LuaParser
 		}
 		if (list2.Count == 1)
 		{
-			list3.Add("后续: " + list2[0]);
+			list3.Add(format("后续: ") + list2[0]);
 		}
 		else if (list2.Count > 1)
 		{
@@ -469,7 +474,7 @@ public class LuaParser
 			{
 				numbered.Add((i < circled.Length ? circled[i].ToString() : (i + 1) + ".") + list2[i]);
 			}
-			list3.Add("后续: " + string.Join(" ", numbered));
+			list3.Add(format("后续: ") + string.Join(" ", numbered));
 		}
 		return string.Join("；", list3);
 	}
