@@ -54,6 +54,7 @@ public static class UiTextEnglish
 		["移到前面"] = "Forward",
 		["移到后面"] = "Backward",
 		["隐藏界面"] = "Hide UI",
+		["面板换边"] = "Move panel",
 		["右键或 Esc 恢复界面"] = "Right click or Esc to show the UI",
 		["音乐"] = "Music",
 		["已解锁 {0} / {1}"] = "Unlocked {0} / {1}",

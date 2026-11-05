@@ -48,7 +48,7 @@ public sealed partial class Gallery
 	private readonly Dictionary<string, AsyncOperationHandle<Sprite>> _stageLoads = new Dictionary<string, AsyncOperationHandle<Sprite>>();
 	private Placed _selected;
 	private Figure _figure;
-	private bool _hideUi, _dragging, _backIsCg, _pickingBack;
+	private bool _hideUi, _dragging, _backIsCg, _pickingBack, _panelLeft;
 	private int _backIndex, _pickPage;
 	private Vector2 _grab, _figureScroll, _moodScroll;
 	private string _figureSearch = "";
@@ -331,12 +331,17 @@ public sealed partial class Gallery
 			HandleStageMouse(new Rect(0f, 0f, 0f, 0f));
 			return;
 		}
+		var panel = new Rect(_panelLeft ? 0f : Screen.width - S(440f), S(92f), S(440f), Screen.height - S(92f));
+		HandleStageMouse(panel);
+		// 拖动时界面让开，才看得到后面
+		if (_dragging)
+		{
+			return;
+		}
 		Color paper = PanelTheme.Paper;
 		Fill(new Rect(0f, 0f, Screen.width, S(92f)), new Color(paper.r, paper.g, paper.b, 0.9f));
-		var panel = new Rect(Screen.width - S(440f), S(92f), S(440f), Screen.height - S(92f));
 		Fill(panel, new Color(paper.r, paper.g, paper.b, 0.9f));
 		DrawHeader();
-		HandleStageMouse(panel);
 		DrawStagePanel(panel);
 	}
 
@@ -492,10 +497,14 @@ public sealed partial class Gallery
 		}
 		GUI.enabled = true;
 		bottom += S(46f);
-		if (GUI.Button(new Rect(x, bottom, width, S(40f)), TextConverter.ForDisplay("隐藏界面"), _track))
+		if (GUI.Button(new Rect(x, bottom, half, S(40f)), TextConverter.ForDisplay("隐藏界面"), _track))
 		{
 			_hideUi = true;
 			_hintUntil = Time.unscaledTime + HintSeconds;
+		}
+		if (GUI.Button(new Rect(x + half + S(8f), bottom, half, S(40f)), TextConverter.ForDisplay("面板换边"), _track))
+		{
+			_panelLeft = !_panelLeft;
 		}
 	}
 
