@@ -41,6 +41,7 @@ public static class UiTextEnglish
 		["标题画面鉴赏按钮"] = "Title screen gallery",
 		["显示未解锁内容"] = "Show locked content",
 		["鉴赏"] = "Gallery",
+		["正在读取随时存档"] = "Loading save-anywhere save",
 		["日常"] = "Daily life",
 		["立绘"] = "Portraits",
 		["背景"] = "Background",

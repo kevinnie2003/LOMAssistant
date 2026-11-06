@@ -604,6 +604,7 @@ public partial class AnytimeSave : MonoBehaviour
 	private void Update()
 	{
 		UpdateReplayMute();
+		UpdateRestoreMask();
 		if (Replaying)
 		{
 			Time.timeScale = 30;
@@ -832,6 +833,11 @@ public partial class AnytimeSave : MonoBehaviour
 /// <summary>随时存档用到的游戏补丁。只在功能启用且版本核验通过时应用。</summary>
 public static class AnytimeSavePatches
 {
+	/// <summary>Fungus 的屏幕淡入淡出画在 OnGUI 里，压在所有界面上面，重演时不画，遮罩才不闪；淡入淡出的状态照常走，结束后是对的。</summary>
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(Fungus.CameraManager), "OnGUI")]
+	public static bool CameraFade_Prefix() => !AnytimeSave.Replaying;
+
 	// 回放可能走到一个选项菜单，但菜单从没激活过、按钮缓存还是空的；原版这里会空引用，导致状态页其它分页关不掉
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(CustomMenuDialog), "InteractableCacheButton")]
@@ -884,3 +890,4 @@ public static class AnytimeSavePatches
 	[HarmonyPatch(typeof(DiceMenuDialog), "GetPressInput")]
 	public static bool GetPressInput_Prefix(ref bool __result) => AnytimeSave.AutoStartRestoredDice(ref __result);
 }
+
