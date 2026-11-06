@@ -14,6 +14,7 @@ namespace LOMAssistant.Features.Combat;
 /// 战斗失败死亡提示（设置「战斗失败死亡提示」）：这场输了会走到生死簿的死亡时，整场战斗在屏幕上方写出死亡名称和收录情况。
 /// 游戏有两条路：决斗关卡直接标了输了就死；或者打完接下一个剧本，剧本开头按输赢判断后跳到死亡画面。
 /// 第二条路开打时下一个剧本已经定好（CurrentStoryScript），读它的分岔即可；输了之后还要过别的分岔的写「可能」。
+/// 同一处还写决斗的下一个回合事件（设置「战斗回合事件提示」），见 FightForecast。
 /// </summary>
 internal sealed class FightDeathHint : MonoBehaviour
 {
@@ -21,6 +22,9 @@ internal sealed class FightDeathHint : MonoBehaviour
 
 	private UnityEngine.Object _fight;
 	private string _text;
+	private List<FightForecast.RoundEvent> _rounds;
+	private int _round = -1;
+	private string _roundText;
 	private GUIStyle _style;
 	private float _scale = -1f;
 
@@ -37,21 +41,30 @@ internal sealed class FightDeathHint : MonoBehaviour
 		CombatManager duel = CombatManager.Instance;
 		GameLevelManager battle = duel == null ? GameLevelManager.Instance : null;
 		UnityEngine.Object fight = duel != null ? duel : battle;
-		if (fight == null || !ConfigManager.FightDeathHint.Value || LevelTestMode.IsActive)
+		if (fight == null || LevelTestMode.IsActive)
 		{
 			_fight = null;
 			_text = null;
+			_rounds = null;
+			_roundText = null;
 			return;
 		}
 		// 决斗的关卡是开场协程里读进来的，读到以后才算开打
-		if (fight == _fight || (duel != null && duel.CombatLevel == null))
+		if (duel != null && duel.CombatLevel == null)
 		{
 			return;
 		}
+		if (fight == _fight)
+		{
+			UpdateRoundText(duel);
+			return;
+		}
 		_fight = fight;
+		_round = -1;
 		try
 		{
-			_text = Describe(duel != null ? duel.CombatLevel : null);
+			_rounds = FightForecast.Rounds(duel != null ? duel.CombatLevel : null);
+			_text = ConfigManager.FightDeathHint.Value ? Describe(duel != null ? duel.CombatLevel : null) : null;
 			FileLogger.Log($"[战斗失败死亡提示] 关卡 {PlayerStatManagerData.Instance.CurrentSceneKey}，下一个剧本 {PlayerStatManagerData.Instance.CurrentStoryScript}：{_text ?? "无"}");
 		}
 		catch (Exception e)
@@ -61,8 +74,24 @@ internal sealed class FightDeathHint : MonoBehaviour
 		}
 	}
 
+	/// <summary>回合变了才重新算：只写下一个还没过去的回合事件。</summary>
+	private void UpdateRoundText(CombatManager duel)
+	{
+		if (duel == null || _rounds == null || !ConfigManager.FightRoundHint.Value)
+		{
+			_roundText = null;
+			return;
+		}
+		int round = duel.CurrentRounds;
+		if (round != _round)
+		{
+			_round = round;
+			_roundText = _rounds.FirstOrDefault(e => !e.Passed(round))?.Text;
+		}
+	}
+
 	/// <summary>level 是决斗关卡，战役为 null。不会死时返回 null。</summary>
-	private static string Describe(CombatLevel level)
+	internal static string Describe(CombatLevel level)
 	{
 		if (level != null && level.DeadEnd)
 		{
@@ -103,7 +132,7 @@ internal sealed class FightDeathHint : MonoBehaviour
 	}
 
 	/// <summary>这一支是不是输了。旗标开打时清零，赢了才写 1，所以「等于 0」的第一支是输，「等于 1」的第一支是赢。</summary>
-	private static bool IsLoss(StoryStep step)
+	internal static bool IsLoss(StoryStep step)
 	{
 		switch (step.Key)
 		{
@@ -129,7 +158,8 @@ internal sealed class FightDeathHint : MonoBehaviour
 
 	private void OnGUI()
 	{
-		if (string.IsNullOrEmpty(_text) || UiHider.Active)
+		string text = string.IsNullOrEmpty(_roundText) ? _text : string.IsNullOrEmpty(_text) ? _roundText : _text + "　|　" + _roundText;
+		if (string.IsNullOrEmpty(text) || UiHider.Active)
 		{
 			return;
 		}
@@ -146,8 +176,12 @@ internal sealed class FightDeathHint : MonoBehaviour
 			_style.alignment = TextAnchor.MiddleCenter;
 			_style.wordWrap = false;
 		}
-		Vector2 size = _style.CalcSize(new GUIContent(_text));
-		float width = Mathf.Min(size.x, Screen.width * 0.9f);
-		GUI.Box(new Rect((Screen.width - width) / 2f, Screen.height * 0.003f, width, size.y), _text, PanelTheme.Sync(_style));
+		Vector2 size = _style.CalcSize(new GUIContent(text));
+		// 两条并成一行时靠左放，让开敌人血条；高度不超过一行，压不到游戏的回合字
+		bool both = !string.IsNullOrEmpty(_roundText) && !string.IsNullOrEmpty(_text);
+		float room = both ? Screen.width * 0.64f : Screen.width * 0.9f;
+		float width = Mathf.Min(size.x, room);
+		float x = both ? Mathf.Max(0f, (room - width) / 2f) : (Screen.width - width) / 2f;
+		GUI.Box(new Rect(x, Screen.height * 0.003f, width, size.y), text, PanelTheme.Sync(_style));
 	}
 }

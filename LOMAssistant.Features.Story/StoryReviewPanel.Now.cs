@@ -42,6 +42,9 @@ public partial class StoryReviewPanel
 		public readonly List<(string Way, string Effects)> Ways = new List<(string, string)>();
 		public readonly List<NowEvent> Events = new List<NowEvent>();
 		public readonly List<NowMission> Missions = new List<NowMission>();
+		/// <summary>正在打的这场战斗，和它的输赢后果、回合事件。</summary>
+		public UnityEngine.Object Fight;
+		public List<(string Title, string Text)> FightReport = new List<(string, string)>();
 	}
 
 	private NowSnapshot _now;
@@ -61,7 +64,7 @@ public partial class StoryReviewPanel
 		{
 			StoryAtlas.Start();
 		}
-		if (_now == null || _now.Script != (OptionInfoPatch.LastScriptKey ?? "") || _nowAtlas != StoryAtlas.Version)
+		if (_now == null || _now.Script != (OptionInfoPatch.LastScriptKey ?? "") || _nowAtlas != StoryAtlas.Version || _now.Fight != LOMAssistant.Features.Combat.FightForecast.Current)
 		{
 			_nowAtlas = StoryAtlas.Version;
 			_now = BuildNow();
@@ -90,6 +93,19 @@ public partial class StoryReviewPanel
 		GUILayout.BeginArea(area);
 		_nowScroll = GUILayout.BeginScrollView(_nowScroll);
 		bool any = false;
+		if (_now.FightReport.Count > 0)
+		{
+			any = true;
+			GUILayout.Label("这场战斗", _heading);
+			foreach (var (title, text) in _now.FightReport)
+			{
+				GUILayout.BeginVertical(_card);
+				GUILayout.Label(title, _rich);
+				GUILayout.Label(Cached((title, text), () => ColorDeltas(text)), _muted);
+				GUILayout.EndVertical();
+			}
+			GUILayout.Space(S(10));
+		}
 		if (_now.Options.Count > 0)
 		{
 			any = true;
@@ -235,6 +251,15 @@ public partial class StoryReviewPanel
 		if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Title")
 		{
 			return now;
+		}
+		try
+		{
+			now.Fight = LOMAssistant.Features.Combat.FightForecast.Current;
+			now.FightReport = LOMAssistant.Features.Combat.FightForecast.Report();
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("此刻页读战斗信息失败: " + e.Message);
 		}
 		try
 		{

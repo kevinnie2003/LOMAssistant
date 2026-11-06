@@ -128,6 +128,8 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> FightDeathHint;
 
+	public static ConfigElement<bool> FightRoundHint;
+
 	public static ConfigElement<float> DuelForecastX;
 
 	public static ConfigElement<float> DuelForecastY;
@@ -231,7 +233,7 @@ public static class ConfigManager
 	public static void Init()
 	{
 		// 配置文件已经有了、却还没有选预设弹窗这一项：是从 2.x 更新上来的老玩家，不弹
-		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noMorale = false, noFeel = false, noDeathHint = false;
+		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noMorale = false, noFeel = false, noRoundHint = false, noDeathHint = false;
 		try
 		{
 			if (System.IO.File.Exists(Config.ConfigFilePath))
@@ -244,6 +246,7 @@ public static class ConfigManager
 				noMorale = !raw.Contains("BattleMorale");
 				noFeel = !raw.Contains("BattleFeel");
 				noDeathHint = !raw.Contains("FightDeathHint");
+				noRoundHint = !raw.Contains("FightRoundHint");
 				// An old true/false fails to parse as int and would fall back to 2 (unlock all).
 				// 旧的 true/false 读不成数字会变成默认的 2（全部解锁），先改写
 				string migrated = raw.Replace("EnableLibraryDisplay = true", "EnableLibraryDisplay = 2")
@@ -292,6 +295,10 @@ public static class ConfigManager
 			BattleFeel.Value = false;
 		}
 		// 战斗失败死亡提示是新加的，默认开；用着「原汁原味」的老玩家更新上来保持关
+		if (noRoundHint && !EnableOptionInfo.Value)
+		{
+			FightRoundHint.Value = false;
+		}
 		if (noDeathHint && !EnableOptionInfo.Value)
 		{
 			FightDeathHint.Value = false;
@@ -507,6 +514,7 @@ public static class ConfigManager
 		DuelEnemyGrowth = new ConfigElement<bool>("DuelEnemyGrowth", "决斗敌人随主角成长：开战时按主角六项属性总和提高敌人的血量和属性，强敌仍明显强于普通敌人。true=开，false=关", defaultValue: false);
 		DuelRework = new ConfigElement<bool>("DuelRework", "决斗玩法重做：克制对方后有额外效果（追击、让对方下回合少一个指令、让绝招落空、重创、反击等），敌我规则相同；敌人也会根据双方的气、血量和主角连续出的招调整出招。第一次进入决斗时有说明。true=开，false=关", defaultValue: false);
 		FightDeathHint = new ConfigElement<bool>("FightDeathHint", "战斗失败死亡提示：这场决斗或战役输了会触发死亡时，在战斗中一直显示死亡名称和生死簿收录情况；输了之后还要看其他条件的写「可能会死」。选项触发的死亡不提示。提示会透露剧情。true=开，false=关", defaultValue: true);
+		FightRoundHint = new ConfigElement<bool>("FightRoundHint", "战斗回合事件提示：决斗里拖到某个回合会结束战斗或改旗标时，在屏幕上方写出下一个这样的回合。会剧透", defaultValue: true);
 		DuelForecastX = new ConfigElement<float>("DuelForecastX", "决斗敌方行动预测窗口的横向位置（占屏幕宽度的比例，-1=默认靠右）。拖动窗口会自动保存", -1f);
 		DuelForecastY = new ConfigElement<float>("DuelForecastY", "决斗敌方行动预测窗口的纵向位置（占屏幕高度的比例，-1=默认居中）。拖动窗口会自动保存", -1f);
 		DuelForecastWidth = new ConfigElement<float>("DuelForecastWidth", "决斗敌方行动预测窗口的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
