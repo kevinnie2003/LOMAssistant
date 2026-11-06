@@ -2,6 +2,13 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.6.1 (2026-11-06)
+
+- **Duel round events** (new setting, on from Assist up): when reaching a round in a duel ends the fight or changes a flag, the top of the screen shows the next such round. The notice contains spoilers.
+- **Now page**: during fights it shows what follows a win or a loss and the round events. Battles also show the victory condition and events triggered by time or head count.
+- **Save-anywhere**: loading now hides the fast-forward, shows progress and mutes the sound.
+- **Fix**: loading a save-anywhere save on the training map recalculates missions, so timed events trigger correctly.
+
 ## 3.6.0 (2026-11-05)
 
 - **Gallery** (new setting, on by default): a new Gallery button on the title screen with CG, Portraits and Music pages. Gamepads are supported.

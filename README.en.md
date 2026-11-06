@@ -60,7 +60,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 ### Story overview (Tab)
 
-- **Now**: every option and dice outcome of the current scene with its result, the branch conditions, whether the following dialogue has been read; the random events here with their odds and which you have not seen (pick the next one); your current quests, where to trigger them and what is still missing.
+- **Now**: every option and dice outcome of the current scene with its result, the branch conditions, whether the following dialogue has been read; the random events here with their odds and which you have not seen (pick the next one); your current quests, where to trigger them and what is still missing. During fights it shows what follows a win or a loss and the round events; battles also show the victory condition and battle events.
 
   <img src="media/story-now.webp" width="640" alt="Now: this scene's options grouped by choice, stat gains in green and losses in red; current quests">
 
@@ -115,7 +115,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 ### Saves
 
-- **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots. F5 saves, F7 loads the latest, F6 lists them all (notes, the dialogue at that point, grouped by save slot, save time or game date, with filters and group delete); no limit by default, set one in Settings. Not available in combat.
+- **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots. F5 saves, F7 loads the latest, F6 lists them all (notes, the dialogue at that point, grouped by save slot, save time or game date, with filters and group delete); no limit by default, set one in Settings. Not available in combat. Loading hides the fast-forward, shows progress and mutes the sound.
 - **Roll back**: after seeing a check, press F4 to go back to the line before it, adjust stats with F9 and continue; the check is re-evaluated.
 
   <img src="media/anytime-save.webp" width="640" alt="Save-anywhere page: all saves, load, note, delete">
@@ -155,6 +155,7 @@ Switches in the combat group of the settings page (F8):
 - Scale duel enemies: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones
 - Duel enemy forecast: shows the enemy's chosen move; the window can be moved and resized
 - Death-on-defeat notice (spoilers): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death; deaths caused by options are not shown
+- Duel round events (spoilers): when reaching a round in a duel ends the fight or changes a flag, the top of the screen shows the next such round
 - Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
 - Better battle controls: fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
 - Choose battle allies: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
@@ -218,7 +219,7 @@ Everything is on the settings page of the window (F8). Changes are saved immedia
 | Preset | Turned on |
 |---|---|
 | As intended | Everything listed below is off |
-| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Death-on-defeat notice; Lecture Hall unlock; Better battle controls; Enemy morale in battles; Unlimited training; Unlimited forging; Free forging |
+| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Death-on-defeat notice; Duel round events; Lecture Hall unlock; Better battle controls; Enemy morale in battles; Unlimited training; Unlimited forging; Free forging |
 | Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Choose battle allies |
 | All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Enemy move forecast; full Lecture Hall unlock display |
 
