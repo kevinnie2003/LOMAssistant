@@ -1,4 +1,4 @@
-"""打发布包：把 release/pkg 打成 LOMAssistant.zip、release/咖啡伴侣 vX.Y.Z.zip 和不带安装器的 LOMAssistant-Nexus.zip。
+"""打发布包：把 release/pkg 打成 LOMAssistant.zip、release/咖啡伴侣 vX.Y.Z.zip 和不带安装器的 LOMAssistant-NoInstaller.zip。
 
 用法（仓库根目录）：python -I -X utf8 tools/pack.py 2.8.3
 事先要编译好 Mod（./build.sh）和安装器（./Installer/build-installer.sh），并把 bin/LOMAssistant.dll 复制到
@@ -49,8 +49,8 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
             z.write(os.path.join(d, f), rel + '/' + f)
 shutil.copyfile(out, os.path.join(base, 'release', '咖啡伴侣 v' + version + '.zip'))
 
-# Nexus 上用的包：不带安装器 exe（Nexus 会把含 exe 的上传自动隔离），其余和完整包一样，手动解压安装
-nexus = os.path.join(base, 'LOMAssistant-Nexus.zip')
+# 不带安装器 exe 的包：传 Nexus（Nexus 会把含 exe 的上传自动隔离），也给安装器被杀毒软件拦截的玩家，其余和完整包一样，手动解压安装
+nexus = os.path.join(base, 'LOMAssistant-NoInstaller.zip')
 with zipfile.ZipFile(out) as src, zipfile.ZipFile(nexus, 'w', zipfile.ZIP_DEFLATED) as dst:
     for item in src.infolist():
         if not item.filename.endswith('.exe'):
