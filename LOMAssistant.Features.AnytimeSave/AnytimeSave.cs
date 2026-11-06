@@ -586,8 +586,24 @@ public partial class AnytimeSave : MonoBehaviour
 		}
 	}
 
+	private bool replayMuted;
+
+	/// <summary>
+	/// 重演时静音。动的是总音量 RTPC：剧本的淡入淡出用 BackgroundMusic、EnvSound，互不影响，RestoreSound 照常工作。
+	/// 只看 Replaying，正常结束、失败、超时都走这里；设置里的音量不改，半路退游戏也不会留下静音。
+	/// </summary>
+	private void UpdateReplayMute()
+	{
+		if (Replaying != replayMuted)
+		{
+			replayMuted = Replaying;
+			AkSoundEngine.SetRTPCValue("MasterVolume", replayMuted ? 0 : SystemSettings.MasterVolume, null, replayMuted ? 0 : 300);
+		}
+	}
+
 	private void Update()
 	{
+		UpdateReplayMute();
 		if (Replaying)
 		{
 			Time.timeScale = 30;
