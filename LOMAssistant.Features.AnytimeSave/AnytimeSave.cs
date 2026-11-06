@@ -562,6 +562,12 @@ public partial class AnytimeSave : MonoBehaviour
 		{ if (Time.realtimeSinceStartup - start > 30) { Fail("标题场景加载超时"); yield break; } yield return null; }
 		yield return null;
 		Apply(loading, false);
+		// 原版读档后都要刷新任务：哪些支线、主线现在能触发是算出来存在内存里的，不刷新就还是读档前的结果，
+		// 限时事件触发不了，要过一次行动才恢复。Story 不刷新：这里主线可能改当前剧本，重演要从 rootScript 开始，走完剧情游戏自己会刷新
+		if (loading.scene == "Free")
+		{
+			MissionManagerData.Instance.UpdateCheckMissions();
+		}
 		trace = new List<Entry>(loading.trace); stamps = new List<ScriptStamp>(loading.scripts);
 		rootScript = loading.rootScript; target = loading.target; cursor = 0; active = -1;
 		Replaying = loading.scene == "Story";
