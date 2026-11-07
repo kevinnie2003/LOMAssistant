@@ -233,6 +233,25 @@ GAME="D:/Steam/steamapps/common/LegendOfMortal" DOTNET=/path/to/dotnet ./build.s
 DOTNET=/path/to/dotnet ./Installer/build-installer.sh
 ```
 
+## License
+
+[MIT](LICENSE)
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+The installer (`咖啡伴侣安装器 Installer.exe`) is built from this repository's source by GitHub Actions and then signed. The maintainer approves every signing request by hand.
+
+- Author and reviewer: [kevinnie2003](https://github.com/kevinnie2003); pull requests from others are reviewed by the author before merging
+- Signing approver: [kevinnie2003](https://github.com/kevinnie2003)
+
+**Privacy**: this program will not transfer any information to other networked systems except in the cases below, which the user turns on or asks for.
+
+- When opened, the installer reads the latest version and release notes from GitHub, and downloads the new zip when you click Install. With "No online update check (install this zip's version)" ticked, it does not go online.
+- After the game starts, the mod reads the latest version number from GitHub. Turning off the "Check for updates" setting keeps it offline.
+- The AI Companion sends your question and the related game information to the AI provider you set up, only when you ask something.
+
 ## Credits
 
 See the [Chinese README](README.md#致谢). This project builds on 活侠传助手 by 爱死 and takes ideas from 赵活系统. The AI Companion tab takes ideas from [江湖夜话](https://github.com/Cpjjason/jianghu-yehua) (Jianghu Yehua) by Cpjjason, another AI mod for the game that lets you chat privately with its characters, who can give you items, teach you martial arts and remember past talks ([video on Bilibili](https://www.bilibili.com/video/BV1s2nC6pE83/)). Some personality traits and habits of the characters on the AI Companion tab draw on the 活侠传 fan character card by 夏呆呆 from the 类脑 community. Thanks to [lxsb222-spec](https://github.com/lxsb222-spec), [blakceyes](https://github.com/blakceyes), [NEXTAltair](https://github.com/NEXTAltair), [pluvivanto](https://github.com/pluvivanto), [lockpick](https://github.com/lockpick) and [F1-ZX](https://github.com/F1-ZX) for their pull requests, and to [mahosalieri85-a11y](https://github.com/mahosalieri85-a11y) and [iampigcheng](https://github.com/iampigcheng) for their issues.

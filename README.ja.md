@@ -224,6 +224,25 @@ ZIP には BepInEx が同梱されています。
 
 <img src="media/presets.webp" width="640" alt="プリセットの選択：4 つのカードに、向いている人と変わる内容">
 
+## ライセンス
+
+[MIT](LICENSE)
+
+## コード署名ポリシー
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+インストーラー（`咖啡伴侣安装器 Installer.exe`）は GitHub Actions でこのリポジトリのソースからビルドしてから署名します。署名のたびにメンテナーが手動で承認します。
+
+- 作者・レビュー担当：[kevinnie2003](https://github.com/kevinnie2003)。ほかの人のプルリクエストは作者がレビューしてからマージします
+- 署名の承認者：[kevinnie2003](https://github.com/kevinnie2003)
+
+**プライバシー**：以下の、使用者がオンにした場合や求めた場合を除き、本プログラムがほかのネットワーク上のシステムに情報を送ることはありません。
+
+- インストーラーは起動時に GitHub から最新バージョンと更新内容を読み込み、インストールを押すと新しい ZIP をダウンロードします。「オンラインで更新を確認しない（この ZIP の版を入れる）」にチェックするとネットに接続しません。
+- Mod はゲーム開始後に GitHub から最新のバージョン番号を読み込みます。設定「新バージョンを確認」をオフにするとネットに接続しません。
+- AIお供は、プレイヤーが質問したときだけ、質問と関係するゲーム情報をプレイヤー自身が設定した AI サービスに送ります。
+
 ## クレジット
 
 [中国語版 README](README.md#致谢) を参照してください。本プロジェクトは爱死氏の「活侠传助手」をもとにしており、赵活系统の機能のアイデアを参考にしています。AIお供タブのアイデアは Cpjjason さんの [江湖夜话](https://github.com/Cpjjason/jianghu-yehua)（江湖夜話）を参考にしています。同じく『活俠傳』の AI Mod で、登場人物と二人きりで話ができ、人物が物を贈ったり武功を指南したり、話したことを覚えていたりします（[Bilibili の紹介動画](https://www.bilibili.com/video/BV1s2nC6pE83/)）。AIお供タブの人物の性格や癖の一部は、类脑コミュニティの夏呆呆さんによる二次創作キャラクターカード『活侠传』を参考にしています。プルリクエストをくださった [lxsb222-spec](https://github.com/lxsb222-spec)、[blakceyes](https://github.com/blakceyes)、[NEXTAltair](https://github.com/NEXTAltair)、[pluvivanto](https://github.com/pluvivanto)、[lockpick](https://github.com/lockpick)、[F1-ZX](https://github.com/F1-ZX) さん、issue をくださった [mahosalieri85-a11y](https://github.com/mahosalieri85-a11y)、[iampigcheng](https://github.com/iampigcheng) さんに感謝します。

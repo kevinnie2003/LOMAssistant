@@ -245,6 +245,25 @@ DOTNET=/path/to/dotnet ./Installer/build-installer.sh
 | `tools/anytime-contract/` | 游戏更新后重新生成随时存档的兼容契约 |
 | `tools/bepinex-patch/` | 给打包的 BepInEx 打补丁：修复游戏装在中文路径下 BepInEx 启动失败 |
 
+## 许可证
+
+[MIT](LICENSE)
+
+## 代码签名政策
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+安装器（`咖啡伴侣安装器 Installer.exe`）由 GitHub Actions 从本仓库的源码构建后签名，每次签名都由维护者手动批准。
+
+- 作者和审核者：[kevinnie2003](https://github.com/kevinnie2003)，其他人提交的 PR 由作者审核后合并
+- 签名批准者：[kevinnie2003](https://github.com/kevinnie2003)
+
+**隐私**：除了下面这些由使用者打开或要求的情况，本程序不会向其他联网系统传输任何信息。
+
+- 安装器打开时从 GitHub 读取最新版本和更新内容，点安装时下载新版压缩包。勾选「不联网检查更新，只装压缩包自带的版本」后不联网。
+- Mod 进游戏后从 GitHub 读取最新版本号。关掉设置「检查新版本」后不联网。
+- AI 陪玩只在玩家提问时，把问题和相关的游戏信息发给玩家自己设置的 AI 服务商。
+
 ## 致谢
 
 本项目不是从零开发的，功能思路和部分代码来自以下作者：

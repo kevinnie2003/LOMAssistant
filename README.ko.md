@@ -224,6 +224,25 @@
 
 <img src="media/presets.webp" width="640" alt="프리셋 선택: 네 카드에 어떤 플레이어에게 맞는지와 바뀌는 내용">
 
+## 라이선스
+
+[MIT](LICENSE)
+
+## 코드 서명 정책
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
+
+설치 프로그램(`咖啡伴侣安装器 Installer.exe`)은 GitHub Actions가 이 저장소의 소스로 빌드한 뒤 서명합니다. 서명할 때마다 관리자가 직접 승인합니다.
+
+- 작성자 및 검토자: [kevinnie2003](https://github.com/kevinnie2003). 다른 사람의 PR은 작성자가 검토한 뒤 병합합니다
+- 서명 승인자: [kevinnie2003](https://github.com/kevinnie2003)
+
+**개인정보**: 아래처럼 사용자가 켜거나 요청한 경우를 제외하고, 이 프로그램은 다른 네트워크 시스템으로 어떤 정보도 전송하지 않습니다.
+
+- 설치 프로그램은 실행할 때 GitHub에서 최신 버전과 업데이트 내용을 읽고, 설치를 누르면 새 압축 파일을 내려받습니다. 「온라인 업데이트 확인 안 함(이 압축 파일의 버전 설치)」을 체크하면 인터넷에 연결하지 않습니다.
+- Mod는 게임에 들어간 뒤 GitHub에서 최신 버전 번호를 읽습니다. 설정 「새 버전 확인」을 끄면 인터넷에 연결하지 않습니다.
+- AI 동행은 플레이어가 질문할 때만 질문과 관련 게임 정보를 플레이어가 직접 설정한 AI 서비스에 보냅니다.
+
 ## 크레딧
 
 [중국어 README](README.md#致谢)를 참고하세요. 이 프로젝트는 爱死 님의 「活侠传助手」를 바탕으로 하며, 赵活系统의 기능 아이디어를 참고했습니다. AI 동행 탭의 아이디어는 Cpjjason 님의 [江湖夜话](https://github.com/Cpjjason/jianghu-yehua)(강호야화)를 참고했습니다. 이것도 『활협전』용 AI Mod로, 게임 속 인물과 단둘이 이야기할 수 있고 인물이 물건을 주거나 무공을 가르쳐 주고 나눈 이야기를 기억합니다([Bilibili 소개 영상](https://www.bilibili.com/video/BV1s2nC6pE83/)). AI 동행 탭 인물들의 성격과 버릇 일부는 类脑 커뮤니티 夏呆呆 님의 2차 창작 캐릭터 카드 『活侠传』를 참고했습니다. 풀 리퀘스트를 보내 주신 [lxsb222-spec](https://github.com/lxsb222-spec), [blakceyes](https://github.com/blakceyes), [NEXTAltair](https://github.com/NEXTAltair), [pluvivanto](https://github.com/pluvivanto), [lockpick](https://github.com/lockpick), [F1-ZX](https://github.com/F1-ZX) 님, issue를 올려 주신 [mahosalieri85-a11y](https://github.com/mahosalieri85-a11y), [iampigcheng](https://github.com/iampigcheng) 님께 감사드립니다.
