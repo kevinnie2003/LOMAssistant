@@ -19,5 +19,5 @@ printf '[assembly: System.Reflection.AssemblyVersion("%s")]\n[assembly: System.R
 	"$VERSION" "$VERSION" "${VERSION%.0}" > obj/InstallerVersion.cs
 "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:winexe -platform:anycpu -langversion:12 -optimize+ -deterministic \
 	-win32manifest:app.manifest -out:"bin/咖啡伴侣安装器 Installer.exe" "${refs[@]}" \
-	-resource:banner.zh.jpg,Installer.banner.zh.jpg -resource:banner.zh-Hant.jpg,Installer.banner.zh-Hant.jpg -resource:banner.en.jpg,Installer.banner.en.jpg -resource:banner.ja.jpg,Installer.banner.ja.jpg -resource:banner.ko.jpg,Installer.banner.ko.jpg -resource:../CHANGELOG.md,Installer.CHANGELOG.md -resource:../CHANGELOG.en.md,Installer.CHANGELOG.en.md -resource:../CHANGELOG.ja.md,Installer.CHANGELOG.ja.md -resource:../CHANGELOG.ko.md,Installer.CHANGELOG.ko.md *.cs obj/InstallerVersion.cs ../LOMAssistant/UiTraditional.cs
+	-resource:../CHANGELOG.md,Installer.CHANGELOG.md -resource:../CHANGELOG.en.md,Installer.CHANGELOG.en.md -resource:../CHANGELOG.ja.md,Installer.CHANGELOG.ja.md -resource:../CHANGELOG.ko.md,Installer.CHANGELOG.ko.md *.cs obj/InstallerVersion.cs ../LOMAssistant/UiTraditional.cs
 echo "Built Installer/bin/咖啡伴侣安装器 Installer.exe"

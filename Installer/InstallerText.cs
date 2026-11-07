@@ -44,9 +44,6 @@ internal static class InstallerText
 		}
 	}
 
-	/// <summary>顶部横幅（banner.zh / zh-Hant / en / ja / ko.jpg，样式同 README 头图）。</summary>
-	public static string BannerSuffix => Current == Lang.Simplified ? "zh" : Current == Lang.Traditional ? "zh-Hant" : Current == Lang.English ? "en" : Current == Lang.Japanese ? "ja" : "ko";
-
 	/// <summary>更新内容译文文件的后缀（en、ja、ko），简体、繁体为 null。</summary>
 	public static string ChangelogSuffix => Current == Lang.English ? "en" : Current == Lang.Japanese ? "ja" : Current == Lang.Korean ? "ko" : null;
 

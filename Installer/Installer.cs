@@ -137,38 +137,10 @@ internal class InstallerForm : Form
 		Text = L("咖啡伴侣 安装器");
 		Font = new Font(FontName, 10f);
 		AutoScaleMode = AutoScaleMode.Dpi;
-		ClientSize = new Size(1280, 900);
-		MinimumSize = new Size(900, 680);
+		ClientSize = new Size(1280, 720);
+		MinimumSize = new Size(900, 600);
 		StartPosition = FormStartPosition.CenterScreen;
 		BackColor = Paper;
-
-		// 顶部：banner（从 README 头图裁的一条），铺满宽度、上下多出来的裁掉，不留黑边
-		Image bannerImage = LoadBanner();
-		var banner = new Panel { Dock = DockStyle.Top, Height = 280, BackColor = Ink };
-		banner.Paint += (sender, e) =>
-		{
-			if (bannerImage == null)
-			{
-				return;
-			}
-			float scale = Math.Max((float)banner.Width / bannerImage.Width, (float)banner.Height / bannerImage.Height);
-			float w = bannerImage.Width * scale, h = bannerImage.Height * scale;
-			e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-			e.Graphics.DrawImage(bannerImage, (banner.Width - w) / 2, (banner.Height - h) / 2, w, h);
-		};
-		banner.Resize += delegate { banner.Invalidate(); };
-		// 窗口矮（小屏幕、笔记本）时 banner 跟着变矮，把高度让给「其他 Mod」列表：左栏除列表外约占 460，列表想要 220，剩下的给 banner（80 到 280）
-		void FitBanner()
-		{
-			float dpi = DeviceDpi / 96f;
-			int height = (int)(Math.Max(80f, Math.Min(280f, ClientSize.Height / dpi - 680f)) * dpi);
-			if (banner.Height != height)
-			{
-				banner.Height = height;
-			}
-		}
-		Resize += delegate { FitBanner(); };
-		Load += delegate { FitBanner(); };
 
 		// 左栏：游戏目录、版本、其他 Mod、安装按钮
 		var left = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, BackColor = Paper, Margin = new Padding(0, 0, 14, 0) };
@@ -256,7 +228,6 @@ internal class InstallerForm : Form
 		ShowTab(true);
 
 		Controls.Add(body);
-		Controls.Add(banner);
 
 		_gameBox.TabStop = false;
 		ActiveControl = _install;
@@ -361,19 +332,6 @@ internal class InstallerForm : Form
 					return reader.ReadToEnd().Replace("\r\n", "\n");
 				}
 			}
-		}
-		catch
-		{
-			return null;
-		}
-	}
-
-	private static Image LoadBanner()
-	{
-		try
-		{
-			Stream stream = typeof(InstallerForm).Assembly.GetManifestResourceStream("Installer.banner." + BannerSuffix + ".jpg");
-			return stream == null ? null : Image.FromStream(stream);
 		}
 		catch
 		{
