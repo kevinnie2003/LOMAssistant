@@ -248,17 +248,23 @@ public sealed partial class Gallery : MonoBehaviour
 		var pictures = new SortedDictionary<string, Picture>(StringComparer.Ordinal);
 		List<Track> tracks = GalleryMusic.Tracks.Select(m => new Track { Key = m.Key, Title = GalleryMusic.Title(m.Traditional, m.Simplified, m.English) }).ToList();
 		TextAsset[] assets = Resources.LoadAll<TextAsset>("story/chinesetraditional");
+		var scanned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 		for (int i = 0; i < assets.Length; i++)
 		{
 			if (assets[i] != null)
 			{
-				Read(assets[i].text, pictures);
+				scanned.Add(assets[i].name);
+				Read(ModScripts.Text(assets[i].name) ?? assets[i].text, pictures);
 				Resources.UnloadAsset(assets[i]);
 			}
 			if (i % 200 == 0)
 			{
 				yield return null;
 			}
+		}
+		foreach (string added in ModScripts.Added(scanned))
+		{
+			Read(ModScripts.Text(added) ?? "", pictures);
 		}
 		// 有的剧本写了图片编号，资源里却没有这张图（游戏里什么也不显示），不收录
 		yield return Addressables.InitializeAsync();

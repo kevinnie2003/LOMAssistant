@@ -318,6 +318,11 @@ public static class StoryScripts
 			}
 			foreach (Match t in StoryText.Matches(line))
 			{
+				// 剧情 Mod 缺辅助文件时才说的安装提示，每段剧本开头都带一份，不算剧情，也不能当段落标题
+				if (t.Groups[1].Value.EndsWith("_INSTALL_MISSING", StringComparison.Ordinal))
+				{
+					continue;
+				}
 				script.Lines.Add(t.Groups[1].Value);
 				if (line.StartsWith("say(", StringComparison.Ordinal))
 				{

@@ -281,11 +281,14 @@ public static class DataHelper
 	private static Dictionary<string, ConditionResultData> _conditionByName;
 	private static SwitchResultConfig[] _switchIndexed;
 	private static ConditionResultConfig _conditionIndexed;
+	private static int _switchIndexedCount, _conditionIndexedCount;
 
 	private static SwitchResultData SwitchData(string key)
 	{
 		SwitchResultConfig[] configs = SwitchConfigs();
-		if (_switchByName == null || !ReferenceEquals(_switchIndexed, configs))
+		// 剧情 Mod 进剧情时才往表里加条目，表还是同一个，要看条数
+		int count = configs.Sum(config => config?.List?.Count ?? 0);
+		if (_switchByName == null || !ReferenceEquals(_switchIndexed, configs) || _switchIndexedCount != count)
 		{
 			_switchByName = new Dictionary<string, SwitchResultData>(StringComparer.Ordinal);
 			foreach (SwitchResultConfig config in configs)
@@ -297,6 +300,7 @@ public static class DataHelper
 				}
 			}
 			_switchIndexed = configs;
+			_switchIndexedCount = count;
 		}
 		return key != null && _switchByName.TryGetValue(key, out SwitchResultData found) ? found : null;
 	}
@@ -304,7 +308,8 @@ public static class DataHelper
 	private static ConditionResultData ConditionData(string key)
 	{
 		ConditionResultConfig config = ConditionConfig();
-		if (_conditionByName == null || !ReferenceEquals(_conditionIndexed, config))
+		int count = config?.List?.Count ?? 0;
+		if (_conditionByName == null || !ReferenceEquals(_conditionIndexed, config) || _conditionIndexedCount != count)
 		{
 			_conditionByName = new Dictionary<string, ConditionResultData>(StringComparer.Ordinal);
 			foreach (ConditionResultData data in config?.List ?? new List<ConditionResultData>())
@@ -312,6 +317,7 @@ public static class DataHelper
 				if (data != null && !_conditionByName.ContainsKey(data.name)) _conditionByName[data.name] = data;
 			}
 			_conditionIndexed = config;
+			_conditionIndexedCount = count;
 		}
 		return key != null && _conditionByName.TryGetValue(key, out ConditionResultData found) ? found : null;
 	}
@@ -665,6 +671,12 @@ public static class DataHelper
 
 	public static string LoadLuaScript(string scriptName)
 	{
+		// 剧情 Mod 顶替的剧本不在游戏资源里，见 ModScripts
+		string mod = ModScripts.Text(scriptName);
+		if (mod != null)
+		{
+			return mod;
+		}
 		string text = scriptName.ToLower();
 		TextAsset textAsset = Resources.Load<TextAsset>("story/chinesetraditional/" + text);
 		return ((textAsset != null) ? textAsset.text : null) ?? string.Empty;

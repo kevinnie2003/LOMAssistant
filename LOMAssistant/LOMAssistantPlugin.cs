@@ -37,6 +37,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 		Diagnostics.LogStartup(base.Info);
 		_harmony = new Harmony(base.Info.Metadata.GUID);
 		Diagnostics.PatchSteam(_harmony);
+		ModScripts.Prepare();
 		ApplyPatches();
 		BepInEx5Plugins.Load();
 		Diagnostics.LogPatchSummary(_harmony);

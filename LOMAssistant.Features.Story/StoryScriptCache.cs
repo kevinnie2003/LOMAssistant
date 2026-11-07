@@ -11,20 +11,21 @@ namespace LOMAssistant.Features.Story;
 
 /// <summary>
 /// 剧本解析结果的缓存：开游戏后生成时间线要把 2200 个剧本逐个解析一遍（几秒），解析完存到 BepInEx\cache 里，
-/// 下次开游戏时游戏版本和咖啡伴侣的 DLL 都没变就直接读缓存（在后台线程读，不占画面）。游戏更新、换了新版咖啡伴侣就重新解析。
+/// 下次开游戏时游戏版本、咖啡伴侣的 DLL 和剧情 Mod 的剧本都没变就直接读缓存（在后台线程读，不占画面）。其中一样变了就重新解析。
 /// </summary>
 public static class StoryScriptCache
 {
 	private static string FilePath => Path.Combine(Paths.CachePath, "LOMAssistant", "StoryScripts.json");
 
-	// 第一行写这个，对得上才用：游戏版本 + 这份 DLL 的修改时间（解析的写法改了，DLL 一定换过）
+	// 第一行写这个，对得上才用：游戏版本 + 这份 DLL 的修改时间（解析的写法改了，DLL 一定换过）+ 剧情 Mod 剧本的指纹
 	private static string Key
 	{
 		get
 		{
 			string dll = typeof(StoryScriptCache).Assembly.Location;
 			long built = File.Exists(dll) ? File.GetLastWriteTimeUtc(dll).Ticks : 0;
-			return "v1|" + Application.version + "|" + built;
+			string mods = ModScripts.Fingerprint;
+			return "v1|" + Application.version + "|" + built + (mods.Length > 0 ? "|" + mods : "");
 		}
 	}
 

@@ -299,7 +299,7 @@ public static class StoryAtlas
 					continue;
 				}
 				names.Add(asset.name);
-				StoryScript script = StoryScripts.Parse(asset.name, asset.text);
+				StoryScript script = StoryScripts.Parse(asset.name, ModScripts.Text(asset.name) ?? asset.text);
 				StoryScripts.Remember(script);
 				parsed.Add(script);
 				Resources.UnloadAsset(asset);
@@ -310,6 +310,17 @@ public static class StoryAtlas
 				}
 			}
 			assets = null;
+			foreach (string name in ModScripts.Added(new HashSet<string>(names, StringComparer.OrdinalIgnoreCase)))
+			{
+				string text = ModScripts.Text(name);
+				if (text != null)
+				{
+					names.Add(name);
+					StoryScript script = StoryScripts.Parse(name, text);
+					StoryScripts.Remember(script);
+					parsed.Add(script);
+				}
+			}
 			StoryScriptCache.Save(parsed);
 		}
 		yield return null;
