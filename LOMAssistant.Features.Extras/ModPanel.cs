@@ -42,10 +42,11 @@ public class ModPanel : MonoBehaviour
 		{
 			StoryReviewPanel.ToggleAi();
 		}
-		// 检测到冲突时自动打开一次设置页，玩家不按键也能看到
-		if (ConflictDetector.Warnings.Count > 0 && !_conflictShown && StoryReviewPanel.OpenSettings())
+		// 检测到新的冲突时自动打开一次设置页，玩家不按键也能看到；提示过的不再打开，红字留在设置页
+		if (ConflictDetector.HasNewWarning && !_conflictShown && StoryReviewPanel.OpenSettings())
 		{
 			_conflictShown = true;
+			ConflictDetector.RememberWarnings();
 		}
 	}
 

@@ -6,6 +6,7 @@ Changes in each version, newest first. Versions before 2.7.0 are only in Chinese
 
 - **Top notice text size** (new setting): sets the text size of the flag and branch notices at the top of the screen. The default is 80%; smaller text fits more lines at once.
 - **Story mods**: story mods loaded with Binarizer are supported. The Story map and Gallery read the mod's scripts, and save-anywhere can save and load inside them. Checks written directly in a mod's scripts aren't shown, and after installing a mod, older save-anywhere saves that passed through scripts it changed can't be loaded.
+- **Conflict warnings**: the settings page opens automatically only the first time a conflict is detected; the warning stays at the top of settings.
 
 ## 3.6.1 (2026-11-06)
 

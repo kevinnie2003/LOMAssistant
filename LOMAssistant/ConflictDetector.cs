@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
@@ -21,6 +22,51 @@ public static class ConflictDetector
 	public static readonly List<string> Warnings = new List<string>();
 
 	public static bool Checked { get; private set; }
+
+	// 已经自动打开设置页提示过的冲突，一行一条
+	private static string ShownMark => Path.Combine(Path.GetDirectoryName(typeof(ConflictDetector).Assembly.Location) ?? ".", "StoryReview", "compat-warnings");
+
+	/// <summary>有没有还没自动打开设置页提示过的冲突。</summary>
+	public static bool HasNewWarning
+	{
+		get
+		{
+			if (Warnings.Count == 0)
+			{
+				return false;
+			}
+			if (_shown == null)
+			{
+				try
+				{
+					_shown = new HashSet<string>(File.Exists(ShownMark) ? File.ReadAllLines(ShownMark) : new string[0]);
+				}
+				catch (Exception e)
+				{
+					FileLogger.LogWarning("[冲突检测] 读取已提示记录失败: " + e.Message);
+					_shown = new HashSet<string>();
+				}
+			}
+			return Warnings.Any(warning => !_shown.Contains(warning));
+		}
+	}
+
+	private static HashSet<string> _shown;
+
+	/// <summary>记下这些冲突已经提示过，下次启动不再自动打开设置页。</summary>
+	public static void RememberWarnings()
+	{
+		try
+		{
+			List<string> added = Warnings.Where(warning => _shown.Add(warning)).ToList();
+			Directory.CreateDirectory(Path.GetDirectoryName(ShownMark));
+			File.AppendAllLines(ShownMark, added);
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("[冲突检测] 保存已提示记录失败: " + e.Message);
+		}
+	}
 
 	public static IEnumerator CheckLater(Harmony ours)
 	{
