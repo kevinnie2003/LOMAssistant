@@ -109,7 +109,7 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/branch-panel.webp" width="480" alt="Branch panel: met conditions in green, unmet in red">
 
-- **Flag change notices** (spoilers): a notice when the story changes a flag; how long it stays can be set.
+- **Flag change notices** (spoilers): a notice when the story changes a flag; how long it stays and its text size can be set.
 - **Checks in the backlog**: story checks, their conditions and your values are recorded in the backlog.
 - **Hide UI for CGs**: right-click in a story scene to leave only the background, CG and portraits; right-click, left-click or press any other key to restore.
 
@@ -204,7 +204,7 @@ Changing values or flags at random can break the story; save first.
 
 **Option results missing, dice cannot be picked?** An older mod of the same kind is installed. The installer handles this; for manual installs, remove the old mods from `BepInEx\plugins`.
 
-**Works with other mods?** Yes, mods whose features don't overlap can be installed alongside it. If a hotkey clashes, this mod gives way automatically, and you can bind another key under Settings > Hotkeys. If another mod ships its own BepInEx, run this mod's installer again after installing it.
+**Works with other mods?** Yes, mods whose features don't overlap can be installed alongside it. If a hotkey clashes, this mod gives way automatically, and you can bind another key under Settings > Hotkeys. If another mod ships its own BepInEx, run this mod's installer again after installing it. Story mods loaded with Binarizer also work: the Story map and Gallery read the mod's scripts, and save-anywhere can save and load inside them. Checks written directly in a mod's scripts aren't shown, and after installing a mod, older save-anywhere saves that passed through scripts it changed can't be loaded.
 
 **Linux / Steam Deck?** Install manually and add `WINEDLLOVERRIDES="winhttp=n,b" %command%` to the Steam launch options.
 
