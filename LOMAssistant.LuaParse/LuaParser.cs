@@ -304,6 +304,10 @@ public class LuaParser
 	/// 逐行走 Lua 的 if/elseif/else/end，记下当前在哪个判断的哪一支。判断可以嵌套：内层 end 之后回到外层那一支，
 	/// 外层后面的效果仍只属于这一支。从分支中间截出来的片段可能先碰到 elseif/else，这时当成新开的一支。
 	/// </summary>
+	private static readonly Regex wordRegex = new Regex("\\b(if|function|do|end)\\b");
+
+	private static readonly Regex stringRegex = new Regex("\"(?:\\\\.|[^\"\\\\])*\"|'(?:\\\\.|[^'\\\\])*'|--.*$");
+
 	private sealed class BranchScope
 	{
 		private sealed class Frame
@@ -320,6 +324,9 @@ public class LuaParser
 
 		private int count;
 
+		// 上一行是写在一行里的 if … end，只管那一行
+		private bool oneLine;
+
 		public bool Conditional => frames.Count > 0;
 
 		public int Branch => frames.Count > 0 ? frames.Peek().Branch : 0;
@@ -330,6 +337,26 @@ public class LuaParser
 
 		public void Step(string line)
 		{
+			if (oneLine)
+			{
+				frames.Pop();
+				oneLine = false;
+			}
+			// 原版剧本的 if 都独占一行；剧情 Mod 常写成一行，按关键字数这一行开了几层
+			if ((line.StartsWith("if ") || line.StartsWith("elseif ")) && !line.EndsWith(" then"))
+			{
+				int depth = wordRegex.Matches(stringRegex.Replace(line, "")).Cast<Match>().Sum(m => m.Value == "end" ? -1 : 1);
+				if (depth < 0 && frames.Count > 0)
+				{
+					frames.Pop();
+				}
+				else if (depth >= 0 && line.StartsWith("if "))
+				{
+					frames.Push(new Frame { Branch = ++count });
+					oneLine = depth == 0;
+				}
+				return;
+			}
 			Match local = switchLocalRegex.Match(line);
 			if (local.Success)
 			{
