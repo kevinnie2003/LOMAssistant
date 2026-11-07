@@ -168,6 +168,7 @@ public static class ConfigManager
 	public static ConfigElement<int> TitlePartnerChoice;
 
 	public static ConfigElement<bool> TitleGallery;
+	public static ConfigElement<bool> TitleTower;
 
 	public static ConfigElement<bool> GalleryShowLocked;
 	public static ConfigElement<int> LegendSlotPages;
@@ -582,6 +583,7 @@ public static class ConfigManager
 		EnableFlowSpeedup = new ConfigElement<bool>("EnableFlowSpeedup", "流程提速：切场景不再写多余的全局存档副本、读档时旗标查表、快进时指令不空等、数值变化后的停顿缩到 0.2 秒（没显示的不停顿）、养成地图上行动后的等待和转场加快 3 倍、决斗回合之间不干等。默认开；只有怀疑它导致问题时才关。true=开，false=关", defaultValue: true);
 		TitlePartnerChoice = new ConfigElement<int>("TitlePartnerChoice", "标题画面显示的人物：9=全部显示，0=跟随结局（默认），1=不显示，2=小师妹，3=龙湘，4=叶云裳，5=小兰，6=小梅，7=小竹，8=大师兄。回到标题画面时生效", 0);
 		TitleGallery = new ConfigElement<bool>("TitleGallery", "标题画面鉴赏按钮：标题画面多一个「鉴赏」按钮，能看解锁的 CG、听解锁的音乐。没解锁的内容不显示。回到标题画面后生效", defaultValue: true);
+		TitleTower = new ConfigElement<bool>("TitleTower", "标题画面练功塔按钮：标题画面多一个「练功塔」按钮，游玩试玩版的练功塔模式。存档、自动存档和生死簿都和正常游玩一样。回到标题画面后生效", defaultValue: true);
 		GalleryShowLocked = new ConfigElement<bool>("GalleryShowLocked", "鉴赏页的「显示未解锁内容」按钮：打开后没解锁的 CG 和音乐也能看、能听，会剧透", defaultValue: false);
 		SaveListOrder = new ConfigElement<int>("SaveListOrder", "新版存档、读档界面里手动存档的排列：0=按栏位号（默认），1=最近保存的在上面，2=按栏位号、读档页也列出所有空栏位（点空栏位在那一格开新游戏，同原版）。打开界面时都会选中并滚到上次保存的那个存档", 0);
 		SaveSlotCount = new ConfigElement<int>("SaveSlotCount", "手动存档栏位数量（原版 20，小于 20 时按 20）", 100);

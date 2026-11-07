@@ -141,14 +141,20 @@ public sealed partial class Gallery : MonoBehaviour
 		{
 			return;
 		}
+		_titleButton = CreateTitleButton(title, "Gallery", "鉴赏", Open);
+	}
+
+	/// <summary>复制标题画面的讲经堂按钮，放到它下面。</summary>
+	internal static Button CreateTitleButton(TitleManager title, string name, string label, UnityEngine.Events.UnityAction click)
+	{
 		Button library = Traverse.Create(title).Field("_libraryButton").GetValue<Button>();
 		if (library == null)
 		{
-			return;
+			return null;
 		}
 		GameObject source = (library.GetComponentInParent<TitleOptionButton>()?.gameObject) ?? library.gameObject;
 		GameObject copy = Instantiate(source, source.transform.parent);
-		copy.name = "Gallery";
+		copy.name = name;
 		copy.transform.SetSiblingIndex(source.transform.GetSiblingIndex() + 1);
 		// 复制来的按钮还连着打开讲经堂的事件
 		foreach (EventTrigger trigger in copy.GetComponentsInChildren<EventTrigger>(true))
@@ -157,8 +163,7 @@ public sealed partial class Gallery : MonoBehaviour
 		}
 		Button button = copy.GetComponentInChildren<Button>(true);
 		button.onClick = new Button.ButtonClickedEvent();
-		button.onClick.AddListener(Open);
-		_titleButton = button;
+		button.onClick.AddListener(click);
 		// 游戏打开讲经堂等面板时会停用这组按钮，鉴赏也要一起停用
 		Traverse buttons = Traverse.Create(title).Field("_buttons");
 		buttons.SetValue(buttons.GetValue<Button[]>().Append(button).ToArray());
@@ -191,8 +196,9 @@ public sealed partial class Gallery : MonoBehaviour
 					Destroy(behaviour);
 				}
 			}
-			text.text = TextConverter.ForDisplay("鉴赏");
+			text.text = TextConverter.ForDisplay(label);
 		}
+		return button;
 	}
 
 	private static void Open()
@@ -864,6 +870,7 @@ public static class GalleryPatch
 		try
 		{
 			Gallery.AddButton(__instance);
+			TitleTower.AddButton(__instance);
 		}
 		catch (Exception e)
 		{
