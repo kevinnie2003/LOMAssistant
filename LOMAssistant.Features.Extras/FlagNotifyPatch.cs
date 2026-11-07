@@ -162,7 +162,8 @@ public static class FlagNotifyPatch
 		{
 			y = Mathf.Min(y, shown.anchoredPosition.y - step);
 		}
-		float lowest = local.y - MaxRows * step;
+		// 排的高度按 100% 算（字小了能多排几条，大了少排几条），都不会往下盖住对白
+		float lowest = local.y - MaxRows * height * BaseScale * 1.1f;
 		if (y < lowest)
 		{
 			foreach (RectTransform shown in Active)
@@ -176,8 +177,10 @@ public static class FlagNotifyPatch
 		host.StartCoroutine(Float(text, group, seconds));
 	}
 
-	private const float TextScale = 0.8f; // 游戏飘字的八成大小
-	private const int MaxRows = 8; // 第一条下面最多排几条
+	private const float BaseScale = 0.8f; // 100% 是游戏飘字的八成大小
+	private const int MaxRows = 8; // 100% 时第一条下面最多排几条
+
+	private static float TextScale => BaseScale * Mathf.Clamp(ConfigManager.TopNoticeScale.Value, 50, 150) / 100f;
 
 	// 还在屏幕上的旗标、分支提示
 	private static readonly System.Collections.Generic.List<RectTransform> Active = new System.Collections.Generic.List<RectTransform>();

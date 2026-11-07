@@ -96,6 +96,8 @@ public static class ConfigManager
 
 	public static ConfigElement<float> FlagNoticeSeconds;
 
+	public static ConfigElement<int> TopNoticeScale;
+
 	public static ConfigElement<int> FontScale;
 	public static ConfigElement<int> GameFontScale;
 	public static ConfigElement<int> AiProvider;
@@ -530,7 +532,8 @@ public static class ConfigManager
 		MemoCollapsed = new ConfigElement<bool>("MemoCollapsed", "备忘录悬浮窗是否收起成标题栏（在窗口里点，自动记录）", defaultValue: false);
 		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表完整显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列）。true=开，false=关", defaultValue: true);
 		EnableOneClickUnlock = new ConfigElement<bool>("EnableOneClickUnlock", "被锁住的选项旁显示「一键设置」：把没满足的解锁条件（属性、好感、旗标）改到满足，选项当场解锁。true=开，false=关", defaultValue: true);
-		FlagNoticeSeconds = new ConfigElement<float>("FlagNoticeSeconds", "剧情旗标变化提示在屏幕上停留几秒（按真实时间，开倍速也一样；原版 1 秒）。0=按游戏原样", 4f);
+		FlagNoticeSeconds = new ConfigElement<float>("FlagNoticeSeconds", "旗标、分支的屏幕上方提示停留几秒（按真实时间，开倍速也一样；原版 1 秒）。0=按游戏原样", 4f);
+		TopNoticeScale = new ConfigElement<int>("TopNoticeScale", "旗标、分支的屏幕上方提示的文字大小（百分比，50~150）。调小后同时能排下更多条", 80);
 		FontScale = new ConfigElement<int>("FontScale", "剧情对白的文字大小（百分比，只放大对白框里的字，乘在「游戏文字大小」上）。100=原样，120=大两成", 100);
 		GameFontScale = new ConfigElement<int>("GameFontScale", "游戏里全部文字的大小（百分比，菜单、按钮、数值、对白都放大，适合 Steam Deck 等小屏幕；放得太大有的字会挤出框）。100=原样，120=大两成", 100);
 		AiPanelKey = new ConfigElement<KeyCode>("AiPanelKey", "打开咖啡伴侣窗口的 AI 页并把光标放进输入框的热键（已经在 AI 页时再按一次关上）", KeyCode.F3);

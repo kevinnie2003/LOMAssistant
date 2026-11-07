@@ -110,7 +110,8 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.EnableManualDiceSelection, "骰子手动选择"),
 				Row(ConfigManager.EnableStoryJump, "剧情跳转"),
 				Row(ConfigManager.FontScale, "对白文字大小（%）", 50f, 200f),
-				Row(ConfigManager.FlagNoticeSeconds, "旗标提示停留（秒）", 0f, 30f),
+				Row(ConfigManager.FlagNoticeSeconds, "上方提示停留（秒）", 0f, 30f),
+				Row(ConfigManager.TopNoticeScale, "上方提示文字大小（%）", 50f, 150f),
 				Row(ConfigManager.BranchPanelAutoHide, "分支小窗自动收起（秒）", 0f, 600f),
 			}),
 			("养成", new List<SettingRow>
