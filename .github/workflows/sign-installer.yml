@@ -1,0 +1,51 @@
+name: Sign installer
+
+# 发版前手动运行（tools/signed-installer.sh）：从源码编译安装器，交给 SignPath 签名，签好的 exe 作为 installer-signed 产物留下。
+# 还没配好 SignPath（仓库变量 SIGNPATH_ORGANIZATION_ID 为空）时只编译，产出未签名的 installer-unsigned。
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build installer
+        shell: bash
+        run: |
+          DOTNET=dotnet ./Installer/build-installer.sh
+          mkdir -p out
+          cp "Installer/bin/咖啡伴侣安装器 Installer.exe" out/LOMAssistant-Installer.exe
+      - name: Upload unsigned installer
+        id: unsigned
+        uses: actions/upload-artifact@v7
+        with:
+          name: installer-unsigned
+          path: out/LOMAssistant-Installer.exe
+      - name: Sign with SignPath
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: LOMAssistant
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          # 每次签名要在 SignPath 网页上手动批准，留两小时
+          wait-for-completion-timeout-in-seconds: 7200
+          output-artifact-directory: signed
+      - name: Upload signed installer
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: installer-signed
+          path: signed/LOMAssistant-Installer.exe
