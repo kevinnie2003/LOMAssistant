@@ -69,6 +69,12 @@ public static class ConflictDetector
 						FileLogger.Log($"[冲突检测] 翻译补丁（{assembly.GetName().Name}）也改了 {method.DeclaringType?.Name}.{method.Name}，已兼容，不提示");
 						continue;
 					}
+					// 剧情 Mod 的加载器：只有 Mod 带了对应内容才接管，其余放行，本 Mod 也读它的内容（见 ModScripts）
+					if (assembly != null && IsStoryModLoader(assembly))
+					{
+						FileLogger.Log($"[冲突检测] 剧情 Mod（{assembly.GetName().Name}）也改了 {method.DeclaringType?.Name}.{method.Name}，已兼容，不提示");
+						continue;
+					}
 					if (assembly != null && !owners.ContainsKey(owner))
 					{
 						owners[owner] = assembly;
@@ -237,6 +243,9 @@ public static class ConflictDetector
 	}
 	// 翻译补丁：日语补丁（LOM_JP_…）、英文补丁（LLM 版 FanslationStudio.LegendOfMortal…，XUnity.AutoTranslator），
 	// 和本 Mod 一起装玩家测试过，只是同一处游戏代码各改各的（翻译、字体），不算冲突
+	private static bool IsStoryModLoader(Assembly assembly) => assembly.GetType("Mortal.HookCustomStory") != null
+		|| assembly.GetName().Name.StartsWith("HahuranGongdong", StringComparison.OrdinalIgnoreCase);
+
 	private static bool IsTranslationPatch(string name) => name.StartsWith("LOM_JP_", StringComparison.OrdinalIgnoreCase)
 		|| name.StartsWith("FanslationStudio.LegendOfMortal", StringComparison.OrdinalIgnoreCase)
 		|| name.StartsWith("XUnity.AutoTranslator", StringComparison.OrdinalIgnoreCase);
