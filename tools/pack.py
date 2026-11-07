@@ -49,7 +49,7 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
             z.write(os.path.join(d, f), rel + '/' + f)
 shutil.copyfile(out, os.path.join(base, 'release', '咖啡伴侣 v' + version + '.zip'))
 
-# 不带安装器 exe 的包：传 Nexus（Nexus 会把含 exe 的上传自动隔离），也给安装器被杀毒软件拦截的玩家，其余和完整包一样，手动解压安装
+# 不带安装器 exe 的包：只传 Nexus（Nexus 会把含 exe 的上传自动隔离），其余和完整包一样
 nexus = os.path.join(base, 'LOMAssistant-NoInstaller.zip')
 with zipfile.ZipFile(out) as src, zipfile.ZipFile(nexus, 'w', zipfile.ZIP_DEFLATED) as dst:
     for item in src.infolist():
