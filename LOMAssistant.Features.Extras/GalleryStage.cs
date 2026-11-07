@@ -31,6 +31,7 @@ public sealed partial class Gallery
 	private sealed class Figure
 	{
 		public string Folder, Name;
+		public bool Raw; // 名字是文件夹里的繁体原文
 		public List<string> Moods = new List<string>();
 	}
 
@@ -40,7 +41,16 @@ public sealed partial class Gallery
 		{ "Sister", "小师妹" }, { "Brother1", "大师兄" }, { "Brother2", "二师兄" }, { "Brother3", "三师兄" }, { "Brother4", "四师兄" }, { "Master", "掌门人" },
 	};
 
-	private static readonly Regex FolderPrefix = new Regex(@"^[A-Za-z]+\d*(?:_\d+)?_(?=[^\x00-\x7F])");
+	// 纯英文的其余几个：取游戏人物名表里用这组立绘的人物，游戏里是什么语言就显示什么，取不到用后面的简体
+	private static readonly Dictionary<string, (string Key, string Fallback)> GameNamed = new Dictionary<string, (string, string)>
+	{
+		{ "Snake", ("Character/snake1", "蛇") }, { "Mask1", ("Character/mask1", "蒙面人") }, { "Badguy", ("Character/badguy1", "歹人") },
+		{ "Beggar", ("Character/beggar1", "乞丐") }, { "Stranger", ("Character/stranger1", "路人") }, { "Women", ("Character/women1", "妇人") },
+		{ "Lee1", ("Character/lee1", "李大夫") }, { "BigTrainee", ("Character/big_trainee_2", "唐大鲸") },
+	};
+
+	// 英文前缀可能有几段：Special_001_、Big_Shock_
+	private static readonly Regex FolderPrefix = new Regex(@"^[A-Za-z]+\d*(?:_[A-Za-z]+\d*)*(?:_\d+)?_(?=[^\x00-\x7F])");
 
 	private List<Figure> _figures;
 	private List<string> _sceneBacks;
@@ -76,7 +86,7 @@ public sealed partial class Gallery
 					{
 						if (!figures.TryGetValue(parts[0], out Figure figure))
 						{
-							figure = new Figure { Folder = parts[0], Name = FigureName(parts[0]) };
+							figure = new Figure { Folder = parts[0], Name = FigureName(parts[0]), Raw = !FigureNames.ContainsKey(parts[0]) && !GameNamed.ContainsKey(parts[0]) };
 							figures[parts[0]] = figure;
 						}
 						string mood = parts[1].Substring(0, parts[1].Length - 4);
@@ -119,8 +129,17 @@ public sealed partial class Gallery
 		{
 			return name;
 		}
+		if (GameNamed.TryGetValue(folder, out var named))
+		{
+			return LOMAssistant.Features.Story.StoryAtlas.LibraryText(named.Key, named.Fallback);
+		}
 		return FolderPrefix.Replace(folder, "").Replace('_', '·');
 	}
+
+	// 文件夹里的名字本来就是繁体：繁体界面直接用，不先转简体再转回去（「散髮」转简体成了「散发」，再转回是「散發」）
+	private static string FigureLabel(Figure figure) => figure.Raw && TextConverter.DisplayLanguage == "ChineseTraditional"
+		? figure.Name
+		: TextConverter.ForDisplay(TextConverter.ToSimplifiedUnlessJapanese(figure.Name));
 
 	private static int FigureRank(string folder) => folder.StartsWith("Sister", StringComparison.Ordinal) || folder.StartsWith("Girl", StringComparison.Ordinal) ? 0
 		: folder.StartsWith("Player", StringComparison.Ordinal) ? 1
@@ -438,7 +457,7 @@ public sealed partial class Gallery
 		{
 			var row = new Rect(0f, i * S(36f), width - S(20f), S(34f));
 			if (row.yMax >= _figureScroll.y && row.y <= _figureScroll.y + listHeight
-				&& GUI.Button(row, TextConverter.ForDisplay(TextConverter.ToSimplifiedUnlessJapanese(figures[i].Name)), figures[i] == _figure ? _trackOn : _track))
+				&& GUI.Button(row, FigureLabel(figures[i]), figures[i] == _figure ? _trackOn : _track))
 			{
 				Place(figures[i]);
 			}
@@ -458,7 +477,7 @@ public sealed partial class Gallery
 		for (int i = 0; i < moods.Count; i++)
 		{
 			var row = new Rect(0f, i * S(36f), width - S(20f), S(34f));
-			if (row.yMax >= _moodScroll.y && row.y <= _moodScroll.y + moodBox.height && GUI.Button(row, moods[i], moods[i] == _selected.Mood ? _trackOn : _track))
+			if (row.yMax >= _moodScroll.y && row.y <= _moodScroll.y + moodBox.height && GUI.Button(row, GalleryMoods.Name(moods[i]), moods[i] == _selected.Mood ? _trackOn : _track))
 			{
 				_selected.Mood = moods[i];
 				TrimStage();
