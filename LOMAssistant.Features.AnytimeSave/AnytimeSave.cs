@@ -246,16 +246,21 @@ public partial class AnytimeSave : MonoBehaviour
 		return result;
 	}
 
-	/// <summary>给剧情脚本套上记录/回放包装：台词、选项、掷骰、查询改成 ams_* 调用，数据修改在回放时跳过。</summary>
+	/// <summary>
+	/// 给剧情脚本套上记录/回放包装：台词、选项、掷骰、查询改成 ams_* 调用，数据修改在回放时跳过。
+	/// 剧情 Mod 的剧本（用 Binarizer 的 ext.Get*）会在 if 和局部函数里读旗标、改旗标：读取要记下来回放，
+	/// 修改的参数里可能有读取，回放时也要照样算，所以不跳过整行，只在调用时跳过（__ams_do）。原版剧本没有 ext，还是整行跳过。
+	/// </summary>
 	public static string Transform(string code)
 	{
+		bool modScript = code.Contains("ext.Get");
 		var output = new StringBuilder();
 		foreach (string line in code.Replace("\r\n", "\n").Split('\n'))
 		{
 			string trimmed = line.TrimStart();
-			bool mutate = trimmed.StartsWith("statmodifymanager.") && !trimmed.StartsWith("statmodifymanager.Get");
+			bool mutate = !modScript && trimmed.StartsWith("statmodifymanager.") && !trimmed.StartsWith("statmodifymanager.Get");
 			mutate |= trimmed.StartsWith("runwait(statmodifymanager.");
-			mutate |= Mutators.Any(n => trimmed.StartsWith(n + "("));
+			mutate |= !modScript && Mutators.Any(n => trimmed.StartsWith(n + "("));
 			bool panelCall = Regex.IsMatch(trimmed, @"^runwait\((?:\w*panel|intropanel)\.Open\(");
 			string transformed = Token.Replace(line, delegate (Match m)
 			{
@@ -266,6 +271,9 @@ public partial class AnytimeSave : MonoBehaviour
 				if (n == "dicemenudialog.ResultSelection") return "ams_query('dice.ResultSelection', function() return dicemenudialog.ResultSelection end)";
 				if (k >= line.Length || line[k] != '(') return n;
 				if (Queries.Contains(n)) return "__Q__" + n;
+				// ext.GetTimeValue 只是换算日期，不读游戏状态
+				if (modScript && n.StartsWith("ext.Get") && n != "ext.GetTimeValue") return "__Q__" + n;
+				if (modScript && !mutate && ((n.StartsWith("statmodifymanager.") && !n.StartsWith("statmodifymanager.Get")) || Mutators.Contains(n))) return "__M__" + n;
 				if (n == "say") return "ams_say";
 				if (n == "choose") return "ams_choose";
 				if (n == "choosetimer") return "ams_choosetimer";
@@ -274,11 +282,11 @@ public partial class AnytimeSave : MonoBehaviour
 				if (n == "runwait" && panelCall) return "ams_panel";
 				return n;
 			});
-			transformed = Regex.Replace(transformed, @"__Q__([\w.]+)\s*\(\s*", delegate (Match m)
+			transformed = Regex.Replace(transformed, @"__(Q|M)__([\w.]+)\s*\(\s*", delegate (Match m)
 			{
-				string n = m.Groups[1].Value;
+				string n = m.Groups[2].Value;
 				bool empty = m.Index + m.Length < transformed.Length && transformed[m.Index + m.Length] == ')';
-				return "ams_query('" + n + "', " + n + (empty ? "" : ", ");
+				return (m.Groups[1].Value == "Q" ? "ams_query('" + n + "', " : "__ams_do(") + n + (empty ? "" : ", ");
 			});
 			if (mutate) transformed = "if not __ams_replaying() then __ams_mutate() " + transformed + " end";
 			output.AppendLine(transformed);
@@ -290,6 +298,15 @@ public partial class AnytimeSave : MonoBehaviour
 	{
 		script.Globals["__ams_replaying"] = DynValue.NewCallback((c, a) => DynValue.NewBoolean(Replaying));
 		script.Globals["__ams_mutate"] = DynValue.NewCallback((c, a) => { OnMutate(); return DynValue.Nil; });
+		// 不写进 Replay.lua：它的哈希是随时存档的兼容标识
+		script.Globals["__ams_do"] = DynValue.NewCallback((c, a) =>
+		{
+			if (Replaying) return DynValue.Nil;
+			OnMutate();
+			var args = new DynValue[Math.Max(0, a.Count - 1)];
+			for (int i = 0; i < args.Length; i++) args[i] = a[i + 1];
+			return script.Call(a[0], args);
+		});
 		script.Globals["__ams_busy"] = DynValue.NewCallback((c, a) => { busy = a[0].Boolean; return DynValue.Nil; });
 		script.Globals["__ams_begin"] = DynValue.NewCallback((c, a) => DynValue.NewBoolean(Begin(a[0].String, a[1].String)));
 		script.Globals["__ams_end"] = DynValue.NewCallback((c, a) => { End(a[0]); return DynValue.Nil; });
