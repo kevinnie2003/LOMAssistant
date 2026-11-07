@@ -2,6 +2,10 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.6.3 (2026-11-07)
+
+- **Training Pagoda** (new setting, on by default): a new Training Pagoda button on the title screen plays the demo's Training Pagoda mode, including the deaths only this mode can trigger.
+
 ## 3.6.2 (2026-11-06)
 
 - **Top notice text size** (new setting): sets the text size of the flag and branch notices at the top of the screen. The default is 80%; smaller text fits more lines at once.
