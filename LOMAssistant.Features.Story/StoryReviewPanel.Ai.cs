@@ -773,6 +773,22 @@ public partial class StoryReviewPanel
 	// 展开了的「查了 N 处资料」（按那一组的第一条记）
 	private readonly HashSet<AiChat.Entry> _aiOpenLookups = new HashSet<AiChat.Entry>();
 
+	/// <summary>
+	/// 一条（或连着的一组查资料）消息排好的样子：折好行的文字、气泡宽度、上次画出来的高度。
+	/// 消息多了以后每次刷新都重新折行、量宽度会越来越卡，所以按消息记住；看不见的消息只按记下的高度留空。
+	/// </summary>
+	private sealed class AiRow
+	{
+		public string Key; // 宽度、字号、展开状态等，变了就重排
+		public string Said, Reply, Hint;
+		public float SaidWidth, ReplyWidth, HintWidth;
+		public float Height = -1f;
+	}
+
+	private readonly Dictionary<AiChat.Entry, AiRow> _aiRows = new Dictionary<AiChat.Entry, AiRow>();
+	private GUIStyle _aiRowStyle;
+	private readonly List<(AiRow Row, string Key, float Height)> _aiMeasured = new List<(AiRow, string, float)>();
+
 	private void DrawAiChat(Rect r)
 	{
 		AiStyles();
@@ -963,40 +979,98 @@ public partial class StoryReviewPanel
 			GUILayout.Label(StoryAtlas.Status, _muted);
 		}
 		var shown = AiChat.Shown;
+		// 消息多的时候只画看得见的那些：先按记下的高度算出总高，滚到底（float.MaxValue）时换算成实际位置
+		string baseKey = (int)area.width + "|" + _aiBot.fontSize + "|" + TextConverter.DisplayLanguage + "|" + (persona != null ? persona.Name : "");
+		if (_aiRows.Count > shown.Count + 200)
+		{
+			var keep = new HashSet<AiChat.Entry>(shown);
+			foreach (AiChat.Entry gone in _aiRows.Keys.Where(k => !keep.Contains(k)).ToList())
+			{
+				_aiRows.Remove(gone);
+			}
+		}
+		float total = 0f;
+		foreach (AiRow known in shown.Select(e => _aiRows.TryGetValue(e, out AiRow row) ? row : null).Where(row => row != null && row.Height > 0f))
+		{
+			total += known.Height;
+		}
+		float top = Mathf.Min(_aiScroll.y, Mathf.Max(0f, total - area.height));
+		float y = 0f;
+		_aiMeasured.Clear();
 		for (int i = 0; i < shown.Count; i++)
 		{
 			AiChat.Entry entry = shown[i];
+			int end = i;
+			if (entry.Kind == AiChat.Kind.Activity)
+			{
+				while (end + 1 < shown.Count && shown[end + 1].Kind == AiChat.Kind.Activity)
+				{
+					end++;
+				}
+			}
+			bool busyTail = end == shown.Count - 1 && AiChat.Busy;
+			string key = baseKey + "|" + (end - i) + "|" + _aiOpenLookups.Contains(entry) + "|" + busyTail + "|" + entry.State;
+			if (!_aiRows.TryGetValue(entry, out AiRow cached))
+			{
+				_aiRows[entry] = cached = new AiRow();
+			}
+			if (cached.Key != key)
+			{
+				cached.Key = key;
+				cached.Height = -1f;
+				cached.Said = cached.Reply = cached.Hint = null;
+			}
+			// 记过高度、又离看得见的地方超过一屏的，只留空
+			if (cached.Height > 0f && (y + cached.Height < top - area.height || y > top + area.height * 2f))
+			{
+				GUILayout.Space(cached.Height);
+				y += cached.Height;
+				i = end;
+				continue;
+			}
+			// 不用 GUIStyle.none：那样里面第一条、最后一条的外边距会算到组外面，留空时高度对不上
+			_aiRowStyle ??= new GUIStyle();
+			GUILayout.BeginVertical(_aiRowStyle);
 			switch (entry.Kind)
 			{
 				case AiChat.Kind.User:
 					// 玩家的话靠右
+					if (cached.Said == null)
+					{
+						cached.Said = Wrap(TextConverter.Verbatim + Escape(entry.Text), _aiUser, bubbleMax - _aiUser.padding.horizontal);
+						cached.SaidWidth = BubbleWidth(cached.Said, _aiUser, bubbleMax);
+					}
 					GUILayout.BeginHorizontal();
 					GUILayout.FlexibleSpace();
-					string said = Wrap(TextConverter.Verbatim + Escape(entry.Text), _aiUser, bubbleMax - _aiUser.padding.horizontal);
-					GUILayout.Label(said, _aiUser, GUILayout.Width(BubbleWidth(said, _aiUser, bubbleMax)));
+					GUILayout.Label(cached.Said, _aiUser, GUILayout.Width(cached.SaidWidth));
 					GUILayout.EndHorizontal();
 					break;
 				case AiChat.Kind.Assistant:
 					GUILayout.Label(persona != null ? TextConverter.ForDisplay(persona.Name) : "攻略助手", _aiName);
 				{
 					// 女主角说的话放气泡；「【攻略提示】」往后是旁白写给玩家的，单独一个淡色框
-					int cut = persona != null ? entry.Text.IndexOf("【攻略提示】", System.StringComparison.Ordinal) : -1;
-					string words = cut >= 0 ? entry.Text.Substring(0, cut).Trim() : entry.Text;
-					string hint = cut >= 0 ? entry.Text.Substring(cut + "【攻略提示】".Length).Trim() : "";
-					if (words.Length > 0)
+					float hintWidth = area.width - S(30) - _aiHintBox.margin.left - _aiHintBox.padding.horizontal;
+					if (cached.Reply == null)
+					{
+						int cut = persona != null ? entry.Text.IndexOf("【攻略提示】", System.StringComparison.Ordinal) : -1;
+						string words = cut >= 0 ? entry.Text.Substring(0, cut).Trim() : entry.Text;
+						string hint = cut >= 0 ? entry.Text.Substring(cut + "【攻略提示】".Length).Trim() : "";
+						cached.Reply = words.Length > 0 ? Wrap(TextConverter.Verbatim + RichFromMarkdown(words), _aiBot, area.width - S(30) - _aiBot.padding.horizontal) : "";
+						cached.ReplyWidth = words.Length > 0 ? BubbleWidth(cached.Reply, _aiBot, area.width - S(30)) : 0f;
+						cached.Hint = hint.Length > 0 ? Wrap(TextConverter.Verbatim + RichFromMarkdown(hint), _aiHintText, hintWidth - _aiHintText.padding.horizontal) : "";
+					}
+					if (cached.Reply.Length > 0)
 					{
 						GUILayout.BeginHorizontal();
-						string reply = Wrap(TextConverter.Verbatim + RichFromMarkdown(words), _aiBot, area.width - S(30) - _aiBot.padding.horizontal);
-						GUILayout.Label(reply, _aiBot, GUILayout.Width(BubbleWidth(reply, _aiBot, area.width - S(30))));
+						GUILayout.Label(cached.Reply, _aiBot, GUILayout.Width(cached.ReplyWidth));
 						GUILayout.FlexibleSpace();
 						GUILayout.EndHorizontal();
 					}
-					if (hint.Length > 0)
+					if (cached.Hint.Length > 0)
 					{
 						GUILayout.BeginVertical(_aiHintBox, GUILayout.MaxWidth(area.width - S(30)));
 						GUILayout.Label("<b>攻略提示</b>", _aiHintTitle);
-						float hintWidth = area.width - S(30) - _aiHintBox.margin.left - _aiHintBox.padding.horizontal;
-						GUILayout.Label(Wrap(TextConverter.Verbatim + RichFromMarkdown(hint), _aiHintText, hintWidth - _aiHintText.padding.horizontal), _aiHintText, GUILayout.Width(hintWidth));
+						GUILayout.Label(cached.Hint, _aiHintText, GUILayout.Width(hintWidth));
 						GUILayout.EndVertical();
 					}
 					break;
@@ -1004,13 +1078,8 @@ public partial class StoryReviewPanel
 				case AiChat.Kind.Activity:
 				{
 					// 连着的查资料并成一行「查了 N 处资料」，点开看明细
-					int end = i;
-					while (end + 1 < shown.Count && shown[end + 1].Kind == AiChat.Kind.Activity)
-					{
-						end++;
-					}
 					bool open = _aiOpenLookups.Contains(entry);
-					bool last = end == shown.Count - 1 && AiChat.Busy;
+					bool last = busyTail;
 					if (!last && GUILayout.Button(string.Format(open ? "▾ 查了 {0} 处资料" : "▸ 查了 {0} 处资料", end - i + 1), _aiFold))
 					{
 						if (open)
@@ -1068,7 +1137,23 @@ public partial class StoryReviewPanel
 					GUILayout.Label("<color=#A3302A>" + Escape(entry.Text) + "</color>", _rich);
 					break;
 			}
+			GUILayout.EndVertical();
+			// 画完量一下高度；整轮画完再记，免得同一次刷新里前后两遍排得不一样
+			if (Event.current.type == EventType.Repaint)
+			{
+				_aiMeasured.Add((cached, key, GUILayoutUtility.GetLastRect().height));
+			}
+			y += cached.Height > 0f ? cached.Height : 0f;
+			i = end;
 		}
+		foreach (var (row, rowKey, height) in _aiMeasured)
+		{
+			if (row.Key == rowKey && height > 0f)
+			{
+				row.Height = height;
+			}
+		}
+		_aiMeasured.Clear();
 		if (AiChat.Busy && AiChat.Partial.Length > 0)
 		{
 			// 一边收一边显示
