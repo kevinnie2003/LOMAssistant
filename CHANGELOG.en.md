@@ -2,6 +2,13 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.6.4 (2026-11-07)
+
+- **Installer**: fewer false positives from antivirus software.
+- **Duel rework**: this setting is removed. Enemies adapting to stamina, health and the command you keep repeating is now part of **Stronger duel enemies** (formerly Scale duel enemies).
+- **Gallery**: the Portraits page shows character and expression names from the game in the UI language instead of English file names.
+- **AI Companion**: no more lag when a chat has many messages.
+
 ## 3.6.3 (2026-11-07)
 
 - **Training Pagoda** (new setting, on by default): a new Training Pagoda button on the title screen plays the demo's Training Pagoda mode, including the deaths only this mode can trigger.
