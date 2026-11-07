@@ -146,13 +146,9 @@ Also:
 
 ### Combat
 
-**Duel rework**: winning a counter gives an extra effect (such as a follow-up hit, locking one of the target's commands next round, making an ultimate miss, weakening the target, or a counter), and the same rules apply to both sides. Enemies also adapt to stamina, health and the command you keep repeating. A guide appears in your first duel
-
-<img src="media/duel-rework.webp" width="640" alt="Duel rework guide: counters are unchanged, but winning adds an effect">
-
 Switches in the combat group of the settings page (F8):
 
-- Scale duel enemies: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones
+- Stronger duel enemies: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones. Enemies also choose moves based on both sides' stamina and health and on the move you keep repeating
 - Duel enemy forecast: shows the enemy's chosen move; the window can be moved and resized
 - Death-on-defeat notice (spoilers): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death; deaths caused by options are not shown
 - Duel round events (spoilers): when reaching a round in a duel ends the fight or changes a flag, the top of the screen shows the next such round

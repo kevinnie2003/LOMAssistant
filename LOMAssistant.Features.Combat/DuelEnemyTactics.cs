@@ -9,7 +9,7 @@ using UnityEngine;
 namespace LOMAssistant.Features.Combat;
 
 /// <summary>
-/// 决斗玩法重做（设置「决斗玩法重做」）的敌人出招：敌人原本的出招概率几乎平均，无从判断。
+/// 决斗敌人增强（设置「决斗敌人增强」）的敌人出招：敌人原本的出招概率几乎平均，无从判断。
 /// 现在以原有概率为底，再按看得见的局面调整：气多偏绝招，气少偏嘴攻和备揍，血少偏备揍和绝招，
 /// 主角气足时偏嘴攻防绝招，主角连续出同一招时偏克制那一招。剧情强制的出招不受影响。
 /// </summary>
@@ -105,7 +105,7 @@ internal static class DuelEnemyTactics
 	public static bool Choose(CombatActionController __instance, ref CombatActionResult __result)
 	{
 		CombatManager manager = CombatManager.Instance;
-		if (!ConfigManager.DuelRework.Value || manager == null || __instance != manager.EnemyAction)
+		if (!ConfigManager.DuelEnemyGrowth.Value || manager == null || __instance != manager.EnemyAction)
 		{
 			return true;
 		}

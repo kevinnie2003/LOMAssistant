@@ -135,8 +135,7 @@ public partial class StoryReviewPanel
 			}),
 			("战斗", new List<SettingRow>
 			{
-				Row(ConfigManager.DuelRework, "决斗玩法重做"),
-				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人随主角成长"),
+				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人增强"),
 				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
 				Row(ConfigManager.FightDeathHint, "战斗失败死亡提示"),
 				Row(ConfigManager.FightRoundHint, "战斗回合事件提示"),
