@@ -1243,7 +1243,25 @@ internal class InstallerForm : Form
 			input.CopyTo(output);
 		}
 		string extracted = Path.Combine(temp, "files");
-		ZipFile.ExtractToDirectory(zip, extracted, Encoding.UTF8);
+		// 只解出要装进游戏的文件：压缩包里的安装器 exe 解到临时文件夹会被杀毒软件当成木马隔离
+		using (ZipArchive archive = ZipFile.Open(zip, ZipArchiveMode.Read, Encoding.UTF8))
+		{
+			foreach (ZipArchiveEntry entry in archive.Entries)
+			{
+				string rel = entry.FullName.Replace('/', '\\');
+				if (entry.Name.Length == 0 || !IsPayload(rel))
+				{
+					continue;
+				}
+				string target = Path.GetFullPath(Path.Combine(extracted, rel));
+				if (!target.StartsWith(Path.GetFullPath(extracted) + "\\", StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+				Directory.CreateDirectory(Path.GetDirectoryName(target));
+				entry.ExtractToFile(target, true);
+			}
+		}
 		if (DllVersion(Path.Combine(extracted, ModDll)) == null)
 		{
 			throw new InvalidDataException(L("下载的压缩包里没有 Mod 文件"));
@@ -1317,6 +1335,9 @@ internal class InstallerForm : Form
 
 	private static readonly string[] PayloadFiles = { "winhttp.dll", "doorstop_config.ini", ".doorstop_version", "changelog.txt" };
 	private static readonly string[] PayloadFolders = { @"BepInEx\core", @"BepInEx\plugins\LOMAssistant" };
+
+	private static bool IsPayload(string rel) => PayloadFiles.Any(name => rel.Equals(name, StringComparison.OrdinalIgnoreCase))
+		|| PayloadFolders.Any(dir => rel.StartsWith(dir + "\\", StringComparison.OrdinalIgnoreCase));
 
 	private int CopyTree(string source, string dest)
 	{
