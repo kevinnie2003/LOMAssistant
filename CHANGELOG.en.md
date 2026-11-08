@@ -2,6 +2,13 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.6.6 (2026-11-08)
+
+- **Gallery Animations page** (new, PR #48): plays the game's frame-by-frame animations of character battle moves and effects, with adjustable frame rate and background, and exports transparent GIFs (to the desktop by default).
+- **Gallery Music page**: a player bar at the bottom with pause and resume, showing the current time and track length.
+- **Enemy morale in battles**: this setting is removed.
+- **Installer**: every version now ships the same installer file, so browsers and antivirus software block it less as more people download it.
+
 ## 3.6.5 (2026-11-08)
 
 - **Load screen**: when you load from inside the game, "Start a new game" is now at the bottom of the list; on the title screen it stays at the top.
