@@ -2,6 +2,13 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.6.5 (2026-11-08)
+
+- **Load screen**: when you load from inside the game, "Start a new game" is now at the bottom of the list; on the title screen it stays at the top.
+- **Save screen**: the sort button is now at the top right of this list too, sharing one setting with the load screen.
+- **Choice outcomes**: the outcome notes under dialogue choices and dice lines scale with **Game text size**; enlarged dice lines grow taller so they no longer overlap.
+- **Installer**: the banner image is removed, so the file is smaller.
+
 ## 3.6.4 (2026-11-07)
 
 - **Installer**: fewer false positives from antivirus software.
