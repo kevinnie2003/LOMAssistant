@@ -10,7 +10,8 @@ import unicodedata
 
 SKIP_SECTIONS = {'开发', '開發', 'Building'}
 # 只是展示用的徽章，说明文件里不写
-SKIP_BADGES = {'下载次数', '下載次數', 'Downloads', 'ダウンロード数', '다운로드 수'}
+SKIP_BADGES = {'下载次数', '下載次數', 'Downloads', 'ダウンロード数', '다운로드 수',
+               'Star', 'Stars', 'スター', '스타', '最近更新', 'Last update', '最終更新', '최근 업데이트'}
 
 
 def width(text):
