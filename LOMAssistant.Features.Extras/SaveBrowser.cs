@@ -78,7 +78,7 @@ public class SaveBrowser : MonoBehaviour
 	private Font _calligraphy, _serif;
 	private Button _buttonTemplate;
 	private int _tab; // 读档页：0 手动，1 自动
-	private Button _sortButton; // 读档页手动存档的排序：按栏位 / 最近在上
+	private Button _sortButton; // 读档页手动存档、存档页的排序：按栏位 / 最近在上 / 原版（两页共用一个设置）
 	private readonly List<Button> _tabs = new List<Button>();
 	private readonly List<(Entry Entry, Button Button)> _rows = new List<(Entry, Button)>();
 	private int _selected;
@@ -230,22 +230,23 @@ public class SaveBrowser : MonoBehaviour
 		float margin = 56f, top = 150f, bottom = 40f, gap = 36f;
 		float listWidth = Mathf.Round((size.x - margin * 2 - gap) * 0.52f);
 		float detailX = margin + listWidth + gap;
-		float listTop = top + (_isLoad ? 70f : 10f);
+		float listTop = top + 70f;
 		if (_isLoad)
 		{
 			BuildTabs(margin, top);
-			// 手动存档页列表右上角：排序切换（配置 SaveListOrder，按栏位 → 最近在上 → 原版：按栏位、空栏位也列出），字样和「删除」一样，不加边框
-			_sortButton = TextButton(_root, "排序：按栏位");
-			Place((RectTransform)_sortButton.transform, margin + listWidth - 240f, top + 16f, 240f, 40f);
-			_sortButton.GetComponentInChildren<Text>().fontSize = 24;
-			_sortButton.GetComponentInChildren<Text>().alignment = TextAnchor.MiddleRight;
-			_sortButton.onClick.AddListener(() =>
-			{
-				ConfigManager.SaveListOrder.Value = (ConfigManager.SaveListOrder.Value + 1) % 3;
-				_selected = -1;
-				Refresh();
-			});
 		}
+		// 列表右上角：排序切换（配置 SaveListOrder，按栏位 → 最近在上 → 原版：按栏位、空栏位也列出），读档页手动存档和存档页都有、共用一个设置；
+		// 字样和「删除」一样，不加边框
+		_sortButton = TextButton(_root, "排序：按栏位");
+		Place((RectTransform)_sortButton.transform, margin + listWidth - 240f, top + 16f, 240f, 40f);
+		_sortButton.GetComponentInChildren<Text>().fontSize = 24;
+		_sortButton.GetComponentInChildren<Text>().alignment = TextAnchor.MiddleRight;
+		_sortButton.onClick.AddListener(() =>
+		{
+			ConfigManager.SaveListOrder.Value = (ConfigManager.SaveListOrder.Value + 1) % 3;
+			_selected = -1;
+			Refresh();
+		});
 		BuildList(margin, listTop, listWidth, size.y - listTop - bottom);
 		BuildDetail(detailX, top, size.x - detailX - margin, size.y - top - bottom);
 		FileLogger.Log($"[存档界面] {(_isLoad ? "读档" : "存档")}页已换成新界面（{size.x:0}x{size.y:0}）");
@@ -508,7 +509,7 @@ public class SaveBrowser : MonoBehaviour
 			}
 			if (_sortButton != null)
 			{
-				_sortButton.gameObject.SetActive(_isLoad && _tab == 0);
+				_sortButton.gameObject.SetActive(!_isLoad || _tab == 0);
 				int order = ConfigManager.SaveListOrder.Value;
 				_sortButton.GetComponentInChildren<Text>().text = order == 1 ? "排序：最近在上" : order == 2 ? "排序：原版" : "排序：按栏位";
 			}
