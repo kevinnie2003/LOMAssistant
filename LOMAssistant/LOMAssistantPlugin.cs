@@ -120,6 +120,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 				TryPatchAll(typeof(StoryLogEntryPatch));
 			}
 			TryPatchAll(typeof(DeltaColorFit));
+			TryPatchAll(typeof(OptionNoteLayout));
 			OptionHoverHint.Ensure(base.gameObject);
 			LogInfo("选项信息补丁已应用。");
 			TryPatchAll(typeof(DiceManualSelectionPatch));

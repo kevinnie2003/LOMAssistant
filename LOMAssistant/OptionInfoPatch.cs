@@ -902,6 +902,166 @@ internal sealed class OptionHoverHint : MonoBehaviour
 }
 
 /// <summary>
+/// 掷骰线路（DiceOption，TextMeshPro）装不下文字时加高：「游戏文字大小」放大后不再和上下两行叠在一起。
+/// 每次换内容的下一帧（排版好、知道宽度了）量一次文字要多高，比文字框原来的高度多出多少，这一行就加高多少，够了就换回原来的高度。
+/// 线路排在 VerticalLayoutGroup 里，它不管子物体高度（按各自的高度往下排），所以直接改这一行的高度；
+/// 游戏会把高度改回去，所以挂一个小组件，每帧画之前（LateUpdate）按记下的原高度重新设一次。
+/// 对话选项按钮（NormalOptionButton）试过同样加高，按钮和里面的边框图都改了高度，画出来的边框还是原样，没有做。
+/// </summary>
+internal static class OptionNoteLayout
+{
+	private static readonly HashSet<string> Logged = new HashSet<string>();
+
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(DiceOption), "UpdateContent")]
+	public static void DiceOption_Postfix(DiceOption __instance) => Later(__instance);
+
+	// 选中时换成另一个文字框（_highText），再量一次
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(DiceOption), "Select")]
+	public static void DiceSelect_Postfix(DiceOption __instance) => Later(__instance);
+
+	private static void Later(MonoBehaviour row)
+	{
+		if (row != null && row.isActiveAndEnabled)
+		{
+			row.StartCoroutine(FitNextFrame(row));
+		}
+	}
+
+	private static System.Collections.IEnumerator FitNextFrame(MonoBehaviour row)
+	{
+		yield return null;
+		Fit(row);
+	}
+
+	private static void Fit(MonoBehaviour row)
+	{
+		try
+		{
+			if (row == null || !(row.transform is RectTransform rect))
+			{
+				return;
+			}
+			OptionRowFit fit = row.GetComponent<OptionRowFit>() ?? row.gameObject.AddComponent<OptionRowFit>();
+			fit.Remember(rect);
+			float extra = 0f;
+			if (row is DiceOption dice)
+			{
+				foreach (string field in new[] { "_normalText", "_highText" })
+				{
+					TMPro.TMP_Text text = dice.GetFieldValue<TMPro.TMP_Text>(field);
+					if (text != null && text.gameObject.activeInHierarchy)
+					{
+						extra = Mathf.Max(extra, text.preferredHeight - fit.TextHeight(text.rectTransform));
+					}
+				}
+			}
+			fit.Extra = Mathf.Max(0f, Mathf.Ceil(extra));
+			if (fit.Extra > 0f && Logged.Add(row.GetType().Name))
+			{
+				FileLogger.Log($"[选项排版] {row.GetType().Name} 加高 {fit.Extra:0}（原来 {fit.RowHeight:0}）");
+			}
+		}
+		catch (Exception ex)
+		{
+			FileLogger.LogWarning("[选项排版] 选项加高失败: " + ex.Message);
+		}
+	}
+}
+
+/// <summary>挂在选项上：记下这一行、边框图、固定高度的文字框原来的高度和位置，每帧按 <see cref="Extra"/> 加高（顶边不动）。</summary>
+internal class OptionRowFit : MonoBehaviour
+{
+	private struct Part
+	{
+		public RectTransform Rect;
+		public float Height;
+		public Vector2 Position;
+	}
+
+	/// <summary>要加高多少（0 = 原样）。</summary>
+	public float Extra;
+	public float RowHeight { get; private set; }
+
+	private RectTransform _row;
+	private readonly List<Part> _parts = new List<Part>();
+	private readonly Dictionary<int, float> _textHeights = new Dictionary<int, float>();
+
+	/// <summary>第一次量之前记下原来的样子（这时还没改过）。</summary>
+	public void Remember(RectTransform row)
+	{
+		if (_row != null)
+		{
+			return;
+		}
+		_row = row;
+		RowHeight = row.rect.height;
+		foreach (Transform child in row)
+		{
+			// 贴着顶边或底边、固定高度、原来和这一行一样高的子物体：边框图（正常、选中、悬停、不能选各一张）
+			if (child is RectTransform frame && Mathf.Approximately(frame.anchorMin.y, frame.anchorMax.y) && Mathf.Abs(frame.rect.height - RowHeight) <= 1f)
+			{
+				_parts.Add(new Part { Rect = frame, Height = frame.rect.height, Position = frame.anchoredPosition });
+			}
+		}
+	}
+
+	/// <summary>文字框原来的高度。高度固定的文字框（不贴着上下边）也记下来，跟着一起加高。</summary>
+	public float TextHeight(RectTransform box)
+	{
+		int id = box.GetInstanceID();
+		if (!_textHeights.TryGetValue(id, out float height))
+		{
+			height = box.rect.height;
+			_textHeights[id] = height;
+			if (Mathf.Approximately(box.anchorMin.y, box.anchorMax.y) && !_parts.Exists(p => p.Rect == box))
+			{
+				_parts.Add(new Part { Rect = box, Height = height, Position = box.anchoredPosition });
+			}
+		}
+		return height;
+	}
+
+	private void LateUpdate()
+	{
+		if (_row == null)
+		{
+			return;
+		}
+		bool changed = false;
+		float rowHeight = RowHeight + Extra;
+		if (!Mathf.Approximately(_row.rect.height, rowHeight))
+		{
+			_row.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, rowHeight);
+			changed = true;
+		}
+		foreach (Part part in _parts)
+		{
+			// 不用加高时不碰子物体（不打断游戏自己的动画）；加高过又改回原样的，上面已经把这一行换回原高度，子物体这一帧换回原样
+			if (part.Rect == null || (Extra <= 0f && !changed))
+			{
+				continue;
+			}
+			float height = part.Height + Extra;
+			Vector2 position = part.Position - new Vector2(0f, (1f - part.Rect.pivot.y) * Extra);
+			if (!Mathf.Approximately(part.Rect.rect.height, height))
+			{
+				part.Rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+			}
+			if (part.Rect.anchoredPosition.y != position.y)
+			{
+				part.Rect.anchoredPosition = new Vector2(part.Rect.anchoredPosition.x, position.y);
+			}
+		}
+		if (changed && _row.parent is RectTransform parent)
+		{
+			LayoutRebuilder.MarkLayoutForRebuild(parent);
+		}
+	}
+}
+
+/// <summary>
 /// 选项后果的加减默认用深绿、深红（浅色选项底上看得清）。同一句话也会出现在深色底上（暗场景的选项、养成地图的行程表），
 /// 那里的字本身是浅色的：文字设成浅色字时，把深绿、深红换成浅绿、浅红。按字本身的颜色判断底色，不用逐个界面去认。
 /// </summary>
