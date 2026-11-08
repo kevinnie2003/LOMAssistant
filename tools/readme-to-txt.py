@@ -2,7 +2,8 @@
 
 内容和 README 一致，只做格式转换：去掉图片和「开发」一节（玩家用不到），
 标题加下划线，加粗、行内代码去掉标记，链接写成「文字（网址）」，表格转成两列对齐的行。
-用法：python tools/readme-to-txt.py README.md 输出路径
+用法：python tools/readme-to-txt.py README.md 输出路径 [--no-installer]
+--no-installer：给不带安装器的包（N 网版）用，「安装」一节里安装器那段换成去哪下载安装器，卸载写成删 Mod 文件夹。
 """
 import re
 import sys
@@ -32,6 +33,40 @@ def inline(text):
 
 
 Q, A, NOTE = '问：', '答：', '注意：'
+
+# 不带安装器的包：「安装」一节的标题，以及安装器那段、卸载那段换成的话（各语言手写）
+INSTALL_SECTIONS = {'安装', '安裝', 'Install', '導入', '설치'}
+UNINSTALL = ('**卸载**', '**卸載**', '**Uninstall**', '**アンインストール**', '**제거**')
+RELEASES = 'https://github.com/kevinnie2003/LOMAssistant/releases/latest'
+NO_INSTALLER = {
+    'README.md': ('**这个压缩包不带安装器**（N 网版）。想用安装器，可以从 [GitHub](%s)下载 `LOMAssistant-Installer.exe`。',
+                  '**卸载**：删掉游戏目录里的 `BepInEx\\plugins\\LOMAssistant` 文件夹。存档不受影响。'),
+    'README.zh-Hant.md': ('**這個壓縮包不附安裝器**（N 網版）。想用安裝器，可以從 [GitHub](%s)下載 `LOMAssistant-Installer.exe`。',
+                          '**卸載**：刪掉遊戲資料夾裡的 `BepInEx\\plugins\\LOMAssistant` 資料夾。存檔不受影響。'),
+    'README.en.md': ('**This zip has no installer** (Nexus version). To use the installer, download `LOMAssistant-Installer.exe` from [GitHub](%s).',
+                     '**Uninstall**: delete the `BepInEx\\plugins\\LOMAssistant` folder in the game folder. Saves are not touched.'),
+    'README.ja.md': ('**この ZIP にはインストーラーが入っていません**（Nexus 版）。インストーラーを使う場合は [GitHub](%s)から `LOMAssistant-Installer.exe` をダウンロードしてください。',
+                     '**アンインストール**：ゲームフォルダの `BepInEx\\plugins\\LOMAssistant` フォルダを削除します。セーブデータには影響しません。'),
+    'README.ko.md': ('**이 압축 파일에는 설치 프로그램이 없습니다**(Nexus 버전). 설치 프로그램을 쓰려면 [GitHub](%s)에서 `LOMAssistant-Installer.exe`를 내려받으세요.',
+                     '**제거**: 게임 폴더의 `BepInEx\\plugins\\LOMAssistant` 폴더를 지우세요. 저장 데이터에는 영향이 없습니다.'),
+}
+
+
+def without_installer(lines, readme):
+    """「安装」一节里：写安装器的那段换成去哪下载安装器，卸载那段换成删 Mod 文件夹。"""
+    installer, uninstall = NO_INSTALLER[readme]
+    installer = installer % RELEASES
+    out, inside = [], False
+    for line in lines:
+        heading = re.match(r'^## (.+)$', line)
+        if heading:
+            inside = heading.group(1).strip() in INSTALL_SECTIONS
+        elif inside and 'Installer.exe' in line:
+            line = installer
+        elif inside and line.startswith(UNINSTALL):
+            line = uninstall
+        out.append(line)
+    return out
 
 
 def convert(lines):
@@ -113,6 +148,7 @@ def convert(lines):
 
 if __name__ == '__main__':
     src, dst = sys.argv[1], sys.argv[2]
+    no_installer = '--no-installer' in sys.argv[3:]
     # 问答、注意的前缀按 README 的语言写
     if src.endswith('README.zh-Hant.md'):
         Q, A, NOTE = '問：', '答：', '注意：'
@@ -125,7 +161,11 @@ if __name__ == '__main__':
     else:
         Q, A, NOTE = 'Q: ', 'A: ', 'Note: '
         LINK, COLON = '{0} ({1})', ': '
-    text = convert(open(src, encoding='utf-8').read().splitlines())
+    lines = open(src, encoding='utf-8').read().splitlines()
+    if no_installer:
+        import os
+        lines = without_installer(lines, os.path.basename(src))
+    text = convert(lines)
     with open(dst, 'w', encoding='utf-8-sig', newline='\r\n') as f:  # 带 BOM、CRLF：老记事本也不乱码
         f.write(text)
     print('written', dst)

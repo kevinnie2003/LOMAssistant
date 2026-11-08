@@ -35,6 +35,12 @@ shutil.copyfile(os.path.join(repo, 'Installer', 'bin', INSTALLER), os.path.join(
 for readme, manual in MANUALS:
     subprocess.run([sys.executable, '-I', '-X', 'utf8', os.path.join(repo, 'tools', 'readme-to-txt.py'),
                     os.path.join(repo, readme), os.path.join(root, manual)], check=True)
+# 不带安装器的包用的说明：安装一节不叫人双击安装器（生成到 release/pkg-noinstaller，只放说明）
+noinst = os.path.join(base, 'release', 'pkg-noinstaller')
+os.makedirs(noinst, exist_ok=True)
+for readme, manual in MANUALS:
+    subprocess.run([sys.executable, '-I', '-X', 'utf8', os.path.join(repo, 'tools', 'readme-to-txt.py'),
+                    os.path.join(repo, readme), os.path.join(noinst, manual), '--no-installer'], check=True)
 
 out = os.path.join(base, 'LOMAssistant.zip')
 with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
@@ -49,11 +55,16 @@ with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
             z.write(os.path.join(d, f), rel + '/' + f)
 shutil.copyfile(out, os.path.join(base, 'release', '咖啡伴侣 v' + version + '.zip'))
 
-# 不带安装器 exe 的包：只传 Nexus（Nexus 会把含 exe 的上传自动隔离），其余和完整包一样
+# 不带安装器 exe 的包：只传 Nexus（Nexus 会把含 exe 的上传自动隔离），说明换成不带安装器的版本，其余和完整包一样
 nexus = os.path.join(base, 'LOMAssistant-NoInstaller.zip')
+manual_names = {m for _, m in MANUALS}
 with zipfile.ZipFile(out) as src, zipfile.ZipFile(nexus, 'w', zipfile.ZIP_DEFLATED) as dst:
     for item in src.infolist():
-        if not item.filename.endswith('.exe'):
+        if item.filename.endswith('.exe'):
+            continue
+        if item.filename in manual_names:
+            dst.writestr(item, open(os.path.join(noinst, item.filename), 'rb').read())
+        else:
             dst.writestr(item, src.read(item.filename))
 print('nexus zip', os.path.getsize(nexus), 'bytes')
 
