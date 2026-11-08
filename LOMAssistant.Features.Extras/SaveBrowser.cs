@@ -37,6 +37,9 @@ public class SaveBrowser : MonoBehaviour
 
 	private const string NewGame = "新游戏";
 
+	/// <summary>在标题画面打开的读档页：「开始新游戏」放最上面；游戏里读档时放最下面，免得想读最新存档时误点开新游戏。</summary>
+	private static bool AtTitle => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Title";
+
 	private static readonly (string Category, string Name)[] AutoGroups = { ("auto", "剧情"), ("auto_free", "养成"), ("auto_battle", "战斗") };
 
 	/// <summary>心上人（游戏数值 lover）对应的立绘。</summary>
@@ -537,7 +540,7 @@ public class SaveBrowser : MonoBehaviour
 
 	private List<Entry> ManualEntries(bool includeEmpty) => SortManual(ManualEntriesBySlot(includeEmpty));
 
-	// 设置里选了「最近在上」：「开始新游戏」仍在最上面，有存档的按保存时间从新到旧，空栏位放最后（按栏位号）。
+	// 设置里选了「最近在上」：「开始新游戏」在标题画面放最上面、游戏里放最下面，有存档的按保存时间从新到旧，空栏位放最后（按栏位号）。
 	// 存档页最上面先放第一个空栏位，存新档不用滚到最底下，也不会只能覆盖最新那个
 	private static List<Entry> SortManual(List<Entry> list)
 	{
@@ -546,7 +549,8 @@ public class SaveBrowser : MonoBehaviour
 			return list;
 		}
 		Entry firstEmpty = list.FirstOrDefault(e => e.Caption != NewGame && e.Data == null);
-		return list.OrderBy(e => e.Caption == NewGame || e == firstEmpty ? 0 : e.Data != null ? 1 : 2)
+		bool atTitle = AtTitle;
+		return list.OrderBy(e => e.Caption == NewGame ? (atTitle ? 0 : 3) : e == firstEmpty ? 0 : e.Data != null ? 1 : 2)
 			.ThenByDescending(e => e.Caption != NewGame && e.Data != null ? e.Data.TimeTick : 0L)
 			.ToList();
 	}
@@ -557,6 +561,7 @@ public class SaveBrowser : MonoBehaviour
 		if (_isLoad)
 		{
 			LoadSlotPanel[] slots = Traverse.Create(_panel).Field("_saveSlots").GetValue<LoadSlotPanel[]>() ?? new LoadSlotPanel[0];
+			Entry newGame = null;
 			for (int i = 0; i < slots.Length; i++)
 			{
 				LoadSlotPanel slot = slots[i];
@@ -564,19 +569,23 @@ public class SaveBrowser : MonoBehaviour
 				GameSave data = SaveSystem.Instance.GetSaveData(name);
 				if (data == null)
 				{
-					// 原来的界面点空栏位就是开新游戏：最上面放一条「开始新游戏」，用第一个空栏位；
+					// 原来的界面点空栏位就是开新游戏：放一条「开始新游戏」，用第一个空栏位，标题画面放最上面、游戏里放最下面；
 					// 选了「含空栏位」就和原版一样，每个空栏位留在原位，点哪格就在哪格开新游戏
 					if (ConfigManager.SaveListOrder.Value == 2)
 					{
 						list.Add(new Entry { Slot = name, Label = SlotLabel(name), Caption = NewGame, Compact = true, Primary = () => slot.OnTitleClick() });
 					}
-					else if (!list.Any(e => e.Caption == NewGame))
+					else if (newGame == null)
 					{
-						list.Insert(0, new Entry { Slot = name, Label = SlotLabel(name), Caption = NewGame, Compact = true, Primary = () => slot.OnTitleClick() });
+						newGame = new Entry { Slot = name, Label = SlotLabel(name), Caption = NewGame, Compact = true, Primary = () => slot.OnTitleClick() };
 					}
 					continue;
 				}
 				list.Add(new Entry { Slot = name, Label = SlotLabel(name), Data = data, CanNote = true, CanDelete = true, Primary = () => slot.OnTitleClick() });
+			}
+			if (newGame != null)
+			{
+				list.Insert(AtTitle ? 0 : list.Count, newGame);
 			}
 		}
 		else
