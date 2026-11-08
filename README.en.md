@@ -187,7 +187,7 @@ Changing values or flags at random can break the story; save first.
 - **Export legend**: export this playthrough's legend as a txt at any time from Status → Legend.
 - **Faster start**: the title animation is sped up, and the installer can skip the opening logos.
 - **Training Pagoda**: the Training Pagoda button on the title screen plays the demo's Training Pagoda mode, including the deaths only this mode can trigger.
-- **Gallery**: the Gallery button on the title screen has CG, Portraits and Music pages and supports gamepads. CGs appear once you have seen them (all scene images are open, and a switch on the page shows locked content). The Portraits page lets you pick a background, place characters and change variants, then hide the UI for screenshots. Music has all 39 official soundtrack tracks.
+- **Gallery**: the Gallery button on the title screen has CG, Portraits, Animations and Music pages and supports gamepads. CGs appear once you have seen them (all scene images are open, and a switch on the page shows locked content). The Portraits page lets you pick a background, place characters and change variants, then hide the UI for screenshots. The Animations page plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs. Music has all 39 official soundtrack tracks, with pause and playback progress.
 - **Also**: choose who appears on the title screen, or show everyone; the lecture hall shows how to reach each ending and death, or everything unlocked; the game can keep running in the background; the window's top right shows each version's changes and a red note when a new version is out.
 
 ## FAQ
