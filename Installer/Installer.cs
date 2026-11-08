@@ -132,6 +132,34 @@ internal class InstallerForm : Form
 
 	[System.Runtime.InteropServices.DllImport("user32.dll")]
 	private static extern bool PrintWindow(IntPtr hwnd, IntPtr hdc, uint flags);
+
+	[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+	private struct NativeRect
+	{
+		public int Left, Top, Right, Bottom;
+	}
+
+	[System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+	private static extern int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out NativeRect value, int size);
+
+	/// <summary>窗口看得见的部分（屏幕坐标，不含四周看不见的拉伸边框）；取不到就用整个窗口。</summary>
+	private Rectangle VisibleBounds()
+	{
+		const int ExtendedFrameBounds = 9;
+		try
+		{
+			if (DwmGetWindowAttribute(Handle, ExtendedFrameBounds, out NativeRect r, System.Runtime.InteropServices.Marshal.SizeOf(typeof(NativeRect))) == 0
+				&& r.Right > r.Left && r.Bottom > r.Top)
+			{
+				return Rectangle.FromLTRB(r.Left, r.Top, r.Right, r.Bottom);
+			}
+		}
+		catch (Exception)
+		{
+			// 老系统没有 dwmapi：用整个窗口
+		}
+		return Bounds;
+	}
 	private readonly string _diagLog = DiagLogArg;
 
 	public InstallerForm(string game, string autoLog)
@@ -312,7 +340,16 @@ internal class InstallerForm : Form
 						PrintWindow(Handle, hdc, 2);
 						g.ReleaseHdc(hdc);
 					}
-					bitmap.Save(ShotArg, System.Drawing.Imaging.ImageFormat.Png);
+					// Windows 10/11 的窗口四周有一圈看不见的拉伸边框，加上系统画的细边框线，PrintWindow 都画成黑边：
+					// 上面从看得见的窗口顶边（留着标题栏）开始，左、右、下贴着内容区裁
+					Rectangle visible = VisibleBounds();
+					Rectangle client = RectangleToScreen(ClientRectangle);
+					var crop = Rectangle.FromLTRB(client.Left - Left, visible.Top - Top, client.Right - Left, client.Bottom - Top);
+					crop.Intersect(new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+					using (Bitmap shot = crop.Width > 0 && crop.Height > 0 ? bitmap.Clone(crop, bitmap.PixelFormat) : (Bitmap)bitmap.Clone())
+					{
+						shot.Save(ShotArg, System.Drawing.Imaging.ImageFormat.Png);
+					}
 				}
 				Close();
 			};
