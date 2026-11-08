@@ -685,7 +685,7 @@ public sealed partial class Gallery
 		float left = S(40f);
 		float width = screen.width - S(80f);
 
-		// 导出位置：默认在本 Mod 目录下的 GalleryGif，可以在这里改，目录不存在会自动建
+		// 导出位置：默认是桌面，可以在这里改，目录不存在会自动建
 		if (_frameExportDirEdit == null)
 		{
 			_frameExportDirEdit = ConfigManager.GalleryFrameExportDir.Value ?? "";
