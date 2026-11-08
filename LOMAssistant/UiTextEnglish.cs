@@ -1476,6 +1476,7 @@ public static class UiTextEnglish
 		["动图"] = "Animations",
 		["播放"] = "Play",
 		["暂停"] = "Pause",
+		["继续"] = "Resume",
 		["帧率"] = "FPS",
 		["循环开"] = "Loop on",
 		["循环关"] = "Loop off",

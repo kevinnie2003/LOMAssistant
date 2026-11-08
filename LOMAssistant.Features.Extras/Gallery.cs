@@ -239,6 +239,8 @@ public sealed partial class Gallery : MonoBehaviour
 		{
 			_musicChanged = false;
 			_playing = null;
+			_musicId = 0;
+			_musicPaused = false;
 			SoundManager.Instance.StopMusic();
 			MusicData music = TitleManager.Instance != null ? Traverse.Create(TitleManager.Instance).Field("_musicData").GetValue<MusicData>() : null;
 			if (music != null)
@@ -851,23 +853,10 @@ public sealed partial class Gallery : MonoBehaviour
 			var cell = new Rect(body.x + i / rows * (width + gap), body.y + i % rows * (height + gap), width, height);
 			if (GUI.Button(cell, track.Title, track == _playing ? _trackOn : _track))
 			{
-				SoundManager.Instance.StopMusic();
-				SoundManager.Instance.ResetMusic();
-				SoundManager.Instance.PlayMusic(track.Key);
-				_playing = track;
-				_musicChanged = true;
+				PlayTrack(track);
 			}
 		}
-		float y = body.yMax - S(46f);
-		GUI.Label(new Rect(body.x, y, body.width - S(160f), S(46f)), _playing != null ? string.Format(TextConverter.ForDisplay("正在播放：{0}"), _playing.Title) : TextConverter.ForDisplay("点曲名播放"), _body);
-		GUI.enabled = _playing != null;
-		if (GUI.Button(new Rect(body.xMax - S(140f), y, S(140f), S(46f)), TextConverter.ForDisplay("停止"), _button))
-		{
-			SoundManager.Instance.StopMusic();
-			_playing = null;
-			_musicChanged = true;
-		}
-		GUI.enabled = true;
+		DrawMusicPlayer(new Rect(body.x, body.yMax - S(96f), body.width, S(96f)));
 	}
 }
 
