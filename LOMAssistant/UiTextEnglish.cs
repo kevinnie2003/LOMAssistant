@@ -1432,7 +1432,6 @@ public static class UiTextEnglish
 		["特效"] = "Effects",
 		["剧情"] = "Story",
 		["粒子"] = "Particle",
-		["剧情插图"] = "Story art",
 		["共 {0} 个"] = "{0} in total",
 		["杂兵"] = "Grunts",
 		["飞石帮"] = "Flying Stone Gang",

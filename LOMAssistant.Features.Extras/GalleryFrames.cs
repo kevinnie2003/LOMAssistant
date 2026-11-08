@@ -20,7 +20,7 @@ public sealed partial class Gallery
 {
 	private const float FrameCharWidth = 250f;
 	private const float FrameClipWidth = 230f;
-	private const float FrameRowHeight = 44f;
+	private const float FrameRowHeight = 58f;
 	private const float FrameStageBarHeight = 150f;
 
 	private static readonly Regex FrameName = new Regex(@"^(.*?)[._-]?(\d+)$");
@@ -43,12 +43,13 @@ public sealed partial class Gallery
 		return false;
 	}
 
-	/// <summary>一级分类：动图都在这一页里分开放。
+	/// <summary>列表排序：角色在前、特效在后。特效只有一个包，不单独分类，都在一个列表里。
 	/// 立绘（portrait_*）不算：那里绝大多数是静态表情差分，而且是「立绘」页签的活。</summary>
-	private static readonly string[] FrameCategories = { AllKinds, "角色", "特效", "剧情" };
+	private static readonly string[] FrameCategories = { "角色", "特效" };
 
-	/// <summary>带序列帧的资源包前缀：其余包（背景、道具、书、视频、立绘）没有逐帧动画，不列出来。</summary>
-	private static readonly string[] FrameBundlePrefixes = { "battle_", "particle", "picture" };
+	/// <summary>带序列帧的资源包前缀：其余包（背景、道具、书、视频、立绘）没有逐帧动画，不列出来。
+	/// picture_*（剧情插图）按编号排着的是不同的插图，不是动画；combat* 是决斗里每个角色的几张单张姿势图，也不是动画。</summary>
+	private static readonly string[] FrameBundlePrefixes = { "battle_", "particle" };
 
 	/// <summary>包名 → 游戏里的名字。没列到的按 FrameTitleOf 里的规则推。</summary>
 	private static readonly Dictionary<string, string> FrameTitles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -94,7 +95,6 @@ public sealed partial class Gallery
 	private AssetBundle _frameBundle;
 	private Coroutine _frameLoadRoutine;
 	private string _frameSearch = "";
-	private string _frameKind = AllKinds;
 	private Vector2 _frameCharScroll, _frameClipScroll;
 	private int _frameIndex;
 	private bool _framePlaying, _frameLoop = true, _frameLoading, _frameExporting;
@@ -102,7 +102,7 @@ public sealed partial class Gallery
 	private string _frameNotice = "";
 	private float _frameNoticeUntil;
 	private string _frameExportResult;
-	private GUIStyle _frameRow, _frameRowOn, _frameSmall;
+	private GUIStyle _frameRow, _frameRowOn, _frameSmall, _frameName, _frameNameOn, _frameHint;
 	private float _frameRowScale = -1f;
 	private float _frameZoom;
 	private string _frameExportDirEdit;
@@ -207,10 +207,6 @@ public sealed partial class Gallery
 		{
 			return "特效";
 		}
-		if (key.StartsWith("picture", StringComparison.OrdinalIgnoreCase))
-		{
-			return "剧情";
-		}
 		if (key.StartsWith("portrait_", StringComparison.OrdinalIgnoreCase)
 			|| key.StartsWith("portarit_", StringComparison.OrdinalIgnoreCase))
 		{
@@ -294,10 +290,6 @@ public sealed partial class Gallery
 		{
 			return "粒子";
 		}
-		if (key.StartsWith("picture", StringComparison.OrdinalIgnoreCase))
-		{
-			return "剧情插图";
-		}
 		if (key.StartsWith("portrait_", StringComparison.OrdinalIgnoreCase)
 			|| key.StartsWith("portarit_", StringComparison.OrdinalIgnoreCase))
 		{
@@ -321,9 +313,8 @@ public sealed partial class Gallery
 		}
 		string search = (_frameSearch ?? "").Trim();
 		_frameCharShown = _frameCharacters
-			.Where(c => (_frameKind == AllKinds || c.Kind == _frameKind)
-				&& (search.Length == 0
-					|| (c.Title + " " + c.Key).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0))
+			.Where(c => search.Length == 0
+				|| (c.Title + " " + c.Key).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0)
 			.ToList();
 		// 当前选中的不在筛选结果里就放下，避免右边还留着别的分类的内容
 		if (_frameCharacter != null && !_frameCharShown.Contains(_frameCharacter))
@@ -486,6 +477,7 @@ public sealed partial class Gallery
 		_frameLoadRoutine = null;
 		if (_frameClips.Count > 0)
 		{
+			FileLogger.Log($"[鉴赏] 动图：{character.Key} 分出 {_frameClips.Count} 段：" + string.Join("、", _frameClips.Select(c => c.Name + "×" + c.Sprites.Count)));
 			SelectClip(_frameClips[0]);
 		}
 		else
@@ -724,39 +716,33 @@ public sealed partial class Gallery
 		_frameRow = new GUIStyle(_track) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
 		_frameRowOn = new GUIStyle(_trackOn) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
 		_frameSmall = PanelTheme.Label(_scale, 16, PanelTheme.InkMuted, wrap: false);
+		// 行里的名字：不带底框，颜色和按钮字一样（选中的那行跟着选中按钮的字色）
+		_frameName = new GUIStyle(_frameSmall) { fontSize = _frameRow.fontSize, clipping = TextClipping.Clip };
+		_frameName.normal.textColor = _track.normal.textColor;
+		_frameNameOn = new GUIStyle(_frameName);
+		_frameNameOn.normal.textColor = _trackOn.normal.textColor;
+		_frameHint = new GUIStyle(_frameSmall) { alignment = TextAnchor.MiddleLeft };
 	}
 
 	private void DrawCharacterList(Rect area)
 	{
 		var search = new Rect(area.x, area.y, area.width, S(40f));
 		string before = _frameSearch;
+		GUI.SetNextControlName("LOMAssistant_FrameSearch");
 		_frameSearch = GUI.TextField(search, _frameSearch ?? "", _field);
+		// 空着、也没在输入时，框里写个淡色的「搜索」提示（竖直居中，点进去就消失）
+		if (string.IsNullOrEmpty(_frameSearch) && GUI.GetNameOfFocusedControl() != "LOMAssistant_FrameSearch")
+		{
+			GUI.Label(new Rect(search.x + S(10f), search.y, search.width - S(20f), search.height), TextConverter.ForDisplay("搜索"), _frameHint);
+		}
 		if (_frameSearch != before)
 		{
 			RefreshCharacters();
 		}
-		// 一级分类：角色 / 特效 / 剧情 / 立绘，都在这一个页签里分开放
-		float gap = S(5f);
-		int count = FrameCategories.Length;
-		float cell = (area.width - gap * (count - 1)) / count;
-		for (int i = 0; i < count; i++)
-		{
-			var box = new Rect(area.x + i * (cell + gap), search.yMax + S(8f), cell, S(34f));
-			if (GUI.Button(box, TextConverter.ForDisplay(FrameCategories[i]), _frameKind == FrameCategories[i] ? _trackOn : _track))
-			{
-				_frameKind = FrameCategories[i];
-				RefreshCharacters();
-				if (_frameCharacter == null && _frameCharShown.Count > 0)
-				{
-					SelectCharacter(_frameCharShown[0]);
-				}
-			}
-		}
-
-		GUI.Label(new Rect(area.x, search.yMax + S(8f) + S(34f) + S(4f), area.width, S(20f)),
+		GUI.Label(new Rect(area.x, search.yMax + S(4f), area.width, S(26f)),
 			string.Format(TextConverter.ForDisplay("共 {0} 个"), _frameCharShown.Count), _frameSmall);
 
-		float listTop = search.yMax + S(8f) + S(34f) + S(24f);
+		float listTop = search.yMax + S(34f);
 		var list = new Rect(area.x, listTop, area.width, Mathf.Max(S(80f), area.yMax - listTop));
 		float content = Mathf.Max(list.height, _frameCharShown.Count * (S(FrameRowHeight) + S(4f)));
 		_frameCharScroll = GUI.BeginScrollView(list, _frameCharScroll, new Rect(0f, 0f, area.width - S(18f), content));
@@ -769,12 +755,9 @@ public sealed partial class Gallery
 			{
 				SelectCharacter(character);
 			}
-			bool wasEnabled = GUI.enabled;
-			GUI.enabled = false;
 			// 主行是游戏里的名字，副行留着资源包名，方便对照
-			GUI.Label(new Rect(row.x + S(10f), row.y + S(3f), row.width - S(20f), S(22f)), TextConverter.ForDisplay(character.Title), _frameRow);
-			GUI.Label(new Rect(row.x + S(10f), row.y + S(23f), row.width - S(20f), S(18f)), character.Key, _frameSmall);
-			GUI.enabled = wasEnabled;
+			GUI.Label(new Rect(row.x + S(12f), row.y + S(4f), row.width - S(24f), S(28f)), TextConverter.ForDisplay(character.Title), on ? _frameNameOn : _frameName);
+			GUI.Label(new Rect(row.x + S(12f), row.y + S(31f), row.width - S(24f), S(24f)), character.Key, _frameSmall);
 		}
 		GUI.EndScrollView();
 	}
@@ -803,12 +786,9 @@ public sealed partial class Gallery
 			{
 				SelectClip(clip);
 			}
-			bool wasEnabled = GUI.enabled;
-			GUI.enabled = false;
-			GUI.Label(new Rect(row.x + S(10f), row.y + S(3f), row.width - S(20f), S(22f)), clip.Name, _frameRow);
-			GUI.Label(new Rect(row.x + S(10f), row.y + S(23f), row.width - S(20f), S(18f)),
+			GUI.Label(new Rect(row.x + S(12f), row.y + S(4f), row.width - S(24f), S(28f)), clip.Name, on ? _frameNameOn : _frameName);
+			GUI.Label(new Rect(row.x + S(12f), row.y + S(31f), row.width - S(24f), S(24f)),
 				string.Format(TextConverter.ForDisplay("{0} 帧 · {1}×{2}"), clip.Sprites.Count, clip.Width, clip.Height), _frameSmall);
-			GUI.enabled = wasEnabled;
 		}
 		GUI.EndScrollView();
 	}
