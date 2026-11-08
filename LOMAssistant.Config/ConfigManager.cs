@@ -52,7 +52,6 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> BattleCompanions;
 
-	public static ConfigElement<bool> BattleMorale;
 
 	public static ConfigElement<float> GameSpeed;
 	public static ConfigElement<bool> GameSpeedInBattle;
@@ -240,7 +239,7 @@ public static class ConfigManager
 	public static void Init()
 	{
 		// 配置文件已经有了、却还没有选预设弹窗这一项：是从 2.x 更新上来的老玩家，不弹
-		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noMorale = false, noFeel = false, noRoundHint = false, noDeathHint = false;
+		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noFeel = false, noRoundHint = false, noDeathHint = false;
 		try
 		{
 			if (System.IO.File.Exists(Config.ConfigFilePath))
@@ -250,7 +249,6 @@ public static class ConfigManager
 				noDeadline = !raw.Contains("DeadlineReminder");
 				noReadMarks = !raw.Contains("ShowReadMarks");
 				noCompanions = !raw.Contains("BattleCompanions");
-				noMorale = !raw.Contains("BattleMorale");
 				noFeel = !raw.Contains("BattleFeel");
 				noDeathHint = !raw.Contains("FightDeathHint");
 				noRoundHint = !raw.Contains("FightRoundHint");
@@ -292,11 +290,7 @@ public static class ConfigManager
 		{
 			BattleCompanions.Value = true;
 		}
-		// 战役士气、手感优化是新加的，默认开；用着「原汁原味」的老玩家更新上来保持关
-		if (noMorale && !EnableOptionInfo.Value)
-		{
-			BattleMorale.Value = false;
-		}
+		// 战役手感优化是新加的，默认开；用着「原汁原味」的老玩家更新上来保持关
 		if (noFeel && !EnableOptionInfo.Value)
 		{
 			BattleFeel.Value = false;
@@ -500,7 +494,6 @@ public static class ConfigManager
 		CheatBattleNoCooldown = new ConfigElement<bool>("CheatBattleNoCooldown", "战役绝招没有冷却：放完马上又能用。true=开，false=关", defaultValue: false);
 		BattleFeel = new ConfigElement<bool>("BattleFeel", "战役手感优化：修复硬直后方向键失灵；普通攻击自动朝向最近的敌人，判定范围扩大，不消耗气力；主角脚下显示普通攻击范围；平射暗器自动瞄准最近的敌人，蓄力抛射不再落空；击杀缩短绝招冷却，连杀时缩短更多；主角绝招「奋力一击」范围扩大；掉落物拾取范围扩大；主角不再被我方的暗器、陷阱和毒雾误伤；战役结算不再扣除性情和贡献度。true=开，false=关", defaultValue: true);
 		BattleCompanions = new ConfigElement<bool>("BattleCompanions", "战役助战选择：开战面板的绝招列表加入好感度达到 40 的同伴，不再限于剧情指定的同伴。true=开，false=关", defaultValue: false);
-		BattleMorale = new ConfigElement<bool>("BattleMorale", "战役敌军士气：普通战役加入敌军士气。敌兵阵亡、主角击杀、连杀和击败敌方首领都会降低士气，士气归零时敌军溃散，我方获胜。带事件的战役不受影响。true=开，false=关", defaultValue: true);
 		GameSpeed = new ConfigElement<float>("GameSpeed", "游戏倍速（在游戏原本速度上再乘以该值；1=原速）", 1f);
 		GameSpeedInBattle = new ConfigElement<bool>("GameSpeedInBattle", "战役也按游戏倍速：true=战役也加速，false=战役按原速（默认）", defaultValue: false);
 		ActionMode = new ConfigElement<int>("ActionMode", "养成行动点：0=正常，1=不消耗（扣到剩 1 点后不再扣，可一直行动；用「空过」结束本旬），2=每旬固定 N 点（N 见 ActionsPerRound）", 0);

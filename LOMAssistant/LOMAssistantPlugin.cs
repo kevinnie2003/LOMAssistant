@@ -156,7 +156,6 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(BattleCheatPatch));
 			TryPatchAll(typeof(BattleFeelPatch));
 			TryPatchAll(typeof(BattleCompanions));
-			TryPatchAll(typeof(BattleMorale));
 			TryPatchAll(typeof(DuelEnemyGrowth));
 			TryPatchAll(typeof(DuelEnemyTactics));
 			FightDeathHint.Ensure(base.gameObject);

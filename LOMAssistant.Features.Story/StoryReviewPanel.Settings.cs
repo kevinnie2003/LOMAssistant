@@ -146,7 +146,6 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.EnableBattleWin, "战役直接获胜按钮"),
 				Row(ConfigManager.BattleFeel, "战役手感优化"),
 				Row(ConfigManager.BattleCompanions, "战役助战选择"),
-				Row(ConfigManager.BattleMorale, "战役敌军士气"),
 				Row(ConfigManager.CheatBattleInvincible, "战役我方不受伤"),
 				Row(ConfigManager.CheatBattleNoCooldown, "战役绝招无冷却"),
 			}),
