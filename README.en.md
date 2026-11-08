@@ -153,7 +153,7 @@ Switches in the combat group of the settings page (F8):
 - Death-on-defeat notice (spoilers): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death; deaths caused by options are not shown
 - Duel round events (spoilers): when reaching a round in a duel ends the fight or changes a flag, the top of the screen shows the next such round
 - Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
-- Better battle controls: fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy, reach further and cost no stamina, with a ring at your feet showing their range; thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you; battle results no longer cost Temperament or Contribution
+- Better battle controls: fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy and reach further, with a ring at your feet showing their range; thrown knives aim at the nearest enemy and charged throws no longer miss; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you
 - Choose battle allies: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
 
 Also:

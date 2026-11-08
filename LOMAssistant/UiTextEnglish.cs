@@ -1520,7 +1520,7 @@ public static class UiTextEnglish
 		["CheatDuelNoDamage"] = "Your attacks deal 0 damage in duels, so the enemy takes none.",
 		["CheatBattleInvincible"] = "You and your allies take no damage in battles, from hits or poison; enemies take damage as usual.",
 		["CheatBattleNoCooldown"] = "Ultimates in battles have no cooldown and can be used again right away.",
-		["BattleFeel"] = "Fixes direction keys not responding after a stun. Normal attacks turn to the nearest enemy, reach further and cost no stamina, and a ring at your feet shows their range. Thrown knives aim at the nearest enemy, charged throws no longer miss, and kills shorten ultimate cooldowns, more so on a streak. Your own ultimate covers a larger area. Drops are picked up from further away. Weapons, traps and poison clouds from your side no longer hurt you, and battle results no longer cost Temperament or Contribution.",
+		["BattleFeel"] = "Fixes direction keys not responding after a stun. Normal attacks turn to the nearest enemy and reach further, and a ring at your feet shows their range. Thrown knives aim at the nearest enemy and charged throws no longer miss. Your own ultimate covers a larger area. Drops are picked up from further away. Weapons, traps and poison clouds from your side no longer hurt you.",
 		["BattleCompanions"] = "The ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names.",
 		["GameSpeed"] = "Game speed (multiplies the normal speed; 1 = normal).",
 		["GameSpeedInBattle"] = "Apply game speed to battles too: true = battles speed up as well, false = battles run at normal speed (default).",

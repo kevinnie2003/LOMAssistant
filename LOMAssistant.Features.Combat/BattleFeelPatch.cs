@@ -76,13 +76,11 @@ internal sealed class BattleRangeRing : MonoBehaviour
 /// <summary>
 /// 战役手感优化（设置「战役手感优化」，辅助及以上打开，即时生效）。不改敌我数值和胜负规则：
 /// 方向键每帧重读：游戏只在按键变化时读方向，硬直中按下的方向会被清掉，恢复后按住也不走；定身时松手则会一直走下去。
-/// 普攻朝最近的敌人出招，判定半径放大、夹角放宽到正面半圆，不耗气；主角脚下画一圈普攻范围。
+/// 普攻朝最近的敌人出招，判定半径放大、夹角放宽到正面半圆；主角脚下画一圈普攻范围。
 /// 主角绝招「奋力一击」范围加倍，同样朝最近的敌人出招。
 /// 平射暗器飞向最近的敌人（原版只能朝左右），蓄力抛射不限前方，范围内有敌人就不落空。
-/// 击杀缩短绝招冷却，连杀越高缩得越多。
 /// 掉落物拾取范围放大。
 /// 主角不受我方误伤：暗器、神奇球的绳网（定身 5 秒）、毒雾、火海、地雷都不再伤到主角，其他人照旧。
-/// 战役结算不扣属性：反向积极度随时间涨，不挨打 30 秒就到三档，这一档固定扣性情和贡献，打得再好也躲不开。
 /// </summary>
 internal static class BattleFeelPatch
 {
@@ -93,9 +91,6 @@ internal static class BattleFeelPatch
 	private const float PickupRadius = 2.5f;
 	private const float KnifeAimRange = 12f;
 	private const float KnifeFlight = 10f; // 和游戏的水平飞行距离一致
-	private const float KillCooldownCut = 0.5f;
-	private const float StreakCooldownCut = 0.1f;
-	private const int StreakCap = 10;
 
 	// 记在我方毒雾、地雷上的标记
 	private sealed class OurSide : MonoBehaviour
@@ -136,26 +131,6 @@ internal static class BattleFeelPatch
 		if (On)
 		{
 			__result = Mathf.Max(__result, AttackAngle);
-		}
-	}
-
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(PlayerCharacter), nameof(PlayerCharacter.CostAttack1), MethodType.Getter)]
-	public static void AttackCost(ref int __result)
-	{
-		if (On)
-		{
-			__result = 0;
-		}
-	}
-
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(PlayerCharacter), nameof(PlayerCharacter.CanAttack1))]
-	public static void CanAttack(ref bool __result)
-	{
-		if (On)
-		{
-			__result = true;
 		}
 	}
 
@@ -224,24 +199,6 @@ internal static class BattleFeelPatch
 			return false;
 		}
 		return true;
-	}
-
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(GameLevelManager), nameof(GameLevelManager.AddKillProgressLevel01))]
-	public static void CutCooldowns(int ____currentMultiKills)
-	{
-		SkillManager skills = SkillManager.Instance;
-		if (!On || skills == null)
-		{
-			return;
-		}
-		float cut = KillCooldownCut + StreakCooldownCut * Mathf.Min(____currentMultiKills, StreakCap);
-		var tr = Traverse.Create(skills);
-		foreach (string field in new[] { "_button_1", "_button_2", "_button_3", "_button_4" })
-		{
-			var time = Traverse.Create(tr.Field(field).GetValue<SkillButton>()).Field("_currentCooldownTime");
-			time.SetValue(time.GetValue<float>() - cut);
-		}
 	}
 
 	[HarmonyPrefix]
@@ -440,15 +397,5 @@ internal static class BattleFeelPatch
 			return false;
 		}
 		return true;
-	}
-
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(ProgressLevelData), nameof(ProgressLevelData.GetCurrentModifyStat))]
-	public static void NoPenalty(ref MartialModifyStat[] __result)
-	{
-		if (On && __result != null)
-		{
-			__result = __result.Where(stat => stat.Value >= 0).ToArray();
-		}
 	}
 }
