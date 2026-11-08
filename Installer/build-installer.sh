@@ -13,11 +13,13 @@ for n in mscorlib System System.Core System.Drawing System.Windows.Forms System.
 	refs+=("-r:$FW/$n.dll")
 done
 mkdir -p bin obj
-# 版本号跟 Mod 一致，写进 exe 的文件信息
-VERSION="$(sed -n 's/.*AssemblyVersion("\([0-9.]*\)").*/\1/p' ../Properties/AssemblyInfo.cs | head -1)"
-printf '[assembly: System.Reflection.AssemblyVersion("%s")]\n[assembly: System.Reflection.AssemblyFileVersion("%s")]\n[assembly: System.Reflection.AssemblyInformationalVersion("%s")]\n' \
-	"$VERSION" "$VERSION" "${VERSION%.0}" > obj/InstallerVersion.cs
+# 安装器自己的版本号，和 Mod 版本无关：只在安装器代码改了时才加。
+# 安装器不带 Mod 版本号、不带更新内容（都从压缩包里读），同样的代码编出来一个字节都不变，
+# 每次发版放出去的是同一个文件，杀毒软件和 SmartScreen 按文件记的信誉才能一直累积。
+INSTALLER_VERSION=1.0.0
+printf '[assembly: System.Reflection.AssemblyVersion("%s.0")]\n[assembly: System.Reflection.AssemblyFileVersion("%s.0")]\n[assembly: System.Reflection.AssemblyInformationalVersion("%s")]\n' \
+	"$INSTALLER_VERSION" "$INSTALLER_VERSION" "$INSTALLER_VERSION" > obj/InstallerVersion.cs
 "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:winexe -platform:anycpu -langversion:12 -optimize+ -deterministic \
 	-win32manifest:app.manifest -out:"bin/咖啡伴侣安装器 Installer.exe" "${refs[@]}" \
-	-resource:../CHANGELOG.md,Installer.CHANGELOG.md -resource:../CHANGELOG.en.md,Installer.CHANGELOG.en.md -resource:../CHANGELOG.ja.md,Installer.CHANGELOG.ja.md -resource:../CHANGELOG.ko.md,Installer.CHANGELOG.ko.md *.cs obj/InstallerVersion.cs ../LOMAssistant/UiTraditional.cs
+	*.cs obj/InstallerVersion.cs ../LOMAssistant/UiTraditional.cs
 echo "Built Installer/bin/咖啡伴侣安装器 Installer.exe"

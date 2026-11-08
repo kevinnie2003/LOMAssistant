@@ -91,6 +91,9 @@ internal class InstallerForm : Form
 	private static readonly Color Muted = Color.FromArgb(120, 110, 98);
 
 	private readonly string _payload = AppDomain.CurrentDomain.BaseDirectory;
+	// 压缩包里随 Mod 带的更新内容（tools/pack.py 放进去）。安装器自己不带版本号、不带更新内容，
+	// 这样每次发版的安装器一个字节都不变，杀毒软件和 SmartScreen 按文件记的信誉才能一直累积
+	private const string PayloadChangelog = @"BepInEx\plugins\LOMAssistant\CHANGELOG";
 	private readonly TextBox _gameBox = new TextBox { ReadOnly = true, Dock = DockStyle.Fill, BorderStyle = BorderStyle.FixedSingle };
 	private readonly Label _versionFrom = new Label { AutoSize = true, Font = new Font(FontName, 18f, FontStyle.Bold), ForeColor = Color.FromArgb(120, 110, 98), Margin = new Padding(0) };
 	private readonly Label _versionTo = new Label { AutoSize = true, Font = new Font(FontName, 18f, FontStyle.Bold), ForeColor = Color.FromArgb(140, 47, 38), Margin = new Padding(0) };
@@ -98,9 +101,9 @@ internal class InstallerForm : Form
 	private readonly RichTextBox _notes = new RichTextBox { Dock = DockStyle.Fill, ReadOnly = true, BorderStyle = BorderStyle.None, DetectUrls = false, ScrollBars = RichTextBoxScrollBars.Vertical };
 	private readonly Button _tabNotes = new Button { Text = L("更新内容"), AutoSize = true, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0, 0, 4, 0), Padding = new Padding(8, 2, 8, 2) };
 	private readonly Button _tabLog = new Button { Text = L("日志"), AutoSize = true, FlatStyle = FlatStyle.Flat, Cursor = Cursors.Hand, Margin = new Padding(0), Padding = new Padding(8, 2, 8, 2) };
-	private string _changelog = ReadResource("Installer.CHANGELOG.md") ?? "";
+	private string _changelog = ReadPayload(PayloadChangelog + ".md") ?? "";
 	// 更新内容的译文（英、日、韩），没翻的版本照旧显示中文，见 InstallerText.Changelog
-	private string _changelogTranslated = ChangelogSuffix != null ? ReadResource("Installer.CHANGELOG." + ChangelogSuffix + ".md") : null;
+	private string _changelogTranslated = ChangelogSuffix != null ? ReadPayload(PayloadChangelog + "." + ChangelogSuffix + ".md") : null;
 	// 游戏目录路径里有中文等非英文字符时的提醒：BepInEx 预加载会失败（IL Compile Error），Mod 不生效
 	private readonly Label _pathWarning = new Label { AutoSize = true, ForeColor = Color.FromArgb(178, 43, 33), MaximumSize = new Size(560, 0), Margin = new Padding(0, 4, 0, 4), Visible = false };
 	private readonly Label _pluginsHint = new Label { AutoSize = true, ForeColor = Color.FromArgb(120, 110, 98), Text = L("勾选的移到「DisabledMods」，不删除") };
@@ -317,21 +320,13 @@ internal class InstallerForm : Form
 		}
 	}
 
-	private static string ReadResource(string name)
+	/// <summary>读安装器旁边（解压出来的压缩包里）的文本文件。单独下载的安装器旁边没有，返回 null，等联网读 GitHub 上的。</summary>
+	private static string ReadPayload(string relative)
 	{
 		try
 		{
-			using (Stream stream = typeof(InstallerForm).Assembly.GetManifestResourceStream(name))
-			{
-				if (stream == null)
-				{
-					return null;
-				}
-				using (var reader = new StreamReader(stream, Encoding.UTF8))
-				{
-					return reader.ReadToEnd().Replace("\r\n", "\n");
-				}
-			}
+			string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, relative);
+			return File.Exists(path) ? File.ReadAllText(path, Encoding.UTF8).Replace("\r\n", "\n") : null;
 		}
 		catch
 		{
