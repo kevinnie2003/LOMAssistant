@@ -185,7 +185,7 @@ internal static class OptionInfoPatch
 			// 强行放出来的选项不看这个设置，总要标出条件没满足
 			if (HiddenOptions.Unmet(key))
 			{
-				__result = __result + TextConverter.ForDisplay("\n<size=16>(" + HiddenOptions.Mark + ")</size>");
+				__result = __result + TextConverter.ForDisplay("\n<size=" + NoteSize + ">(" + HiddenOptions.Mark + ")</size>");
 			}
 			return;
 		}
@@ -198,9 +198,12 @@ internal static class OptionInfoPatch
 		}
 		if (note.Length > 0)
 		{
-			__result = __result + TextConverter.ForDisplay("\n<size=16>(" + ColorDeltas(note) + ")</size>");
+			__result = __result + TextConverter.ForDisplay("\n<size=" + NoteSize + ">(" + ColorDeltas(note) + ")</size>");
 		}
 	}
+
+	/// <summary>选项下面那行后果说明的字号：16 乘「游戏文字大小」（rich text 的 size 是写死的像素，不会跟着那个设置放大）。</summary>
+	private static int NoteSize => Mathf.RoundToInt(16f * Mathf.Clamp(ConfigManager.GameFontScale.Value, 50, 200) / 100f);
 
 	// 「嘴力 +1」「南宫浅好感 -2」「银两 +500」：加的绿色、减的红色（条件里的「需>=40」「=1」不算）
 	private static readonly Regex Delta = new Regex(@"(?<=^|[、；：:\s(（①-⑳])([^\s、；：:()（）<>=①-⑳]+?) ([+-]\d+)(?=$|[、；）)\s])");
