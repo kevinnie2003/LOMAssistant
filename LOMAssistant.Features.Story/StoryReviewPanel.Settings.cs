@@ -197,7 +197,6 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.SkipReadKey, "一键快进已读对话"),
 				Row(ConfigManager.SkipActionKey, "空过一次行动"),
 				Row(ConfigManager.AiPanelKey, "AI陪玩页"),
-				Row(ConfigManager.AiCompanionKey, "主动陪玩开关"),
 				Row(ConfigManager.AnytimePanelKey, "随时存档页"),
 				Row(ConfigManager.AnytimeSaveKey, "随时存档：存新档"),
 				Row(ConfigManager.AnytimeLoadKey, "随时存档：读取最新存档"),

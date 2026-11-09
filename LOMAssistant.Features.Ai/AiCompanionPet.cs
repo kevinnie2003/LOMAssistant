@@ -103,10 +103,6 @@ internal sealed class CompanionPet : MonoBehaviour
 
 	private void Update()
 	{
-		if (GUIUtility.keyboardControl == 0 && AiCompanion.Supported && InputGuard.HotkeyDown(ConfigManager.AiCompanionKey.Value))
-		{
-			ConfigManager.AiCompanion.Value = !ConfigManager.AiCompanion.Value;
-		}
 		AiCompanion.Tick();
 		// 松开鼠标的那一帧这里先跑到：没拖动就算点了一下
 		if (_pressed && !Input.GetMouseButton(0))

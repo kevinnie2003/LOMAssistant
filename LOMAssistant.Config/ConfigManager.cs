@@ -119,7 +119,6 @@ public static class ConfigManager
 	public static ConfigElement<float> AiCompanionX;
 	public static ConfigElement<float> AiCompanionY;
 	public static ConfigElement<bool> AiCompanionCollapsed;
-	public static ConfigElement<KeyCode> AiCompanionKey;
 
 	public static ConfigElement<int> PanelFont;
 	public static ConfigElement<int> PanelScale;
@@ -561,7 +560,6 @@ public static class ConfigManager
 		AiCompanionX = new ConfigElement<float>("AiCompanionX", "主动陪玩形象的横向位置（占屏幕宽度的比例，-1=默认右下角）。拖动形象会自动保存", -1f);
 		AiCompanionY = new ConfigElement<float>("AiCompanionY", "主动陪玩形象的纵向位置（占屏幕高度的比例，-1=默认右下角）。拖动形象会自动保存", -1f);
 		AiCompanionCollapsed = new ConfigElement<bool>("AiCompanionCollapsed", "主动陪玩形象是否缩小为头像（在画面上点击，自动记录）", defaultValue: false);
-		AiCompanionKey = new ConfigElement<KeyCode>("AiCompanionKey", "开启、关闭主动陪玩的热键。默认不绑定", KeyCode.None);
 		UiLanguage = new ConfigElement<int>("UiLanguage", "咖啡伴侣窗口等 Mod 界面的语言：0=跟随游戏（装了日语补丁时显示日语，装了英文补丁时显示英语），1=简体中文，2=繁体中文，3=韩语，4=日语，5=英语", 0);
 		PanelTheme = new ConfigElement<int>("PanelTheme", "咖啡伴侣窗口的配色：0=浅色（宣纸底），1=深色（墨色底，默认），2=跟随系统（Windows 的应用模式）", 1);
 		PanelFont = new ConfigElement<int>("PanelFont", "咖啡伴侣窗口等 Mod 界面的字体：0=思源宋体（游戏对话用的字体，默认），1=微软雅黑（系统字体）", 0);
