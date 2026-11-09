@@ -118,7 +118,13 @@ public partial class StoryReviewPanel
 		{
 			StoryAtlas.Start();
 		}
-		if (_aiSetup || !AiChat.Configured)
+		// 还没配好服务商就先进设置页，并留在那儿，等玩家自己点「开始提问」或「返回」
+		// （以前只看配没配好：Key 刚填上第一个字就算配好了，设置页当场换成对话页）
+		if (!AiChat.Configured)
+		{
+			_aiSetup = true;
+		}
+		if (_aiSetup)
 		{
 			DrawAiSetup(r);
 		}
@@ -149,9 +155,17 @@ public partial class StoryReviewPanel
 			_aiTestStatus = "";
 			_aiPickedProvider = -1;
 		}
-		GUILayout.BeginArea(r);
+		// 顶上固定一行：左上角「返回」（和别的子页一样）、标题。还没配好服务商时没有对话页可回，按钮点不了；
+		// 按钮一直在：按条件显示的话，填 Key 填到一半它冒出来，后面输入框的控件编号跟着变，焦点会跳走
+		GUI.enabled = AiChat.Configured;
+		if (GUI.Button(new Rect(r.x, r.y, S(110), S(36)), "返回", _button))
+		{
+			_aiSetup = false;
+		}
+		GUI.enabled = true;
+		GUI.Label(new Rect(r.x + S(126), r.y, r.width - S(126), S(36)), "AI 设置", Middle(_heading));
+		GUILayout.BeginArea(new Rect(r.x, r.y + S(46), r.width, r.height - S(46)));
 		_aiSetupScroll = GUILayout.BeginScrollView(_aiSetupScroll);
-		GUILayout.Label("AI 设置", _heading);
 		GUILayout.Label("需要自己的 API Key。Key 只存在这台电脑的配置文件里，只发给下面选的服务商；导出诊断时会隐藏。每次提问，问题和 AI 查到的游戏剧情会发给服务商，按服务商的价格计费。", _muted);
 		GUILayout.Space(S(10));
 
