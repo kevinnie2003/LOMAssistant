@@ -381,6 +381,37 @@ public static partial class Tests
 	/// <summary>实际界面组合：任务编号、地点、选择、掷骰和否则分支。</summary>
 	public static void TestUiDisplaySentences()
 	{
+		// 复合结果中的否则条件应与单独翻译一致，富文本标签不能截断条件。
+		foreach (string language in new[] { "Korean", "Japanese", "English" })
+		{
+			foreach (string clause in new[]
+			{
+				"否则（不满足：心上人=0）",
+				"否则（不满足：心上人=2）",
+				"否则（以下都不满足：心上人=0；心上人=2）",
+				"否则（不满足：心上人（G00003）=0）",
+				"否则（不满足：<color=#ffffff>心上人=0</color>）",
+			})
+			{
+				string translated = LOMAssistant.UiText.Translate(clause, language);
+				Assert(translated != clause && !translated.Contains("否则") && !translated.Contains("不满足"), language + ": " + translated);
+				foreach (string prefix in new[] { "test\n", "test    ", "<size=20>test\n" })
+				{
+					string suffix = prefix.StartsWith("<size") ? "</size>" : "";
+					string source = prefix + clause + suffix;
+					Assert(LOMAssistant.UiText.Translate(source, language) == prefix + translated + suffix, language + ": " + source);
+				}
+			}
+		}
+		Assert(LOMAssistant.UiText.Translate("test:心上人=0", "Korean") == "test:마음에 둔 사람=0", "冒号后的条件名");
+		Assert(LOMAssistant.UiText.Translate("test：心上人=2", "Korean") == "test：마음에 둔 사람=2", "全角冒号后的条件名");
+		Assert(LOMAssistant.UiText.Translate("test\n否则（不满足：心上人=0）", "Korean") == "test\n그 외 (마음에 둔 사람=0 미충족)", "多行否则条件");
+		Assert(LOMAssistant.UiText.Translate("<size=20>test\n否则（不满足：<color=#ffffff>心上人=0</color>）</size>", "Korean") == "<size=20>test\n그 외 (<color=#ffffff>마음에 둔 사람=0</color> 미충족)</size>", "保留富文本标签");
+		foreach (string language in new[] { "ChineseSimplified", "ChineseTraditional" })
+		{
+			string source = "<size=20>test\n否则（不满足：<color=#ffffff>心上人=0</color>）</size>";
+			Assert(LOMAssistant.UiText.Translate(source, language) == source, language + ": 复合原文");
+		}
 		foreach (string[] row in new[]
 		{
 			new[] { "Korean", "M7001_02 · 围攻唐门 强制发生", "M7001_02 · 당문 포위 공격 (강제 발생)" },
