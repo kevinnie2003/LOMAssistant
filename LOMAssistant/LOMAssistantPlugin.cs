@@ -193,6 +193,14 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(OneClickUnlockPatch));
 			TryPatchAll(typeof(HiddenOptions));
 			TryPatchAll(typeof(LOMAssistant.Features.Extras.GameSpeedSayPatch));
+			try
+			{
+				LOMAssistant.Features.Extras.GameSpeedWriters.Patch(_harmony);
+			}
+			catch (Exception ex)
+			{
+				FileLogger.LogError("GameSpeedWriters 补丁应用失败: " + ex);
+			}
 			TryPatchAll(typeof(BranchOverride));
 			EventPicker.Ensure(base.gameObject);
 			UiHider.Ensure(base.gameObject);
