@@ -4,6 +4,14 @@ name: Sign installer
 # 还没配好 SignPath（仓库变量 SIGNPATH_ORGANIZATION_ID 为空）时只编译，产出未签名的 installer-unsigned。
 on:
   workflow_dispatch:
+    inputs:
+      signing-policy:
+        description: SignPath 签名策略（test-signing 用自签的测试证书，只用来试流程）
+        type: choice
+        options:
+          - release-signing
+          - test-signing
+        default: release-signing
 
 permissions:
   actions: read
@@ -37,7 +45,7 @@ jobs:
           api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
           organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
           project-slug: LOMAssistant
-          signing-policy-slug: release-signing
+          signing-policy-slug: ${{ inputs.signing-policy }}
           github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
           wait-for-completion: true
           # 每次签名要在 SignPath 网页上手动批准，留两小时
