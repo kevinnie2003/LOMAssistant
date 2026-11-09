@@ -181,7 +181,8 @@ public class DeadlineReminder : MonoBehaviour
 		list.Add(new Item
 		{
 			Title = TextConverter.ToSimplified(name.Length > 0 ? name : title),
-			Place = place == "無" ? "" : place,
+			// 不限地点的任务：场所是「無」，上面转成简体后是「无」（原来拿繁体的「無」比，永远对不上，提醒里会写成去「无」触发）
+			Place = check.Position == PositionType.無 ? "" : place,
 			Until = StoryAtlas.DateText(now.Value + left.Value),
 			Left = left.Value,
 			Main = main,

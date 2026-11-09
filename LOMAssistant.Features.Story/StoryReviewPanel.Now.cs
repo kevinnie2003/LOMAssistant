@@ -324,7 +324,7 @@ public partial class StoryReviewPanel
 					Main = true,
 					Title = TextConverter.ToSimplified(mainTitle.Replace("\n", " ")),
 					Desc = OnPaper(TextConverter.ToSimplified(mainDesc).Trim()),
-					Place = place == "無" ? "" : place,
+					Place = main.Position == PositionType.無 ? "" : place,
 					Ready = missions != null && missions.MainMissionStart && missions.MainCheckData == main && !string.IsNullOrEmpty(main.StartScript),
 					Left = DeadlineReminder.Left(main)
 				});
@@ -344,7 +344,7 @@ public partial class StoryReviewPanel
 				{
 					Title = TextConverter.ToSimplified(pair.Value.Item1.Replace("\n", " ")),
 					Desc = OnPaper(TextConverter.ToSimplified(pair.Value.Item2).Trim()),
-					Place = place == "無" ? "" : place,
+					Place = check.Position == PositionType.無 ? "" : place,
 					Ready = active != null && active.Values.Contains(check) && !string.IsNullOrEmpty(check.StartScript),
 					Left = DeadlineReminder.Left(check)
 				});
