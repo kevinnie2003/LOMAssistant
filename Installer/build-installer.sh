@@ -16,10 +16,10 @@ mkdir -p bin obj
 # 安装器自己的版本号，和 Mod 版本无关：只在安装器代码改了时才加。
 # 安装器不带 Mod 版本号、不带更新内容（都从压缩包里读），同样的代码编出来一个字节都不变，
 # 每次发版放出去的是同一个文件，杀毒软件和 SmartScreen 按文件记的信誉才能一直累积。
-INSTALLER_VERSION=1.0.0
+INSTALLER_VERSION=1.1.0
 printf '[assembly: System.Reflection.AssemblyVersion("%s.0")]\n[assembly: System.Reflection.AssemblyFileVersion("%s.0")]\n[assembly: System.Reflection.AssemblyInformationalVersion("%s")]\n' \
 	"$INSTALLER_VERSION" "$INSTALLER_VERSION" "$INSTALLER_VERSION" > obj/InstallerVersion.cs
 "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:winexe -platform:anycpu -langversion:12 -optimize+ -deterministic \
-	-win32manifest:app.manifest -out:"bin/咖啡伴侣安装器 Installer.exe" "${refs[@]}" \
+	-win32manifest:app.manifest -win32icon:app.ico -out:"bin/咖啡伴侣安装器 Installer.exe" "${refs[@]}" \
 	*.cs obj/InstallerVersion.cs ../LOMAssistant/UiTraditional.cs
 echo "Built Installer/bin/咖啡伴侣安装器 Installer.exe"

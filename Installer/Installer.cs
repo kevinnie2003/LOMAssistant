@@ -166,6 +166,14 @@ internal class InstallerForm : Form
 	{
 		_autoLog = autoLog;
 		Text = L("咖啡伴侣 安装器");
+		// 标题栏、任务栏用 exe 自己的图标（编译时 -win32icon 嵌进去的 app.ico）
+		try
+		{
+			Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+		}
+		catch
+		{
+		}
 		Font = new Font(FontName, 10f);
 		AutoScaleMode = AutoScaleMode.Dpi;
 		ClientSize = new Size(1280, 720);
