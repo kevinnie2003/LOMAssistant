@@ -45,10 +45,10 @@ internal static class AiCompanionPrompts
 	}
 
 	/// <summary>系统提示词：选了人设用她的，没选就是攻略助手。同一位、同一档设置下每次都一样，服务商的缓存才命中。</summary>
-	public static string SystemPrompt(AiPersona persona, bool fast)
+	public static string SystemPrompt(AiPersona persona)
 	{
 		string spoiler = Spoiler(LOMAssistant.Config.ConfigManager.AiSpoiler.Value);
-		return persona != null ? persona.CompanionPrompt(AiPrompts.LanguageRule, spoiler, fast) : Assistant(spoiler);
+		return persona != null ? persona.CompanionPrompt(AiPrompts.LanguageRule, spoiler) : Assistant(spoiler);
 	}
 
 	private static string Assistant(string spoiler)

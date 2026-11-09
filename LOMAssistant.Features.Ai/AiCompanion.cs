@@ -708,10 +708,9 @@ public static class AiCompanion
 		var remark = new Remark { Card = card, Writing = true };
 		ChatMessage turn = null;
 		List<ChatMessage> send = null;
-		bool fast = AiChat.Fast;
 		try
 		{
-			turn = Prepare(persona, scene, card, fast, started, out send);
+			turn = Prepare(persona, scene, card, started, out send);
 		}
 		catch (Exception ex)
 		{
@@ -723,8 +722,9 @@ public static class AiCompanion
 			yield break;
 		}
 		LlmReply reply = null;
-		// 思考照模型平时的样子开着（说出来的话更好），思考也算在输出额度里：话只有一两句，额度仍给够，免得想到一半被截断
-		yield return LlmClient.Complete(AiChat.Provider, ConfigManager.AiBaseUrl.Value, ConfigManager.AiApiKey.Value, Model, _system, send, false, fast ? 600 : 1500, r => reply = r, false,
+		// 思考照模型平时的样子开着（说出来的话更好），思考也算在输出额度里：话只有一两句，额度仍给够，免得想到一半被截断。
+		// 问答的「回答方式」（极速、标准、深度）不管这里：主动陪玩只有一种说法，不分轻重
+		yield return LlmClient.Complete(AiChat.Provider, ConfigManager.AiBaseUrl.Value, ConfigManager.AiApiKey.Value, Model, _system, send, false, ReplyTokens, r => reply = r, false,
 			text =>
 			{
 				// 一边收一边显示：收到第一个字气泡才出来。界面是英、韩、日文时先攒十来个字，看清不是中文再露面；流到一半发现是中文就收起来
@@ -756,7 +756,7 @@ public static class AiCompanion
 			FileLogger.Log("[AI] 主动陪玩的话不是界面语言，让它改写一遍");
 			LlmReply rewritten = null;
 			yield return LlmClient.Complete(AiChat.Provider, ConfigManager.AiBaseUrl.Value, ConfigManager.AiApiKey.Value, Model, AiPrompts.RewriteRule + AiPrompts.RewriteSpeaker(persona),
-				new List<ChatMessage> { new ChatMessage { Role = ChatMessage.User, Text = said } }, false, fast ? 600 : 1500, r => rewritten = r, false, null, true);
+				new List<ChatMessage> { new ChatMessage { Role = ChatMessage.User, Text = said } }, false, ReplyTokens, r => rewritten = r, false, null, true);
 			try
 			{
 				said = Rewritten(rewritten);
@@ -781,14 +781,17 @@ public static class AiCompanion
 	// 陪玩用的模型：单独设了就用它，否则是问答平时的模型（深度模式的强模型不拿来说这一两句话）
 	private static string Model => ConfigManager.AiCompanionModel.Value.Trim().Length > 0 ? ConfigManager.AiCompanionModel.Value.Trim() : ConfigManager.AiModel.Value;
 
+	// 一句话的输出额度（含思考）、带给它看的最近对白句数
+	private const int ReplyTokens = 1500, LinesSent = 12;
+
 	// 拼好要发的内容：系统提示词、这段剧情里前面的往来、这一次的现状和事件
-	private static ChatMessage Prepare(AiPersona persona, string scene, string card, bool fast, float started, out List<ChatMessage> send)
+	private static ChatMessage Prepare(AiPersona persona, string scene, string card, float started, out List<ChatMessage> send)
 	{
 		// 系统提示词一段时间里保持不变（服务商的缓存靠它）：换人、换语言、换剧透档，或者过了十分钟（经历多了几条）才重拼
-		string systemKey = (persona?.Id ?? "") + "|" + fast + "|" + TextConverter.DisplayLanguage + "|" + ConfigManager.AiSpoiler.Value + "|" + StoryAtlas.Ready;
+		string systemKey = (persona?.Id ?? "") + "|" + TextConverter.DisplayLanguage + "|" + ConfigManager.AiSpoiler.Value + "|" + StoryAtlas.Ready;
 		if (systemKey != _systemKey || started - _systemAt > 600f)
 		{
-			_system = AiCompanionPrompts.SystemPrompt(persona, fast);
+			_system = AiCompanionPrompts.SystemPrompt(persona);
 			_systemKey = systemKey;
 			_systemAt = started;
 			Thread.Clear();
@@ -800,8 +803,7 @@ public static class AiCompanion
 			Thread.Clear();
 			_threadScript = script;
 		}
-		int keep = fast ? 6 : 12;
-		var lines = Lines.Skip(Math.Max(0, Lines.Count - keep)).ToList();
+		var lines = Lines.Skip(Math.Max(0, Lines.Count - LinesSent)).ToList();
 		// 最近说过的几句是这一位说的；换了人就不带
 		if ((persona?.Id ?? "") != _recentPersona)
 		{

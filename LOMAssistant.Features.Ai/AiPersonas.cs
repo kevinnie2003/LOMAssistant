@@ -431,7 +431,7 @@ public sealed class AiPersona
 	/// 主动陪玩（常驻画面的小伙伴）用的系统提示词：比问答的短得多，只留身份、性子、几句原话、最近几件一起经历的事和说话的规矩。
 	/// 这类请求不带查资料的工具，她只看得到每次发给她的【此刻】【刚才】【事件】，没给的后续剧情无从说起。
 	/// </summary>
-	public string CompanionPrompt(string language, string spoiler, bool fast)
+	public string CompanionPrompt(string language, string spoiler)
 	{
 		string L(string zh, string en, string ko, string ja, string hant) => AiPrompts.L(zh, en, ko, ja, hant);
 		string me = AiPrompts.L(Name, TextConverter.ForDisplay(Name), TextConverter.ForDisplay(Name), Name,
@@ -469,7 +469,7 @@ public sealed class AiPersona
 
 		var rng = new Random(Id.GetHashCode() ^ lines.Count);
 		// 原话里的换行（对白框里的折行）换成空格，一句占一行
-		var voice = lines.Select(l => StoryAtlas.LineText(l.Key).Replace("\r", "").Replace("\n", " ").Trim()).Where(t => t.Length >= 6 && t.Length <= 40).Distinct().OrderBy(_ => rng.Next()).Take(fast ? 5 : 10).ToList();
+		var voice = lines.Select(l => StoryAtlas.LineText(l.Key).Replace("\r", "").Replace("\n", " ").Trim()).Where(t => t.Length >= 6 && t.Length <= 40).Distinct().OrderBy(_ => rng.Next()).Take(10).ToList();
 		if (voice.Count > 0)
 		{
 			sb.Append('\n').Append(L("【你在游戏里亲口说过的话】（照着这个语气和句子长短说新的话，不要照抄；对别人的称呼不要拿来叫赵活）",
@@ -482,21 +482,18 @@ public sealed class AiPersona
 				sb.Append("- ").Append(v).Append('\n');
 			}
 		}
-		if (!fast)
+		var story = Experiences(lines).With;
+		story = story.Skip(Math.Max(0, story.Count - 5)).ToList();
+		if (story.Count > 0)
 		{
-			var story = Experiences(lines).With;
-			story = story.Skip(Math.Max(0, story.Count - 5)).ToList();
-			if (story.Count > 0)
+			sb.Append('\n').Append(L("【你和赵活最近一起经历的事】（越往下越近；文中的「你」指赵活。你只知道这些和每次给你的内容）",
+				"[What you and Zhao Huo went through most recently] (oldest first; 「你」 in it means Zhao Huo. You know only this and what you are given each time)",
+				"[당신과 조활이 최근 함께 겪은 일] (오래된 것부터 적혀 있습니다. 기록 속의 「당신」이나 「你」는 조활입니다. 당신이 아는 것은 이것과 매번 주어지는 내용뿐입니다)",
+				"【あなたと趙活が最近一緒に経験したこと】（古い順です。文中の「你」は趙活のことです。あなたが知っているのはこれと、毎回渡される内容だけです）",
+				"【你和趙活最近一起經歷的事】（越往下越近；文中的「你」指趙活。你只知道這些和每次給你的內容）")).Append('\n');
+			foreach (string t in story)
 			{
-				sb.Append('\n').Append(L("【你和赵活最近一起经历的事】（越往下越近；文中的「你」指赵活。你只知道这些和每次给你的内容）",
-					"[What you and Zhao Huo went through most recently] (oldest first; 「你」 in it means Zhao Huo. You know only this and what you are given each time)",
-					"[당신과 조활이 최근 함께 겪은 일] (오래된 것부터 적혀 있습니다. 기록 속의 「당신」이나 「你」는 조활입니다. 당신이 아는 것은 이것과 매번 주어지는 내용뿐입니다)",
-					"【あなたと趙活が最近一緒に経験したこと】（古い順です。文中の「你」は趙活のことです。あなたが知っているのはこれと、毎回渡される内容だけです）",
-					"【你和趙活最近一起經歷的事】（越往下越近；文中的「你」指趙活。你只知道這些和每次給你的內容）")).Append('\n');
-				foreach (string t in story)
-				{
-					sb.Append("- ").Append(t).Append('\n');
-				}
+				sb.Append("- ").Append(t).Append('\n');
 			}
 		}
 

@@ -107,7 +107,7 @@ public static class LlmClient
 		}
 	}
 
-	/// <summary>light：主动陪玩的一两句话。服务商忙时不重试，不跟着深度模式加思考强度，Claude 的系统提示词缓存留一小时。</summary>
+	/// <summary>light：主动陪玩的一两句话。服务商忙时不重试，思考强度不跟着问答的回答方式变（深度不加、极速不关），Claude 的系统提示词缓存留一小时。</summary>
 	public static IEnumerator Complete(LlmProvider provider, string baseUrl, string key, string model, string system,
 		List<ChatMessage> messages, bool useTools, int maxTokens, Action<LlmReply> done, bool noMoreCalls = false, Action<string> onText = null, bool light = false)
 	{
@@ -593,8 +593,8 @@ public static class LlmClient
 		{
 			body["reasoning_effort"] = AiChat.Deep && !light ? "medium" : "low";
 		}
-		// 极速模式下本地模型（Ollama）不思考：小模型想很久也不会更准，还常卡住
-		if (AiChat.Fast && url.IndexOf(":11434", StringComparison.Ordinal) >= 0)
+		// 极速模式下本地模型（Ollama）不思考：小模型想很久也不会更准，还常卡住。只管问答，主动陪玩不跟着回答方式变
+		if (AiChat.Fast && !light && url.IndexOf(":11434", StringComparison.Ordinal) >= 0)
 		{
 			body["reasoning_effort"] = "none";
 		}
