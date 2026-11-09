@@ -147,13 +147,12 @@ public partial class StoryReviewPanel
 		AiStyles();
 		if (_aiPickedProvider >= 0 && Event.current.type == EventType.Layout)
 		{
-			LlmProvider picked = LlmProvider.At(_aiPickedProvider);
-			ConfigManager.AiProvider.Value = _aiPickedProvider;
-			ConfigManager.AiBaseUrl.Value = picked.BaseUrl;
-			ConfigManager.AiModel.Value = picked.Model;
-			ConfigManager.AiDeepModel.Value = picked.DeepModel;
+			// 每家各记各的 Key、改过的地址和模型名：换过去是那家上次填的，没填过就是默认值、Key 空着
+			AiProviderStore.Switch(_aiPickedProvider);
 			_aiTestStatus = "";
 			_aiPickedProvider = -1;
+			// 输入框的控件编号可能跟着变了，别让焦点落到另一个框里
+			GUIUtility.keyboardControl = 0;
 		}
 		// 顶上固定一行：左上角「返回」（和别的子页一样）、标题。还没配好服务商时没有对话页可回，按钮点不了；
 		// 按钮一直在：按条件显示的话，填 Key 填到一半它冒出来，后面输入框的控件编号跟着变，焦点会跳走

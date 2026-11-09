@@ -545,7 +545,7 @@ public static class ConfigManager
 		AiProvider = new ConfigElement<int>("AiProvider", "AI 攻略用哪家服务商（序号，在咖啡伴侣窗口「AI」页里选）", 0);
 		AiBaseUrl = new ConfigElement<string>("AiBaseUrl", "AI 服务商的 API 地址（选服务商时自动填）", "https://api.deepseek.com/v1");
 		AiModel = new ConfigElement<string>("AiModel", "AI 用的模型名（选服务商时自动填建议的，可以改）", "deepseek-flash");
-		AiApiKey = new ConfigElement<string>("AiApiKey", "AI 服务商的 API Key：只存在这台电脑的配置文件里，只发给选的服务商", "");
+		AiApiKey = new ConfigElement<string>("AiApiKey", "正在使用的 AI 服务商的 API Key：只存在这台电脑上，只发给这家服务商。其他服务商填过的 Key 存在 config 文件夹的 LOMAssistant_AI/providers.json，切换服务商时自动换上", "");
 		AiDeepMode = new ConfigElement<bool>("AiDeepMode", "AI 深度模式：换用更强的模型（AiDeepModel），回答更长，答前把结论对照查到的资料核对一遍。更准，也更贵、更慢", defaultValue: false);
 		AiFastMode = new ConfigElement<bool>("AiFastMode", "AI 极速模式：少查几次资料、提示词更短、不让模型多想，免费额度和本地小模型也能较快回答；答案更粗略。和深度模式只能开一个", defaultValue: false);
 		AiDeepModel = new ConfigElement<string>("AiDeepModel", "深度模式用的模型名；空着就和平时用同一个模型", "deepseek-v4-pro");
