@@ -119,6 +119,8 @@ public static class AiChat
 		{
 			return;
 		}
+		// 小伙伴正要开口：让给玩家的问题
+		AiCompanion.Cancel();
 		// 中途换了人设，这一问还是记在原来那位的对话里
 		LOMAssistantPlugin.Instance.StartCoroutine(Run(question, Current, AiPersona.Find(PersonaId), null, true));
 	}
@@ -365,7 +367,7 @@ public static class AiChat
 	private static readonly System.Text.RegularExpressions.Regex ToolMarkup = new System.Text.RegularExpressions.Regex(
 		@"<[｜|]?\s*DSML[\s\S]*$|<\s*/?\s*(?:function_calls|invoke|parameter|tool_call|tool_use)\b[\s\S]*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-	private static string StripToolMarkup(string text) => ToolMarkup.Replace(text ?? "", "");
+	internal static string StripToolMarkup(string text) => ToolMarkup.Replace(text ?? "", "");
 
 	private const int MaxDigestChars = 40000;
 
@@ -392,7 +394,7 @@ public static class AiChat
 	private static string Join(string before, string after) =>
 		before.Length == 0 ? after : after.Length == 0 ? before : before + "\n\n" + after;
 
-	private static string Showable(string text)
+	internal static string Showable(string text)
 	{
 		string t = StripToolMarkup(text);
 		int tag = t.LastIndexOf('[');
@@ -413,7 +415,7 @@ public static class AiChat
 		@"[（(「]\s*(?:" + id + @")\s*[）)」]|[ \t]?(?<![A-Za-z0-9_])(?:" + id + @")(?![A-Za-z0-9_])[ \t]?");
 
 	/// <summary>模型不听话写出来的编号，显示前去掉。</summary>
-	private static string StripIds(string text, bool all) => (all ? AnyIds : ScriptIds).Replace(text, "");
+	internal static string StripIds(string text, bool all) => (all ? AnyIds : ScriptIds).Replace(text, "");
 
 	/// <summary>玩家点了卡片上的确认或不改。</summary>
 	public static void Resolve(AiSession session, Entry proposal, bool apply)
@@ -446,7 +448,7 @@ public static class AiChat
 	private static readonly System.Text.RegularExpressions.Regex MoodTag = new System.Text.RegularExpressions.Regex(@"\[\s*(?:表情|mood)\s*[:：]\s*([A-Za-z_0-9]+)\s*\]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
 	// 回复末尾的「[表情: shy]」拿出来，不显示；不在她能用的表情里就用默认
-	private static string TakeMood(string answer, AiPersona persona, out string mood)
+	internal static string TakeMood(string answer, AiPersona persona, out string mood)
 	{
 		mood = persona.Moods[0];
 		System.Text.RegularExpressions.Match m = MoodTag.Match(answer);
@@ -483,7 +485,7 @@ public static class AiChat
 	/// 回答是不是用错了语言：界面是英文、韩文时汉字比本国文字多，界面是日文时汉字很多却几乎没有假名。
 	/// 玩家自己用中文问的（问题里有汉字、日文界面下没有假名）不算错。「」里引的原文不计。
 	/// </summary>
-	internal static bool WrongLanguage(string answer, string question, string language)
+	internal static bool WrongLanguage(string answer, string question, string language, int min = 20)
 	{
 		string body = System.Text.RegularExpressions.Regex.Replace(answer, "「[^」]*」|\\[表情:[^\\]]*\\]|【[^】]*】", "");
 		int han = 0, kana = 0, hangul = 0, latin = 0, qHan = 0, qKana = 0;
@@ -501,12 +503,13 @@ public static class AiChat
 		}
 		switch (language)
 		{
+			// min：汉字多过这么多才算。问答的回答长，20 个以内当是引的名字；主动陪玩的话只有一两句，整句中文也不到 20 个字，要用小得多的数
 			case UiText.English:
-				return qHan == 0 && han > 20 && han * 2 > latin / 5;
+				return qHan == 0 && han > min && han * 2 > latin / 5;
 			case UiText.Korean:
-				return qHan == 0 && han > 20 && han > hangul;
+				return qHan == 0 && han > min && han > hangul;
 			case UiText.Japanese:
-				return (qKana > 0 || qHan == 0) && han > 20 && kana * 10 < han;
+				return (qKana > 0 || qHan == 0) && han > min && kana * 10 < han;
 			default:
 				return false;
 		}

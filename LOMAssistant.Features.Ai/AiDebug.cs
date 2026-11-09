@@ -16,9 +16,10 @@ public static class AiDebug
 
 	public static bool On => ConfigManager.AiDebugLog.Value;
 
-	public static void Turn(string who, string system, string question)
+	/// <summary>model：这次请求真正用的模型；不给就是问答现在用的那个（主动陪玩可以另设模型，也不跟着深度模式换）。</summary>
+	public static void Turn(string who, string system, string question, string model = null)
 	{
-		Write("\n\n==================== " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " · " + who + " · " + AiChat.Model + " ====================\n"
+		Write("\n\n==================== " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + " · " + who + " · " + (model ?? AiChat.Model) + " ====================\n"
 			+ "【系统提示词】（" + system.Length + " 字）\n" + system + "\n\n【这次发的问题】\n" + question + "\n");
 	}
 

@@ -107,8 +107,9 @@ public static class LlmClient
 		}
 	}
 
+	/// <summary>light：主动陪玩的一两句话。服务商忙时不重试，不跟着深度模式加思考强度，Claude 的系统提示词缓存留一小时。</summary>
 	public static IEnumerator Complete(LlmProvider provider, string baseUrl, string key, string model, string system,
-		List<ChatMessage> messages, bool useTools, int maxTokens, Action<LlmReply> done, bool noMoreCalls = false, Action<string> onText = null)
+		List<ChatMessage> messages, bool useTools, int maxTokens, Action<LlmReply> done, bool noMoreCalls = false, Action<string> onText = null, bool light = false)
 	{
 		string url = (baseUrl ?? "").Trim().TrimEnd('/');
 		if (url.Length == 0)
@@ -121,7 +122,7 @@ public static class LlmClient
 			done(new LlmReply { Error = "没有填模型名" });
 			yield break;
 		}
-		JObject body = provider.Claude ? ClaudeBody(model, system, messages, useTools, maxTokens) : OpenAiBody(model, system, messages, useTools, maxTokens, url);
+		JObject body = provider.Claude ? ClaudeBody(model, system, messages, useTools, maxTokens, light) : OpenAiBody(model, system, messages, useTools, maxTokens, url, light);
 		// 最后一轮：工具定义照给（历史里有工具调用，不给定义有的服务商会报错，DeepSeek 还会把调用格式当正文写出来），但不许再调用
 		if (useTools && noMoreCalls)
 		{
@@ -195,7 +196,11 @@ public static class LlmClient
 					}
 					yield return null;
 				}
-				_current = null;
+				// 这次请求被停掉时，别的请求可能已经接着发出去了：只清自己的
+				if (_current == request)
+				{
+					_current = null;
+				}
 				string text = stream != null ? stream.Raw.ToString() : request.downloadHandler?.text ?? "";
 				if (stalled)
 				{
@@ -207,7 +212,8 @@ public static class LlmClient
 				{
 					long code = request.responseCode;
 					bool busy = code == 429 || code == 529 || (code >= 500 && code <= 504);
-					if (busy && attempt < 2 && (stream == null || stream.Events == 0))
+					// 主动陪玩的话错过就算了，不重试：免费额度被限流时不会连着再发
+					if (busy && attempt < 2 && !light && (stream == null || stream.Events == 0))
 					{
 						FileLogger.LogWarning("[AI] 服务商忙（" + code + "），" + (attempt == 0 ? 3 : 8) + " 秒后自动重试");
 						yield return new UnityEngine.WaitForSecondsRealtime(attempt == 0 ? 3f : 8f);
@@ -532,7 +538,7 @@ public static class LlmClient
 		return reason + "\n" + code + (detail.Length > 0 ? " " + detail.Trim() : "");
 	}
 
-	private static JObject OpenAiBody(string model, string system, List<ChatMessage> messages, bool useTools, int maxTokens, string url)
+	private static JObject OpenAiBody(string model, string system, List<ChatMessage> messages, bool useTools, int maxTokens, string url, bool light)
 	{
 		var list = new JArray { new JObject { ["role"] = "system", ["content"] = system } };
 		foreach (ChatMessage m in messages)
@@ -585,7 +591,7 @@ public static class LlmClient
 		// Gemini 3 系列的思考关不掉，不设时想得太久会超时：平时、极速 low，深度模式 medium（3.8-flash 不认 minimal，会报 400）
 		if (url.IndexOf("generativelanguage.googleapis.com", StringComparison.OrdinalIgnoreCase) >= 0 && model.IndexOf("gemini-3", StringComparison.OrdinalIgnoreCase) >= 0)
 		{
-			body["reasoning_effort"] = AiChat.Deep ? "medium" : "low";
+			body["reasoning_effort"] = AiChat.Deep && !light ? "medium" : "low";
 		}
 		// 极速模式下本地模型（Ollama）不思考：小模型想很久也不会更准，还常卡住
 		if (AiChat.Fast && url.IndexOf(":11434", StringComparison.Ordinal) >= 0)
@@ -628,7 +634,7 @@ public static class LlmClient
 		return reply;
 	}
 
-	private static JObject ClaudeBody(string model, string system, List<ChatMessage> messages, bool useTools, int maxTokens)
+	private static JObject ClaudeBody(string model, string system, List<ChatMessage> messages, bool useTools, int maxTokens, bool light = false)
 	{
 		var list = new JArray();
 		JArray pendingResults = null;
@@ -701,7 +707,24 @@ public static class LlmClient
 		{
 			body["tools"] = new JArray(AiChat.Tools.Select(t => new JObject { ["name"] = t.Name, ["description"] = t.Description, ["input_schema"] = t.Parameters }));
 		}
+		if (light)
+		{
+			ClaudeLight(body);
+		}
 		return body;
+	}
+
+	/// <summary>
+	/// 主动陪玩的一两句话：两句之间常隔五分钟以上，系统提示词的缓存改留一小时（写入贵一些，之后一小时里每次都按命中算）。
+	/// 思考不动，照模型平时的样子开着：想过再说的话更好（实测一句 50 字的话连思考输出近 300 token）。
+	/// </summary>
+	private static void ClaudeLight(JObject body)
+	{
+		if (body["system"] is JArray blocks && blocks.Count > 0 && blocks[0] is JObject first)
+		{
+			// 一小时的缓存要排在五分钟的（最后一条消息上那个）前面，系统提示词正好在最前
+			first["cache_control"] = new JObject { ["type"] = "ephemeral", ["ttl"] = "1h" };
+		}
 	}
 
 	private static LlmReply ParseClaude(JObject json)

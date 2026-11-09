@@ -111,6 +111,15 @@ public static class ConfigManager
 	public static ConfigElement<bool> AiDeepMode;
 	public static ConfigElement<bool> AiFastMode;
 	public static ConfigElement<string> AiDeepModel;
+	public static ConfigElement<bool> AiCompanion;
+	public static ConfigElement<int> AiCompanionLevel;
+	public static ConfigElement<string> AiCompanionPersona;
+	public static ConfigElement<string> AiCompanionModel;
+	public static ConfigElement<int> AiCompanionTokenCap;
+	public static ConfigElement<float> AiCompanionX;
+	public static ConfigElement<float> AiCompanionY;
+	public static ConfigElement<bool> AiCompanionCollapsed;
+	public static ConfigElement<KeyCode> AiCompanionKey;
 
 	public static ConfigElement<int> PanelFont;
 	public static ConfigElement<int> PanelScale;
@@ -544,6 +553,15 @@ public static class ConfigManager
 		AiDebugLog = new ConfigElement<bool>("AiDebugLog", "把每次发给 AI 的人设、现状、查资料的结果和用量写进 Mod 文件夹的 logs/ai_debug.txt，方便核对", defaultValue: false);
 		AiHints = new ConfigElement<bool>("AiHints", "女主角人设问到攻略时，在回答后面单独给一段攻略提示；关掉就只用她的口吻聊天", defaultValue: true);
 		AiSpoiler = new ConfigElement<int>("AiSpoiler", "AI 剧透程度：0=想知道什么说什么，1=只说当前和走过的剧情，2=只给方向提示", 0);
+		AiCompanion = new ConfigElement<bool>("AiCompanion", "主动陪玩：选定的人设常驻游戏画面，对玩家的选择、掷骰、战斗结果等发表看法，只评论和建议，不修改存档。每次发言会将最近的对白和事件发送给 AI 服务商，按服务商的价格计费；需要游戏 1.0.6001 及以上版本。true=开，false=关（默认）", defaultValue: false);
+		AiCompanionLevel = new ConfigElement<int>("AiCompanionLevel", "主动陪玩的发言频率：0=安静（仅结局、战斗胜负、自身好感变化、限时剧情将到期），1=正常（默认，另含有后果的选择、掷骰结果、剧情段落结束），2=话多（另含普通选择、数值变化）", 1);
+		AiCompanionPersona = new ConfigElement<string>("AiCompanionPersona", "主动陪玩的人选：人设的角色编号，留空为攻略助手（在 AI 页选择，自动记录）", "");
+		AiCompanionModel = new ConfigElement<string>("AiCompanionModel", "主动陪玩使用的模型名；留空则与 AI 问答使用同一模型", "");
+		AiCompanionTokenCap = new ConfigElement<int>("AiCompanionTokenCap", "主动陪玩每次启动游戏的 token 用量上限：达到后本次游戏不再发言；0=不限", 200000);
+		AiCompanionX = new ConfigElement<float>("AiCompanionX", "主动陪玩形象的横向位置（占屏幕宽度的比例，-1=默认右下角）。拖动形象会自动保存", -1f);
+		AiCompanionY = new ConfigElement<float>("AiCompanionY", "主动陪玩形象的纵向位置（占屏幕高度的比例，-1=默认右下角）。拖动形象会自动保存", -1f);
+		AiCompanionCollapsed = new ConfigElement<bool>("AiCompanionCollapsed", "主动陪玩形象是否缩小为头像（在画面上点击，自动记录）", defaultValue: false);
+		AiCompanionKey = new ConfigElement<KeyCode>("AiCompanionKey", "开启、关闭主动陪玩的热键。默认不绑定", KeyCode.None);
 		UiLanguage = new ConfigElement<int>("UiLanguage", "咖啡伴侣窗口等 Mod 界面的语言：0=跟随游戏（装了日语补丁时显示日语，装了英文补丁时显示英语），1=简体中文，2=繁体中文，3=韩语，4=日语，5=英语", 0);
 		PanelTheme = new ConfigElement<int>("PanelTheme", "咖啡伴侣窗口的配色：0=浅色（宣纸底），1=深色（墨色底，默认），2=跟随系统（Windows 的应用模式）", 1);
 		PanelFont = new ConfigElement<int>("PanelFont", "咖啡伴侣窗口等 Mod 界面的字体：0=思源宋体（游戏对话用的字体，默认），1=微软雅黑（系统字体）", 0);

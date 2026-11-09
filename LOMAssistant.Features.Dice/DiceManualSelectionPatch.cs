@@ -17,6 +17,9 @@ public static class DiceManualSelectionPatch
 
 	public static bool RollHasStarted;
 
+	/// <summary>上一次直接点线路是什么时候（真实时间）：这样选的结果，游戏记下的点数不作数，主动陪玩用它分辨。</summary>
+	public static float ChosenAt = -100f;
+
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(DiceMenuDialog), "OnEnable")]
 	public static void OnEnable_Postfix(DiceMenuDialog __instance)
@@ -70,6 +73,7 @@ public static class DiceManualSelectionPatch
 			Traverse traverse = Traverse.Create(Menu);
 			IsClickedIndex = i;
 			IsClicked = true;
+			ChosenAt = UnityEngine.Time.realtimeSinceStartup;
 			traverse.Field("_resultSelection").SetValue(i);
 			Menu.UpdateSelection();
 			FileLogger.Log("[DicePatch] OnButtonClick: RollHasStarted=" + RollHasStarted);

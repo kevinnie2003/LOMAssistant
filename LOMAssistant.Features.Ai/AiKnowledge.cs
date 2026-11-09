@@ -177,7 +177,7 @@ public static class AiKnowledge
 
 	private static string PathText(List<StoryStep> path) => path.Count == 0 ? "（开头，不经分岔）" : string.Join(" → ", path.Select(s => Clean(StoryScripts.Describe(s))).ToArray());
 
-	private static string Speaker(string id)
+	internal static string Speaker(string id)
 	{
 		if (id.Length == 0)
 		{

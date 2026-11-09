@@ -90,7 +90,7 @@ public static class AiTests
 	// ---------------- 发给服务商的请求 ----------------
 
 	private static JObject OpenAi(string model, string url, bool tools = true) => Call<JObject>(typeof(LlmClient), "OpenAiBody",
-		model, "system", new List<ChatMessage> { new ChatMessage { Text = "问题" } }, tools, 2000, url);
+		model, "system", new List<ChatMessage> { new ChatMessage { Text = "问题" } }, tools, 2000, url, false);
 
 	/// <summary>推理强度：Gemini 3 平时和极速 low、深度 medium（3.8-flash 不认 minimal）；OpenAI 的 Luna、Sol 调工具时 none；本地 Ollama 极速时 none；别家不设。</summary>
 	public static void TestReasoningEffort()

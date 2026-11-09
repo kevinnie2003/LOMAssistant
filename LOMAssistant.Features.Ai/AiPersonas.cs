@@ -413,6 +413,138 @@ public sealed class AiPersona
 		return sb.ToString().TrimEnd();
 	}
 
+	/// <summary>主动陪玩每次开口前的现状：好感、心上人和结缘。比问答的 Context 短，不读屏幕（对白另外按回想记录给）。</summary>
+	public string CompanionState()
+	{
+		var sb = new StringBuilder();
+		StoryRomance.Heroine h = Heroine;
+		int? value = h != null ? StoryRomance.Affection(h) : Friend != null ? PlayerStatManagerData.Instance?.Relationships?.Get(Friend.Value)?.Value : null;
+		if (value != null)
+		{
+			sb.Append("你对赵活的好感是 ").Append(value.Value).Append("（不要把数字说出口，只让它影响你的态度）。");
+		}
+		sb.Append(RelationText(h));
+		return sb.ToString();
+	}
+
+	/// <summary>
+	/// 主动陪玩（常驻画面的小伙伴）用的系统提示词：比问答的短得多，只留身份、性子、几句原话、最近几件一起经历的事和说话的规矩。
+	/// 这类请求不带查资料的工具，她只看得到每次发给她的【此刻】【刚才】【事件】，没给的后续剧情无从说起。
+	/// </summary>
+	public string CompanionPrompt(string language, string spoiler, bool fast)
+	{
+		string L(string zh, string en, string ko, string ja, string hant) => AiPrompts.L(zh, en, ko, ja, hant);
+		string me = AiPrompts.L(Name, TextConverter.ForDisplay(Name), TextConverter.ForDisplay(Name), Name,
+			TextConverter.ForDisplay(Name));
+		var lines = ReadLines();
+		var sb = new StringBuilder();
+		sb.Append(L("你是" + Name + "，武侠游戏《活侠传》里的人物，此刻陪在赵活（玩家操控的主角）身边，看着他经历眼前的事。",
+			"You are " + me + " (" + Name + "), a character in the wuxia game Legend of Mortal. Right now you are at the side of Zhao Huo (赵活), the protagonist the player controls, watching what he goes through.",
+			"당신은 무협 게임 『활협전』의 인물 " + me + "(" + Name + ")입니다. 지금 당신은 플레이어가 조작하는 주인공 조활(赵活)의 곁에서 그가 겪는 일을 지켜보고 있습니다. 괄호 속 인물명과 뒤에 이어지는 호칭 설정은 모드 내부 자료입니다. 말할 때는 제공된 한국어 명칭과 말투를 사용하세요.",
+			"あなたは武侠ゲーム『活俠傳』の登場人物、" + me + "（" + Name + "）です。いまは、プレイヤーが操作する主人公の趙活（赵活）のそばにいて、彼が経験していることを見守っています。",
+			"你是" + me + "，武俠遊戲《活俠傳》裡的人物，此刻陪在趙活（玩家操控的主角，資料裡寫作「赵活」）身邊，看著他經歷眼前的事。"))
+			.Append(Address).Append('\n');
+		string call = LatestCall(lines);
+		if (call.Length > 0)
+		{
+			sb.Append(L("照你们走到现在的剧情，你最近一次叫他「" + call + "」，没有特别的缘由就这样叫他。",
+				"In the story so far you last called him 「" + call + "」; keep calling him that (in English) unless there is a reason not to.",
+				"이번 회차의 스토리에서 당신은 그를 마지막으로 「" + call + "」라고 불렀습니다. 특별한 이유가 없으면 (한국어로) 그렇게 부르세요.",
+				"これまでのストーリーで、あなたが最後に彼を呼んだのは「" + call + "」です。特に理由がなければ（日本語で）そう呼んでください。",
+				"照你們走到現在的劇情，你最近一次叫他「" + call + "」，沒有特別的緣由就這樣叫他。")).Append('\n');
+		}
+		// 人物志只给外貌和公开身份那两段：这里要短，身世真相靠她读过的经历知道
+		var intros = Intros().Take(2).ToList();
+		if (intros.Count > 0)
+		{
+			sb.Append('\n').Append(L("【游戏人物志对你的记载】", "[Your entry in the game's character records]", "[게임 인물지에 적힌 당신]", "【ゲームの人物誌にあるあなたの記録】",
+				"【遊戲人物誌對你的記載】")).Append('\n');
+			foreach (string intro in intros)
+			{
+				sb.Append(intro).Append('\n');
+			}
+		}
+		sb.Append('\n').Append(L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
+			"【你的性子和小習慣】")).Append('\n').Append(Traits).Append('\n');
+
+		var rng = new Random(Id.GetHashCode() ^ lines.Count);
+		// 原话里的换行（对白框里的折行）换成空格，一句占一行
+		var voice = lines.Select(l => StoryAtlas.LineText(l.Key).Replace("\r", "").Replace("\n", " ").Trim()).Where(t => t.Length >= 6 && t.Length <= 40).Distinct().OrderBy(_ => rng.Next()).Take(fast ? 5 : 10).ToList();
+		if (voice.Count > 0)
+		{
+			sb.Append('\n').Append(L("【你在游戏里亲口说过的话】（照着这个语气和句子长短说新的话，不要照抄；对别人的称呼不要拿来叫赵活）",
+				"[Lines you have said in the game] (follow their tone and length but say new things; do not use what you called other people for Zhao Huo. They are in Chinese; speak English with the same feel)",
+				"[말투 참고용 공식 한국어 대사] (말투와 문장 길이를 참고해 새로운 말을 하고 그대로 베끼지 마세요. 다른 사람에게 쓴 호칭을 조활에게 쓰지 마세요)",
+				"【ゲームであなたが実際に言った台詞】（口調や文の長さはこれに倣い、新しい言葉で話してください。ほかの人への呼び方を趙活に使わないでください。中国語ですが、同じ雰囲気の日本語で話してください）",
+				"【你在遊戲裡親口說過的話】（照著這個語氣和句子長短說新的話，不要照抄；對別人的稱呼不要拿來叫趙活。原話是簡體字，你說話用繁體）")).Append('\n');
+			foreach (string v in voice)
+			{
+				sb.Append("- ").Append(v).Append('\n');
+			}
+		}
+		if (!fast)
+		{
+			var story = Experiences(lines).With;
+			story = story.Skip(Math.Max(0, story.Count - 5)).ToList();
+			if (story.Count > 0)
+			{
+				sb.Append('\n').Append(L("【你和赵活最近一起经历的事】（越往下越近；文中的「你」指赵活。你只知道这些和每次给你的内容）",
+					"[What you and Zhao Huo went through most recently] (oldest first; 「你」 in it means Zhao Huo. You know only this and what you are given each time)",
+					"[당신과 조활이 최근 함께 겪은 일] (오래된 것부터 적혀 있습니다. 기록 속의 「당신」이나 「你」는 조활입니다. 당신이 아는 것은 이것과 매번 주어지는 내용뿐입니다)",
+					"【あなたと趙活が最近一緒に経験したこと】（古い順です。文中の「你」は趙活のことです。あなたが知っているのはこれと、毎回渡される内容だけです）",
+					"【你和趙活最近一起經歷的事】（越往下越近；文中的「你」指趙活。你只知道這些和每次給你的內容）")).Append('\n');
+				foreach (string t in story)
+				{
+					sb.Append("- ").Append(t).Append('\n');
+				}
+			}
+		}
+
+		sb.Append('\n').Append(L("【怎么说话】", "[How you speak]", "[말하는 법]", "【話し方】",
+			"【怎麼說話】")).Append('\n');
+		sb.Append("- ").Append(L("每隔一阵你会收到三段幕后说明，都不是赵活对你说的话：【此刻】是现状（你们的关系、日期、他在做什么）；【刚才】是刚发生的对白，「某人：……」是那个人说的话；【事件】是赵活刚做的事和结果。",
+			"From time to time you receive three behind-the-scenes notes; none of them is something Zhao Huo says to you. 【此刻】 is the current situation (your relationship, the date, what he is doing); 【刚才】 is the dialogue that just happened, where 「someone：……」 is what that person said; 【事件】 is what Zhao Huo just did and how it turned out.",
+			"이따금 세 가지 내부 자료를 받습니다. 모두 조활이 당신에게 한 말이 아닙니다. 【此刻】는 현재 상황(두 사람의 관계, 날짜, 그가 하고 있는 일), 【刚才】는 방금 오간 대사로 「누구：……」는 그 사람이 한 말이고, 【事件】는 조활이 방금 한 일과 그 결과입니다. 표식과 항목명은 모드의 중국어 내부 표기이며, 대사 내용은 게임의 현재 언어로 읽은 말입니다.",
+			"ときどき、三つの舞台裏の説明が届きます。どれも趙活があなたに言った言葉ではありません。【此刻】は今の状況（二人の関係、日付、彼がしていること）、【刚才】はいま交わされた台詞で「誰々：……」はその人の言葉、【事件】は趙活がいましたことと、その結果です。",
+			"每隔一陣你會收到三段幕後說明，都不是趙活對你說的話：【此刻】是現況（你們的關係、日期、他在做什麼）；【刚才】是剛發生的對白，「某人：……」是那個人說的話；【事件】是趙活剛做的事和結果。")).Append('\n');
+		sb.Append("- ").Append(L("对【事件】说一句你的看法：感想、打趣、提醒、建议都可以，照你的性子来。只说一两句，不超过 50 字，像随口说的。",
+			"Say one thing about the 【事件】: a reaction, a tease, a reminder or a piece of advice, whatever fits you. One or two sentences, under 30 words, as if said in passing.",
+			"【事件】에 대해 당신의 생각을 한마디 하세요. 감상, 농담, 귀띔, 조언 무엇이든 좋으니 당신 성격대로 하세요. 한두 문장, 60자 이내로 지나가듯 말하세요.",
+			"【事件】について、あなたの思ったことを一言。感想、からかい、注意、助言、どれでもあなたらしく。一、二文、60字以内で、ふと口にするように。",
+			"對【事件】說一句你的看法：感想、打趣、提醒、建議都可以，照你的性子來。只說一兩句，不超過 50 字，像隨口說的。")).Append('\n');
+		sb.Append("- ").Append(L("直接对赵活说。不复述【刚才】和【事件】里的原话，不写旁白，不替他拿主意。",
+			"Speak directly to Zhao Huo. Do not repeat what is in 【刚才】 or 【事件】, do not narrate, and do not decide for him.",
+			"조활에게 직접 말하세요. 【刚才】와 【事件】의 내용을 되풀이하지 말고, 해설을 쓰지 말고, 그를 대신해 결정하지 마세요.",
+			"趙活に直接話しかけてください。【刚才】と【事件】の内容を繰り返さず、地の文を書かず、彼の代わりに決めないでください。",
+			"直接對趙活說。不複述【刚才】和【事件】裡的原話，不寫旁白，不替他拿主意。")).Append('\n');
+		sb.Append("- ").Append(AiCompanionPrompts.RecentRule).Append('\n');
+		sb.Append("- ").Append(L("只根据给你的内容说：没给的剧情、数字、条件不要编；之后会发生什么你不知道，不要预言。",
+			"Speak only from what you are given: do not invent story, numbers or conditions that were not given; you do not know what happens next, so do not predict it.",
+			"주어진 내용만으로 말하세요. 주어지지 않은 스토리, 숫자, 조건을 지어내지 마세요. 앞으로 무슨 일이 일어날지는 모르니 예언하지 마세요.",
+			"渡された内容だけをもとに話してください。渡されていないストーリー、数字、条件を作らないこと。この先どうなるかは知らないので、予言しないでください。",
+			"只根據給你的內容說：沒給的劇情、數字、條件不要編；之後會發生什麼你不知道，不要預言。")).Append('\n');
+		sb.Append("- ").Append(L("【刚才】里说话人是你自己时，那是你当时说的话：不要评论自己的台词，只对赵活的选择和他待你的态度说话。",
+			"When the speaker in 【刚才】 is you, those are your own words at the time: do not comment on your own lines; speak only about Zhao Huo's choices and how he treats you.",
+			"【刚才】에서 말한 사람이 당신이라면 그것은 당신이 그때 한 말입니다. 자기 대사를 평하지 말고, 조활의 선택과 그가 당신을 대하는 태도에 대해서만 말하세요.",
+			"【刚才】の話し手があなた自身なら、それはそのときあなたが言った言葉です。自分の台詞を評さず、趙活の選択と、彼のあなたへの態度についてだけ話してください。",
+			"【刚才】裡說話的人是你自己時，那是你當時說的話：不要評論自己的台詞，只對趙活的選擇和他待你的態度說話。")).Append('\n');
+		sb.Append("- ").Append(L("你就是" + Name + "，不提 AI、模型、游戏、玩家、剧情、选项、存档这些词；好感的数字不说出口。",
+			"You are " + me + " throughout. Never mention AI, models, the game, players, the story, options or saves, and never say the affection number.",
+			"당신은 끝까지 " + me + "입니다. AI, 모델, 게임, 플레이어, 스토리, 선택지, 저장 같은 말은 하지 말고, 호감도 숫자도 입 밖에 내지 마세요.",
+			"あなたは最後まで" + me + "です。AI、モデル、ゲーム、プレイヤー、ストーリー、選択肢、セーブといった言葉は口にせず、好感度の数字も言わないでください。",
+			"你就是" + me + "，不提 AI、模型、遊戲、玩家、劇情、選項、存檔這些詞；好感的數字不說出口。")).Append('\n');
+		sb.Append("- ").Append(spoiler).Append('\n');
+		sb.Append("- ").Append(language).Append('\n');
+		sb.Append("- ").Append(L("回复最后另起一行写你此刻的表情：[表情: 名字]，只能从这些里选：",
+			"End your reply with a new line giving your expression as [表情: name], exactly in that form, choosing only from: ",
+			"답의 마지막 줄에는 모드가 읽을 표정 표식을 [表情: 이름] 형식으로 쓰세요. 이름은 다음 목록의 식별자를 그대로 사용하세요: ",
+			"返答の最後の行に、今の表情を [表情: 名前] の形のまま書いてください。次の中からだけ選びます：",
+			"回覆最後另起一行寫你此刻的表情：[表情: 名字]（照這個寫法），只能從這些裡選：")).Append(MoodGuide())
+			.Append(L("。神情要跟着话走。", ". Match it to what you say.", ". 표정은 말에 맞추세요.", "。表情は話す内容に合わせてください。",
+			"。神情要跟著話走。")).Append('\n');
+		return sb.ToString();
+	}
+
 	/// <summary>
 	/// 以她的身份回答时的系统提示词。极速模式（fast）少给原话和经历、攻略规则只留要点，给小模型读。
 	/// 规则按界面语言各写一份（AiPrompts.L）；人物志、原话、经历沿用游戏当前语言，性子和称呼补充仍是 Mod 写的中文。

@@ -21,6 +21,8 @@ public partial class StoryReviewPanel
 	private Vector2 _aiScroll, _aiSetupScroll;
 	private bool _aiSetup;
 	private string _aiTestStatus = "";
+	// 设置页里正在改的主动陪玩 token 上限（数字输入框的文字）
+	private string _aiCapText;
 	private bool _aiTesting;
 	private int _aiShownCount;
 
@@ -47,8 +49,69 @@ public partial class StoryReviewPanel
 		panel._aiTyping = true;
 	}
 
+	// 从画面上的小伙伴点过来时带着的那句话：先摆在对话末尾给玩家看，玩家真的追问了才记进这段对话；
+	// 没追问就换人、离开这一页，它不留下（主动陪玩说过的话不进对话记录）
+	private AiCompanion.Remark _aiCarry;
+	private string _aiCarryPersona = "";
+	private int _aiCarryFrame;
+
+	/// <summary>
+	/// 从画面上的小伙伴点过来：打开 AI 页、切到陪玩的这位。remark 是它刚说的那句话，先摆在对话末尾，
+	/// 玩家追问时才连同当时的事一起记进对话、告诉 AI；question 不空就直接发问。
+	/// </summary>
+	internal static void OpenAiFor(string personaId, AiCompanion.Remark remark, string question)
+	{
+		StoryReviewPanel panel = Instance;
+		if (panel == null)
+		{
+			return;
+		}
+		panel._visible = true;
+		panel._tab = AiTab;
+		panel._showChangelog = false;
+		panel._aiHistory = false;
+		panel._aiFocusInput = true;
+		panel._aiTyping = true;
+		if (AiChat.Busy)
+		{
+			return;
+		}
+		AiChat.PersonaId = personaId ?? AiPersona.AssistantId;
+		panel._aiCarry = remark != null && remark.Text.Length > 0 ? remark : null;
+		panel._aiCarryPersona = AiChat.PersonaId;
+		panel._aiCarryFrame = Time.frameCount;
+		panel._aiScroll.y = float.MaxValue;
+		if (!string.IsNullOrEmpty(question) && AiChat.Configured)
+		{
+			panel.AskAi(TextConverter.ForDisplay(question));
+		}
+	}
+
+	// 发问。从小伙伴那儿带过来的那句话这时才进对话：显示在问题前面，并连同当时的事告诉 AI
+	private void AskAi(string question)
+	{
+		if (AiChat.Busy)
+		{
+			return;
+		}
+		if (_aiCarry != null && _aiCarryPersona == AiChat.PersonaId && (question ?? "").Trim().Length > 0)
+		{
+			AiSession session = AiChat.Session;
+			session.Shown.Add(new AiChat.Entry { Kind = AiChat.Kind.Assistant, Text = _aiCarry.Text, Mood = _aiCarry.Mood });
+			string note = AiCompanionPrompts.FollowUp(_aiCarry.Text, _aiCarry.Card);
+			session.Note = session.Note.Length > 0 ? session.Note + "；" + note : note;
+		}
+		_aiCarry = null;
+		AiChat.Ask(question);
+	}
+
 	private void DrawAi(Rect r)
 	{
+		// 带过来的那句话只在这次打开时摆着：离开过这一页、换了人就不再摆
+		if (_aiCarry != null && ((Time.frameCount - _aiSeenFrame > 2 && Time.frameCount - _aiCarryFrame > 2) || _aiCarryPersona != AiChat.PersonaId))
+		{
+			_aiCarry = null;
+		}
 		_aiSeenFrame = Time.frameCount;
 		// AI 查资料要用整理好的剧情数据：打开这一页就开始整理（和路线图一样）
 		if (!StoryAtlas.Ready && !StoryAtlas.Building && UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "Title")
@@ -113,6 +176,24 @@ public partial class StoryReviewPanel
 		Assign(ConfigManager.AiDeepModel, GUILayout.TextField(ConfigManager.AiDeepModel.Value, 100, _field, Ctl()));
 		GUILayout.EndHorizontal();
 		GUILayout.Label("模型名是建议值，服务商出了新模型可以自己改。要选支持工具调用（function calling）的模型。", _muted);
+		GUILayout.Space(S(8));
+
+		GUILayout.BeginHorizontal();
+		GUILayout.Label("主动陪玩模型", _label, GUILayout.Width(S(240)), Ctl());
+		Assign(ConfigManager.AiCompanionModel, GUILayout.TextField(ConfigManager.AiCompanionModel.Value, 100, _field, Ctl()));
+		GUILayout.EndHorizontal();
+		GUILayout.BeginHorizontal();
+		GUILayout.Label("主动陪玩 token 上限", _label, GUILayout.Width(S(240)), Ctl());
+		_aiCapText ??= ConfigManager.AiCompanionTokenCap.Value.ToString();
+		string capText = GUILayout.TextField(_aiCapText, 9, _field, GUILayout.Width(S(200)), Ctl());
+		if (capText != _aiCapText)
+		{
+			_aiCapText = Regex.Replace(capText, @"\D", "");
+			ConfigManager.AiCompanionTokenCap.Value = int.TryParse(_aiCapText, out int capValue) ? capValue : 0;
+		}
+		GUILayout.FlexibleSpace();
+		GUILayout.EndHorizontal();
+		GUILayout.Label("主动陪玩模型留空时与问答使用同一模型。token 上限按每次启动游戏计算，达到后本次游戏不再发言；填 0 为不限。", _muted);
 		GUILayout.Space(S(8));
 
 		GUILayout.Label("回答方式、剧透程度、女主角的攻略提示在对话页上方直接选。", _muted);
@@ -240,7 +321,7 @@ public partial class StoryReviewPanel
 	private static readonly Dictionary<string, UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<Sprite>> AiPortraits =
 		new Dictionary<string, UnityEngine.ResourceManagement.AsyncOperations.AsyncOperationHandle<Sprite>>();
 
-	private static Sprite AiPortrait(AiPersona p, string mood)
+	internal static Sprite AiPortrait(AiPersona p, string mood)
 	{
 		foreach (string m in new[] { mood, p.Moods[0] })
 		{
@@ -277,7 +358,7 @@ public partial class StoryReviewPanel
 	// 在游戏实际载入的图上量（同一个人在解包资源里可能有好几套画布），量一次记住
 	private static readonly Dictionary<Sprite, Vector2> HeadAnchors = new Dictionary<Sprite, Vector2>();
 
-	private static Vector2 HeadAnchor(Sprite sprite, string name)
+	internal static Vector2 HeadAnchor(Sprite sprite, string name)
 	{
 		if (HeadAnchors.TryGetValue(sprite, out Vector2 cached))
 		{
@@ -459,7 +540,7 @@ public partial class StoryReviewPanel
 				if (Steamworks.SteamUtils.GetEnteredGamepadTextInput(out string text, length + 1) && Instance != null)
 				{
 					Instance._aiInput = "";
-					AiChat.Ask(text);
+					Instance.AskAi(text);
 				}
 			});
 			return Steamworks.SteamUtils.ShowGamepadTextInput(Steamworks.EGamepadTextInputMode.k_EGamepadTextInputModeNormal,
@@ -492,6 +573,64 @@ public partial class StoryReviewPanel
 			x = b.xMax + S(2);
 		}
 		return picked;
+	}
+
+	// 主动陪玩那一排：关、安静、正常、话多；陪玩的是谁（和上面聊天选的人设分开，点按钮换成当前这位）；用了多少 token
+	private void DrawAiCompanionStrip(Rect r, AiPersona current)
+	{
+		float x = r.x;
+		bool supported = AiCompanion.Supported;
+		GUI.enabled = supported;
+		int level = supported && ConfigManager.AiCompanion.Value ? AiCompanion.Level + 1 : 0;
+		int picked = ChoiceStrip(ref x, r.y, r.height, "主动陪玩", new[] { "关", "安静", "正常", "话多" }, level, new[]
+		{
+			"不在游戏画面上显示",
+			"选定的人设常驻游戏画面，仅在结局、战斗胜负、自身好感变化、限时剧情将到期时发言",
+			"另在做出有后果的选择、掷骰、剧情段落结束时发言",
+			"另在普通选择、数值变化时发言，token 用量约为「正常」的两倍",
+		});
+		GUI.enabled = true;
+		x += S(24);
+		if (!supported)
+		{
+			GUI.Label(new Rect(x, r.y, r.xMax - x, r.height), "需要游戏 1.0.6001 及以上版本", Middle(_muted));
+			return;
+		}
+		if (picked != level)
+		{
+			if (picked == 0)
+			{
+				ConfigManager.AiCompanion.Value = false;
+			}
+			else
+			{
+				ConfigManager.AiCompanionLevel.Value = picked - 1;
+				if (!ConfigManager.AiCompanion.Value)
+				{
+					ConfigManager.AiCompanion.Value = true;
+					Notice("主动陪玩已开启：每次发言会将最近的对白和事件发送给服务商");
+				}
+			}
+		}
+		AiPersona who = AiCompanion.Persona;
+		string label = string.Format("陪玩人选：{0}", TextConverter.ForDisplay(who != null ? who.Name : "攻略助手"));
+		float lw = TextWidth(label, Middle(_muted), 0f);
+		GUI.Label(new Rect(x, r.y, lw, r.height), label, Middle(_muted));
+		x += lw + S(4);
+		if ((current?.Id ?? "") != (who?.Id ?? ""))
+		{
+			var swap = new Rect(x, r.y, TextWidth("换成当前人设", _aiSmallButton, S(64)), r.height);
+			if (GUI.Button(swap, "换成当前人设", _aiSmallButton))
+			{
+				ConfigManager.AiCompanionPersona.Value = current?.Id ?? "";
+			}
+			Hover(swap, "由上方选中的人设陪玩");
+			x = swap.xMax + S(12);
+		}
+		if (AiCompanion.TokensUsed > 0)
+		{
+			GUI.Label(new Rect(x, r.y, r.xMax - x, r.height), string.Format(AiCompanion.Capped ? "陪玩已用 {0} token（已达上限）" : "陪玩已用 {0} token", AiCompanion.TokensUsed), Middle(_muted));
+		}
 	}
 
 	private void DrawAiHistory(Rect r)
@@ -589,7 +728,7 @@ public partial class StoryReviewPanel
 	private static readonly Dictionary<(int, int, bool, char), float> _charWidth = new Dictionary<(int, int, bool, char), float>();
 	private static readonly GUIStyle _measure = new GUIStyle { wordWrap = false, richText = true };
 
-	private static string Wrap(string rich, GUIStyle style, float width)
+	internal static string Wrap(string rich, GUIStyle style, float width)
 	{
 		if (width <= 0f || string.IsNullOrEmpty(rich))
 		{
@@ -956,6 +1095,9 @@ public partial class StoryReviewPanel
 			}) == 0;
 		}
 		r = new Rect(r.x, r.y + bh + S(8), r.width, r.height - bh - S(8));
+		// 第三行：主动陪玩（常驻游戏画面的小伙伴）。开关和话多程度并成一排，后面是陪玩的人选
+		DrawAiCompanionStrip(new Rect(r.x, r.y, r.width, bh), persona);
+		r = new Rect(r.x, r.y + bh + S(8), r.width, r.height - bh - S(8));
 		if (_aiHistory)
 		{
 			DrawAiHistory(r);
@@ -1154,6 +1296,16 @@ public partial class StoryReviewPanel
 			}
 		}
 		_aiMeasured.Clear();
+		// 从画面上的小伙伴点过来时带着的那句话：摆在末尾当话头，还不算这段对话里的
+		if (_aiCarry != null && !AiChat.Busy)
+		{
+			GUILayout.Label("刚才在游戏画面上说的", _muted);
+			string carried = Wrap(TextConverter.Verbatim + RichFromMarkdown(_aiCarry.Text), _aiBot, area.width - S(30) - _aiBot.padding.horizontal);
+			GUILayout.BeginHorizontal();
+			GUILayout.Label(carried, _aiBot, GUILayout.Width(BubbleWidth(carried, _aiBot, area.width - S(30))));
+			GUILayout.FlexibleSpace();
+			GUILayout.EndHorizontal();
+		}
 		if (AiChat.Busy && AiChat.Partial.Length > 0)
 		{
 			// 一边收一边显示
@@ -1186,7 +1338,7 @@ public partial class StoryReviewPanel
 				// 宽度按界面语言量：按中文原文量，英文、韩文会被截掉
 				if (GUILayout.Button(q, _button, GUILayout.Width(TextWidth(q, _button, 0f) + _button.padding.horizontal), Ctl()))
 				{
-					AiChat.Ask(TextConverter.ForDisplay(q));
+					AskAi(TextConverter.ForDisplay(q));
 				}
 				GUILayout.FlexibleSpace();
 				GUILayout.EndHorizontal();
@@ -1270,7 +1422,7 @@ public partial class StoryReviewPanel
 			if (question.Length > 0)
 			{
 				_aiInput = "";
-				AiChat.Ask(question);
+				AskAi(question);
 			}
 		}
 	}
@@ -1281,7 +1433,7 @@ public partial class StoryReviewPanel
 	private static readonly Regex Heading = new Regex(@"^#{1,6}\s*(.+)$", RegexOptions.Multiline);
 
 	// 模型常用 Markdown：粗体、标题换成富文本粗体，列表符号照留，其余尖括号换掉免得被当成标签
-	private static string RichFromMarkdown(string text)
+	internal static string RichFromMarkdown(string text)
 	{
 		string t = Escape(text).Replace("\r", "");
 		t = Heading.Replace(t, "<b>$1</b>");

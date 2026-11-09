@@ -210,6 +210,9 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			LOMAssistant.Features.Story.StoryJumpNote.Ensure(base.gameObject);
 			PositionOptionHints.Ensure(base.gameObject);
 			LOMAssistant.Features.Memo.MemoPanel.Ensure(base.gameObject);
+			// 主动陪玩：几处只读的钩子（决斗和战役胜负、剧情记录、插画）和画面上的小伙伴
+			TryPatchAll(typeof(LOMAssistant.Features.Ai.AiCompanionPatches));
+			LOMAssistant.Features.Ai.CompanionPet.Ensure(base.gameObject);
 			TryPatchAll(typeof(MapEventHints));
 			TryPatchAll(typeof(StatLimitPatch));
 			TryPatchAll(typeof(TitlePatch));
