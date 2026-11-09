@@ -36,9 +36,7 @@ public static class UiText
 		{
 			lang.Cache.Clear();
 		}
-		string result = text.IndexOf('<') >= 0
-			? string.Concat(Tags.Split(text).Select(part => Tag.IsMatch(part) ? part : Segment(part, lang)))
-			: Segment(text, lang);
+		string result = Segment(text, lang);
 		lang.Cache[text] = result;
 		return result;
 	}
@@ -49,6 +47,7 @@ public static class UiText
 	private static readonly Regex Tag = new Regex("^" + TagPattern + "$");
 	private static readonly Regex Sections = new Regex(@"(\n| · |　·　|　+| → )");
 	private static readonly Regex Separators = new Regex(@"( {2,}|・|、)");
+	private static readonly Regex Otherwise = new Regex(@"否则（(?:不满足|以下都不满足)：(?:[^（）]|（(?<depth>)|）(?<-depth>))*(?(depth)(?!))）");
 	private static readonly Regex Han = new Regex(@"[一-鿿]");
 	private static readonly char[] Blank = { ' ', '　', '\n', '\r', '\t' };
 
@@ -58,6 +57,16 @@ public static class UiText
 		if (found != null)
 		{
 			return found;
+		}
+		// 结果说明可能拼在多行文字中，先翻完整的「否则」条件，再拆富文本标签和段落。
+		if (depth < 8)
+		{
+			text = Otherwise.Replace(text, m => Whole(m.Value, lang, depth + 1) ?? m.Value);
+		}
+		string[] tagged = Tags.Split(text);
+		if (tagged.Length > 1)
+		{
+			return string.Concat(tagged.Select(part => Tag.IsMatch(part) ? part : depth < 8 ? Segment(part, lang, depth + 1) : Words(part, lang)));
 		}
 		// 先分开外层段落，保留「（要 …）」等句式内部的空格；名称也可能带顿号，要先完整识别。
 		string[] parts = Sections.Split(text);
@@ -172,7 +181,7 @@ public static class UiText
 		string names = string.Join("|", map.Keys.OrderByDescending(n => n.Length).Select(Regex.Escape).ToArray());
 		const string comparison = "(?:>=|<=|!=|=|>|<|≥|≤|≠)";
 		// 完整「否则」说明用分号分开条件，也要先识别整名，再翻其中的物品名。
-		var regex = new Regex("(?<=" + comparison + ")(?:" + names + ")(?=$|\\s|<|；)|(?<=^|\\s|；)(?:" + names + ")(?= 需|\\s*" + comparison + ")");
+		var regex = new Regex("(?<=" + comparison + ")(?:" + names + ")(?=$|\\s|<|；)|(?<=^|\\s|；|：|:)(?:" + names + ")(?= 需|\\s*" + comparison + ")");
 		return (regex, m => map[m.Value]);
 	}
 
