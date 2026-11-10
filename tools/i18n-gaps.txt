@@ -25,7 +25,6 @@ English	上风观
 English	不明
 English	丐帮
 English	中药蜜饯
-English	丹霞子
 English	乌蚕宝衣
 English	乖乖水
 English	乘凉
@@ -46,7 +45,6 @@ English	书籍_莲花落
 English	书籍_蛇形拳
 English	书籍_金刚腿
 English	书籍_阿摩搪墙拳
-English	二师兄
 English	云霄雷霆霹雳刀
 English	五毒秘录
 English	佛学
@@ -59,19 +57,17 @@ English	刘颚
 English	千面人魔
 English	南宫护心诀
 English	南宫横
-English	南宫浅
-English	南宫深
 English	南宫远
 English	南溪
 English	南蝥礜石散
 English	历战血书
 English	去处
 English	参观锦香宫
-English	叶云舟
 English	同舟剑法
 English	向无忧
 English	听云木剑
 English	听海生
+English	咖啡伴侣已于 {0} 导入 LOM_SaveSlotMemo 的备注（Save_NNN.memo.txt）：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 English	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 English	唐中翎
 English	唐升
@@ -80,13 +76,11 @@ English	唐娇娇
 English	唐守鸿
 English	唐小楼
 English	唐惟元
-English	唐杉
 English	唐芳
 English	唐衫
 English	唐铮
 English	唐门传承小剑
 English	唐门暗器总纲
-English	四师兄
 English	回梦仙香
 English	国
 English	国国
@@ -110,6 +104,7 @@ English	好感度_最高唐门师兄
 English	好感度_李富贵_樊啸天
 English	好感度_解无尘
 English	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+English	存档备注：已从 LOM_SaveSlotMemo 导入 {0} 条备注，跳过 {1} 条（已有备注）。
 English	孟仙谣
 English	孟珙
 English	宋悲
@@ -202,7 +197,6 @@ English	标记_
 English	校场
 English	核枣钉
 English	梁有诗
-English	樊啸天
 English	正在掷骰
 English	正在选的选项：
 English	段智秀
@@ -220,11 +214,9 @@ English	焚心火印
 English	玄功洞
 English	玄烛心经
 English	玄玄如意指
-English	王二壮
 English	玩家在标题画面，还没读档进游戏。
 English	玩家还没读档进游戏
 English	现在在：
-English	瑞笙
 English	申屠龙
 English	画中仙
 English	白鲨语
@@ -309,6 +301,8 @@ English	（设置项「
 English	，各档：
 English	，改后重启游戏生效
 English	：现在 
+English	；存档文件本身能读
+English	；存档文件读不出来（{0}），标成无法读取
 Japanese	 就会触发）
 Japanese	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
 Japanese	>剩 
@@ -361,6 +355,7 @@ Japanese	叶云裳
 Japanese	后山
 Japanese	向无忧
 Japanese	听海生
+Japanese	咖啡伴侣已于 {0} 导入 LOM_SaveSlotMemo 的备注（Save_NNN.memo.txt）：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Japanese	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Japanese	唐中翎
 Japanese	唐升
@@ -385,6 +380,7 @@ Japanese	大师兄涂鸦
 Japanese	失魂落魄
 Japanese	女弟子
 Japanese	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+Japanese	存档备注：已从 LOM_SaveSlotMemo 导入 {0} 条备注，跳过 {1} 条（已有备注）。
 Japanese	孟仙谣
 Japanese	孟珙
 Japanese	守卫
@@ -497,6 +493,8 @@ Japanese	（设置项「
 Japanese	，各档：
 Japanese	，改后重启游戏生效
 Japanese	：现在 
+Japanese	；存档文件本身能读
+Japanese	；存档文件读不出来（{0}），标成无法读取
 Korean	 就会触发）
 Korean	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
 Korean	>剩 
@@ -518,11 +516,13 @@ Korean	不明
 Korean	傳奇_001
 Korean	养成地图上
 Korean	去处
+Korean	咖啡伴侣已于 {0} 导入 LOM_SaveSlotMemo 的备注（Save_NNN.memo.txt）：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Korean	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Korean	国
 Korean	国国
 Korean	地图标题：
 Korean	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+Korean	存档备注：已从 LOM_SaveSlotMemo 导入 {0} 条备注，跳过 {1} 条（已有备注）。
 Korean	对白：
 Korean	常数_
 Korean	感情：
@@ -566,3 +566,5 @@ Korean	（设置项「
 Korean	，各档：
 Korean	，改后重启游戏生效
 Korean	：现在 
+Korean	；存档文件本身能读
+Korean	；存档文件读不出来（{0}），标成无法读取
