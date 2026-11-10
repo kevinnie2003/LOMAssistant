@@ -247,7 +247,7 @@ public static class ConfigManager
 	public static void Init()
 	{
 		// 配置文件已经有了、却还没有选预设弹窗这一项：是从 2.x 更新上来的老玩家，不弹
-		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noFeel = false, noRoundHint = false, noDeathHint = false;
+		bool updated = false, noDeadline = false, noReadMarks = false, noCompanions = false, noFeel = false, noRoundHint = false, noDeathHint = false, noJump = false;
 		try
 		{
 			if (System.IO.File.Exists(Config.ConfigFilePath))
@@ -260,6 +260,7 @@ public static class ConfigManager
 				noFeel = !raw.Contains("BattleFeel");
 				noDeathHint = !raw.Contains("FightDeathHint");
 				noRoundHint = !raw.Contains("FightRoundHint");
+				noJump = !raw.Contains("EnableStoryJump");
 				// An old true/false fails to parse as int and would fall back to 2 (unlock all).
 				// 旧的 true/false 读不成数字会变成默认的 2（全部解锁），先改写
 				string migrated = raw.Replace("EnableLibraryDisplay = true", "EnableLibraryDisplay = 2")
@@ -297,6 +298,11 @@ public static class ConfigManager
 		if (noCompanions && EnableEventPicker.Value && ShowBranchChecks.Value != 0)
 		{
 			BattleCompanions.Value = true;
+		}
+		// 剧情跳转默认关，进阶、全开打开：配置里还没有这一项的老玩家，用着这两档的更新上来也打开（判断方式同上）
+		if (noJump && EnableEventPicker.Value && ShowBranchChecks.Value != 0)
+		{
+			EnableStoryJump.Value = true;
 		}
 		// 战役手感优化是新加的，默认开；用着「原汁原味」的老玩家更新上来保持关
 		if (noFeel && !EnableOptionInfo.Value)
@@ -605,7 +611,7 @@ public static class ConfigManager
 		AutoSaveHistory = new ConfigElement<int>("AutoSaveHistory", "每类自动存档（养成/剧情/战斗）额外保留的旧档数量，0=不保留", 5);
 		EnableSaveBrowser = new ConfigElement<bool>("EnableSaveBrowser", "新版存档、读档界面：左边列表（心上人头像、备注、备注和删除按钮），右边详情（心上人立绘、任务、读档后的对白）。true=开（默认），false=用游戏原来的界面，改后重启生效", defaultValue: true);
 		EnableShopAllItems = new ConfigElement<bool>("EnableShopAllItems", "四师兄商店售卖全部物品（书籍、杂物、特殊物品；不卖《证类本草》，提前买会导致六月后山事件出 bug）。true=开，false=关", defaultValue: false);
-		EnableStoryJump = new ConfigElement<bool>("EnableStoryJump", "剧情跳转：剧情图、路线图里选中一段剧情，可以「跳到这里」直接从那一段开演（包括还没走到的），中间的旗标、任务进度按剧本补上。补剧情、收集分支用，正常游玩不建议。true=开（默认），false=关", defaultValue: true);
+		EnableStoryJump = new ConfigElement<bool>("EnableStoryJump", "剧情跳转：剧情图、路线图里选中一段剧情，可以「跳到这里」直接从那一段开演（包括还没走到的），中间的旗标、任务进度按剧本补上。补剧情、收集分支用，正常游玩不建议。true=开，false=关（默认）", defaultValue: false);
 		EnableDebugPanel = new ConfigElement<bool>("EnableDebugPanel", "数值面板热键（F9 打开「数值」页）。已不用：不想要就把 DebugPanelKey 设成 None", defaultValue: true);
 		DebugPanelKey = new ConfigElement<KeyCode>("DebugPanelKey", "打开数值面板的热键，如 F9 / P 等", KeyCode.F9);
 		EnableAnytimeSave = new ConfigElement<bool>("EnableAnytimeSave", "是否启用随时存档（剧情台词、选项、掷骰和养成界面都能存，每次存一个新档，不占原版存档栏）。true=开，false=关，改后重启生效", defaultValue: true);
