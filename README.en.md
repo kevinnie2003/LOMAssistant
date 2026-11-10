@@ -185,7 +185,7 @@ Connect a large language model with your own API key to ask about the story and 
   <img src="media/save-browser.webp" width="640" alt="New load screen: save list with portraits and notes, and a detail pane with the portrait and the dialogue after loading">
 
 - **More slots**: 100 manual saves (20 in the base game), 5 pages of legend slots (1 page of 12), and 5 extra old copies of each auto save; all of these numbers can be changed in Settings.
-- **Save notes**: on the save screen, select a manual save and press F8 to write a note. Notes are synced with Steam Cloud, and notes from LOM_SaveSlotExpander are imported.
+- **Save notes**: on the save screen, select a manual save and press F8 to write a note. Notes are synced with Steam Cloud, and notes from LOM_SaveSlotExpander and LOM_SaveSlotMemo are imported.
 
 ### Training
 
