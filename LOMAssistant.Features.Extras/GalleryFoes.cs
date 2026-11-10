@@ -58,13 +58,11 @@ public sealed partial class Gallery
 	private float _foeZoom;
 	private Vector2 _foePan;
 	private bool _foeDragging;
-	private string _foeNameLanguage = "ChineseSimplified";
 	private Vector2 _foeGrab;
 	private readonly List<AssetBundle> _foeBundles = new List<AssetBundle>();
 	private Coroutine _foeLoadRoutine;
 	private bool _foeLoading;
 	private GUIStyle _foeRow, _foeRowOn, _foeSmall, _foeName, _foeNameOn, _foeHint;
-	private string _foeExportDirEdit;
 
 	// ---------------- 扫描 ----------------
 
@@ -175,7 +173,7 @@ public sealed partial class Gallery
 					{
 						Folder = parts[0],
 						Id = row.Id ?? "",
-						Name = string.IsNullOrEmpty(row.Cn) ? parts[0] : row.Cn,
+						Name = string.IsNullOrEmpty(row.Name) ? parts[0] : row.Name,
 						SortKey = row.Id ?? parts[0],
 					};
 				}
@@ -229,30 +227,10 @@ public sealed partial class Gallery
 
 	// ---------------- 名字 ----------------
 
-	/// <summary>角色名按界面语言取。</summary>
-	private static string FoeDisplay(Foe foe, string language)
+	/// <summary>角色名按界面语言取：和其他页面一样查人名表，没有译名的显示原名。</summary>
+	private static string FoeDisplay(Foe foe)
 	{
-		if (foe == null)
-		{
-			return "";
-		}
-		if (!GalleryFoeNames.Table.TryGetValue(foe.Folder, out var row))
-		{
-			return foe.Name;
-		}
-		switch (language)
-		{
-			case "Korean":
-				return string.IsNullOrEmpty(row.Kr) ? row.Cn : row.Kr;
-			case "Japanese":
-				return string.IsNullOrEmpty(row.Jp) ? row.Cn : row.Jp;
-			case "English":
-				return string.IsNullOrEmpty(row.En) ? row.Cn : row.En;
-			case "ChineseTraditional":
-				return string.IsNullOrEmpty(row.Tw) ? row.Cn : row.Tw;
-			default:
-				return row.Cn;
-		}
+		return foe == null ? "" : TextConverter.ForDisplay(foe.Name);
 	}
 
 	// ---------------- 加载立绘 ----------------
@@ -399,24 +377,22 @@ public sealed partial class Gallery
 	{
 		EnsureFoeBundles();
 		FoeStyles();
-		// 名字按 Mod 的界面语言取，每帧刷一次，切语言后马上跟着变
-		_foeNameLanguage = TextConverter.DisplayLanguage;
 		DrawHeader();
 		float top = S(110f);
 		float left = S(40f);
 		float width = screen.width - S(80f);
 
-		// 导出位置：默认在本 Mod 目录下的 GalleryFoes，可以在这里改，目录不存在会自动建
-		if (_foeExportDirEdit == null)
+		// 导出位置和动图页共用（默认桌面），可以在这里改，目录不存在会自动建
+		if (_frameExportDirEdit == null)
 		{
-			_foeExportDirEdit = ConfigManager.GalleryFoeExportDir.Value ?? "";
+			_frameExportDirEdit = ConfigManager.GalleryFrameExportDir.Value ?? "";
 		}
 		GUI.Label(new Rect(left, top, S(80f), S(44f)), TextConverter.ForDisplay("导出到"), _muted);
 		var dirField = new Rect(left + S(84f), top, width - S(280f), S(44f));
-		_foeExportDirEdit = GUI.TextField(dirField, _foeExportDirEdit ?? "", _field);
+		_frameExportDirEdit = GUI.TextField(dirField, _frameExportDirEdit ?? "", _field);
 		if (GUI.Button(new Rect(dirField.xMax + S(10f), top, S(150f), S(44f)), TextConverter.ForDisplay("打开文件夹"), _button))
 		{
-			OpenFoeExportFolder();
+			OpenExportFolder();
 		}
 
 		var body = new Rect(left, top + S(58f), width, screen.height - top - S(58f) - S(40f));
@@ -450,7 +426,7 @@ public sealed partial class Gallery
 		string query = (_foeSearch ?? "").Trim();
 		if (query.Length > 0)
 		{
-			shown = shown.Where(f => (FoeDisplay(f, _foeNameLanguage) + " " + f.Name + " " + f.Folder).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+			shown = shown.Where(f => (FoeDisplay(f) + " " + f.Name + " " + f.Folder).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
 		}
 		GUI.Label(new Rect(area.x, search.yMax + S(4f), area.width, S(26f)),
 			_foeLoading ? TextConverter.ForDisplay("正在加载…")
@@ -470,7 +446,7 @@ public sealed partial class Gallery
 				SelectFoe(foe);
 			}
 			GUI.Label(new Rect(row.x + S(12f), row.y + S(4f), row.width - S(24f), S(28f)),
-				FoeDisplay(foe, _foeNameLanguage), on ? _foeNameOn : _foeName);
+				FoeDisplay(foe), on ? _foeNameOn : _foeName);
 			GUI.Label(new Rect(row.x + S(12f), row.y + S(31f), row.width - S(24f), S(24f)), foe.Folder, _foeSmall);
 		}
 		GUI.EndScrollView();
@@ -536,7 +512,7 @@ public sealed partial class Gallery
 		if (_foe != null && _foePose != null)
 		{
 			GUI.Label(new Rect(view.x + S(8f), view.yMax - S(26f), view.width - S(16f), S(22f)),
-				FoeDisplay(_foe, _foeNameLanguage) + " · " + TextConverter.ForDisplay(_foePose.Group)
+				FoeDisplay(_foe) + " · " + TextConverter.ForDisplay(_foePose.Group)
 				+ "　" + TextConverter.ForDisplay("滚轮缩放，按住拖动"), _foeSmall);
 		}
 
@@ -595,36 +571,6 @@ public sealed partial class Gallery
 		}
 	}
 
-	/// <summary>页面上填的导出目录；空着就用配置里的。填了会顺手记进配置。</summary>
-	private string FoeExportDirectory()
-	{
-		string dir = (_foeExportDirEdit ?? "").Trim();
-		if (dir.Length == 0)
-		{
-			dir = ConfigManager.GalleryFoeExportDir.Value;
-		}
-		if (dir != ConfigManager.GalleryFoeExportDir.Value)
-		{
-			ConfigManager.GalleryFoeExportDir.Value = dir;
-		}
-		return dir;
-	}
-
-	private void OpenFoeExportFolder()
-	{
-		string dir = FoeExportDirectory();
-		try
-		{
-			System.IO.Directory.CreateDirectory(dir);
-			System.Diagnostics.Process.Start("explorer.exe", "\"" + dir + "\"");
-		}
-		catch (Exception e)
-		{
-			FileLogger.LogWarning("[鉴赏] 打开决斗导出文件夹失败: " + e.Message);
-			FrameNotice(TextConverter.ForDisplay("打不开这个文件夹"), 5f);
-		}
-	}
-
 	/// <summary>把当前选中的立绘导出成 PNG，文件放在动图页那个导出目录里。</summary>
 	private void ExportFoeImage()
 	{
@@ -633,8 +579,8 @@ public sealed partial class Gallery
 		{
 			return;
 		}
-		string dir = FoeExportDirectory();
-		string name = SafeFileName(FoeDisplay(_foe, _foeNameLanguage) + "_" + _foePose.Variant) + ".png";
+		string dir = ExportDirectory();
+		string name = SafeFileName(FoeDisplay(_foe) + "_" + _foePose.Variant) + ".png";
 		try
 		{
 			System.IO.Directory.CreateDirectory(dir);

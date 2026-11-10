@@ -206,6 +206,7 @@ public static class UiTraditional
 		("惡心", "噁心"),
 		("咸魚", "鹹魚"),
 		("合并", "合併"),
+		("唐升", "唐陞"),
 	};
 
 	public static string Fix(string text)
