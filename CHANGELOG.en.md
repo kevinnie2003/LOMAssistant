@@ -2,6 +2,20 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.0 (2026-11-09)
+
+- **Proactive companion** (new, off by default): a persona of your choice stays on the game screen and says a line or two when you make a choice, roll dice, finish a fight, see affection change, or have a timed story about to run out. It only comments and advises. Talk frequency has three levels (Quiet, Normal, Chatty), and it can use its own model and a token cap per game launch. The switch is on the AI companion tab.
+- **Custom personas** (new): put a persona text and images in a folder to add a persona of your own; the built-in personas' images and texts can be replaced too. Open the folder from "AI settings"; it contains instructions.
+- **AI settings**: each provider keeps its own key, so switching providers no longer means typing it again. The settings page now has three columns and a back button.
+- **Better battle controls**: removed three parts: normal attacks costing no energy, kills shortening ultimate cooldowns, and battle results not lowering temperament and contribution.
+- **Story jump**: off by default; players using the "Advanced" or "All on" preset keep it on after updating.
+- **Game speed**: after the game changes its own speed, the speed multiplier is no longer miscalculated (#50).
+- **Choice outcomes**: "Otherwise" conditions in outcome notes are now translated in the Korean, Japanese and English UI (PR #49).
+- **Timed story reminder, Now tab**: quests that can trigger anywhere are no longer shown as triggering at a place called "None".
+- **Save list**: when one save can't be read, only that save is marked "Unreadable save"; the other saves show as usual.
+- **Save notes**: on first launch, notes from LOM_SaveSlotMemo are imported automatically (first line only).
+- **Traditional Chinese**: more UI terms now use common wording.
+
 ## 3.6.6 (2026-11-08)
 
 - **Gallery Animations page** (new, PR #48): plays the game's frame-by-frame animations of character battle moves and effects, with adjustable frame rate and background, and exports transparent GIFs (to the desktop by default).
