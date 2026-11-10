@@ -554,7 +554,7 @@ public static class ConfigManager
 		AiSpoiler = new ConfigElement<int>("AiSpoiler", "AI 剧透程度：0=想知道什么说什么，1=只说当前和走过的剧情，2=只给方向提示", 0);
 		AiCompanion = new ConfigElement<bool>("AiCompanion", "主动陪玩：选定的人设常驻游戏画面，对玩家的选择、掷骰、战斗结果等发表看法，只评论和建议，不修改存档。每次发言会将最近的对白和事件发送给 AI 服务商，按服务商的价格计费；需要游戏 1.0.6001 及以上版本。true=开，false=关（默认）", defaultValue: false);
 		AiCompanionLevel = new ConfigElement<int>("AiCompanionLevel", "主动陪玩的发言频率：0=安静（仅结局、战斗胜负、自身好感变化、限时剧情将到期），1=正常（默认，另含有后果的选择、掷骰结果、剧情段落结束），2=话多（另含普通选择、数值变化）", 1);
-		AiCompanionPersona = new ConfigElement<string>("AiCompanionPersona", "主动陪玩的人选：人设的角色编号，留空为攻略助手（在 AI 页选择，自动记录）", "");
+		AiCompanionPersona = new ConfigElement<string>("AiCompanionPersona", "主动陪玩的人选：人设的角色编号，留空为攻略助手（在 AI 页选择，自动记录）。默认是小师妹唐默铃", "sister1");
 		AiCompanionModel = new ConfigElement<string>("AiCompanionModel", "主动陪玩使用的模型名；留空则与 AI 问答使用同一模型", "");
 		AiCompanionTokenCap = new ConfigElement<int>("AiCompanionTokenCap", "主动陪玩每次启动游戏的 token 用量上限：达到后本次游戏不再发言；0=不限", 200000);
 		AiCompanionX = new ConfigElement<float>("AiCompanionX", "主动陪玩形象的横向位置（占屏幕宽度的比例，-1=默认右下角）。拖动形象会自动保存", -1f);
