@@ -151,8 +151,10 @@ def check_docs(problems):
     # 功能那几节五种语言要一致；安装、开发、致谢各语言写法不同，不比
     def shape(name):
         lines = read(name).splitlines()
-        heads = [i for i, l in enumerate(lines) if l.startswith('## ')]
-        lines = lines[heads[2]:heads[3]]
+        heads = [i for i, l in enumerate(lines) if l.startswith('## ')] + [len(lines)]
+        # 功能一节：三级标题最多的那个二级章节（不按第几节找，章节顺序调整后也认得）
+        start, end = max(zip(heads, heads[1:]), key=lambda s: sum(l.startswith('### ') for l in lines[s[0]:s[1]]))
+        lines = lines[start:end]
         return (sum(l.startswith('#') for l in lines), sum(l.startswith('<img') or '![' in l for l in lines),
                 sum(l.lstrip().startswith('- ') for l in lines))
 

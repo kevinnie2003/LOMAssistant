@@ -42,21 +42,42 @@ The zip already contains BepInEx.
 
 All keys can be changed or unbound under **Hotkeys** on the settings page.
 
+## Settings
+
+Everything is on the settings page of the window (F8), where settings can be searched by name. Changes are saved immediately; ones that need a restart are marked; hover over a name for details. Settings are also stored in `BepInEx\config\LOMAssistant.cfg`.
+
+<img src="media/settings.webp" width="640" alt="Settings page: switches, numbers, game speed and hotkeys by group">
+
+**Presets**: at the top of the settings page you can switch in one click to **As intended**, **Assist**, **Advanced** or **All on**. They only change story hints, training and combat aids and cheats; saves, speed-ups, interface and hotkeys stay as they are. Changing any of those switches makes it **Custom**; you can still switch back to a preset afterwards. New players pick one the first time they open the window; if they don't, it stays on **Assist**.
+
+| Preset | Turned on |
+|---|---|
+| As intended | Everything listed below is off |
+| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Death-on-defeat notice; Duel round events; Lecture Hall unlock; Better battle controls; Unlimited training; Unlimited forging; Free forging |
+| Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Choose battle allies |
+| All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Enemy move forecast; full Lecture Hall unlock display |
+
+Anything not listed does not change with presets and can be switched on its own in Settings.
+
+<img src="media/presets.webp" width="640" alt="Choosing a preset: four cards saying who each one suits and what it changes">
+
 ## Features
+
+Setting names below are written as they appear on the settings page. The preset table above shows which preset turns on each feature.
 
 ### AI companion (F3)
 
-Connect a large language model with your own API key to ask about the story and strategy, or to chat with the heroines and the Eldest Brother. Supports DeepSeek, Kimi, Qwen, Zhipu GLM, SiliconFlow, OpenRouter, OpenAI, Claude, Gemini, local Ollama, and any OpenAI-compatible endpoint.
+Connect a large language model with your own API key to ask about the story and strategy, or to chat with characters from the game. Supports DeepSeek, Kimi, Qwen, Zhipu GLM, SiliconFlow, OpenRouter, OpenAI, Claude, Gemini, local Ollama, and any OpenAI-compatible endpoint.
 
 - **Guide**: looks up the game's own story data before answering: quests and their triggers, script branches and dialogue, affection and stat totals along each route, endings and deaths, romance routes, character bios, location events, duel conditions, plus your current progress and the options on screen.
 - **Heroines and the Eldest Brother**: the nine romanceable heroines and Tang Buyi, the Eldest Brother, speak in their own voice, their portraits change expression with what they say, and how they address you follows the story. They only know the story you have read. When you ask for help, a separate guide tip follows the reply; you can also set them to chat only.
 - **Spoilers**: Tell me anything / Only current and past / Hints only.
-- **Edits**: when the AI wants to change stats, affection, your sweetheart, story flags or this mod's settings, it shows a card first; nothing changes until you confirm.
+- **Answers**: Fast / Standard / Deep. Fast looks things up less and answers faster but more roughly; Deep switches to a stronger model that checks the facts before answering: more accurate, but costlier and slower.
+- **Edits**: when the AI wants to change stats, affection, your love interest, story flags or this mod's settings, it shows a card first; nothing changes until you confirm.
 - **Chats**: each character's chats are stored locally; start new ones, switch between them, delete them, or export them to the desktop. Replies appear as they are written.
-- **Deep mode**: switches to a stronger model that checks the facts before answering: more accurate, but costlier and slower.
 - **Proactive companion**: a persona of your choice stays on the game screen and says a line or two when you make a choice, roll the dice, finish a fight, gain or lose affection, or a timed event is about to expire. It only comments and advises. There are three levels of talkativeness (Quiet, Normal, Chatty), an optional separate model and a token cap per game launch. The figure can be dragged, shrunk or paused, and clicking its bubble takes you to the AI companion tab to follow up.
 - **Custom personas**: put a persona text and images in a folder to add a persona of your own, available both on the AI companion tab and as the proactive companion. You can also replace the images and persona text of the built-in ones. Open the folder from AI settings; a readme inside explains how.
-- **Cost and privacy**: you pay the provider's own rates; the mod charges nothing. Your key and chats go only to the provider you choose, and the key is hidden in diagnostics exports.
+- **Cost and privacy**: you pay the provider's own rates; the mod charges nothing. Your key and chats go only to the provider you choose, and diagnostics exports do not contain the key.
 
 <img src="media/ai-companion.webp" width="640" alt="AI companion: 郁竹 answers in her own voice, with a guide tip below">
 
@@ -64,17 +85,25 @@ Connect a large language model with your own API key to ask about the story and 
 
 ### Story overview (Tab)
 
-- **Now**: every option and dice outcome of the current scene with its result, the branch conditions, whether the following dialogue has been read; the random events here with their odds and which you have not seen (pick the next one); your current quests, where to trigger them and what is still missing. During fights it shows what follows a win or a loss and the round events; battles also show the victory condition and battle events.
+- **Now**: the current scene, your location and your quests.
+  - Scene: every option and dice outcome with its result, the branch conditions, and whether the following dialogue has been read.
+  - Location: the random events here with their odds and which you have not seen; you can pick the next one to trigger.
+  - Quests: your current quests, where to trigger them and what is still missing.
+  - Fights: what follows a win or a loss and the round events; battles also show the victory condition and battle events.
 
   <img src="media/story-now.webp" width="640" alt="Now: this scene's options grouped by choice, stat gains in green and losses in red; current quests">
 
-- **Route map**: the whole main story laid out as one line along the calendar; branches split off above and below and come back to it where they rejoin, with the trigger condition on each split; side quests below; where several routes run side by side (the three study-abroad routes, your decision and so on) each keeps its own lane. Ticks mark what this playthrough has done, the red 「今」 seal marks the current main quest, the next stop has a gold ring, and "Back to now" jumps back to it. Click a stop to see where it leads next (when, where, conditions), its trigger conditions, its branches and its options (folded by default; unfold to see each option's conditions and results); a side quest step shows the next step and which main stop it rejoins. Search by quest, place, dialogue or flag (a flag result lists the scenes that change or check it); typing the first letters of the words, or Chinese pinyin initials, works too.
+- **Route map**: the whole main story laid out as one line along the calendar, with side quests below.
+  - Branches split off above and below the main line and come back to it where they rejoin, with the trigger condition on each split; where several routes run side by side, each keeps its own lane.
+  - Ticks mark what this playthrough has done, the red 「今」 seal marks the current main quest and the next stop has a gold ring; **Back to now** jumps back to the current stop.
+  - Click a stop to see where it leads next (when, where, conditions), its trigger conditions, its branches and its options; options are folded by default, and unfolding them shows each option's conditions and results. A side quest step shows the next step and which main stop it rejoins.
+  - Search by quest, place, dialogue or flag; typing the first letters of the words, or Chinese pinyin initials, works too. A flag result lists the scenes that change or check it.
 
   <img src="media/story-route.webp" width="640" alt="Route map: the main story as stops on a calendar, side quests below">
 
 - **Romance routes**: pick a love interest on the route map to light up only her scenes and see each step, whether it is done and where to get it.
 
-- **Story map**: each quest as a flow chart. Every scene box lists its ways on (options, dice, conditions) one per row, with a line from that row to the scene it leads to; options that stay in the scene are listed too. Hover a row for the full condition and what it changes. Stories at places such as daily life in Kongtong and Qingcheng or Jiangling have story maps too, view-only.
+- **Story map**: each quest as a flow chart. Every scene box lists its ways on (options, dice, conditions) one per row, with a line from that row to the scene it leads to; options that stay in the scene are listed too. Hover over a row for the full condition and what it changes. Stories at places such as daily life in Kongtong and Qingcheng or Jiangling have story maps too, view-only.
 
   <img src="media/story-flow.webp" width="640" alt="Story map: options, conditions and destinations between story segments">
 
@@ -82,117 +111,157 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/story-nodes.webp" width="640" alt="Branch saves: recorded story segments by date, replay or delete">
 
-- **Story jump**: pick a scene on the route map or story map and click **Jump here** to play from there, even one you haven't reached yet. Handy for filling in the story or collecting endings on another route. Before the jump you see the choices along the way that affect what comes later; the progress in between is filled in the way you pick, and you can bond with one of the heroines too. Condition checks inside the target scene default to the branch with unread lines; after the jump that branch is taken directly without changing values; with **Auto-adjust for branches** on, its conditions are filled in first, and the branch is taken directly when they can't be. A save-anywhere save is made first, so you can always go back. The story in between isn't actually played, so now and then things may not line up; not recommended for normal play.
+- **Story jump**: pick a scene on the route map or story map and click **Jump here** to play from there, even one you haven't reached yet.
+  - Before the jump you see the choices along the way that affect what comes later; the progress in between is filled in the way you pick, and you can bond with one of the heroines too.
+  - Condition checks inside the target scene default to the branch with unread lines; after the jump that branch is taken directly without changing values. With **Auto-adjust for branches** on, its conditions are filled in first, and the branch is taken directly when they can't be.
+  - A save-anywhere save is made first, so you can always go back.
+  - The story in between isn't actually played, so now and then things may not line up; not recommended for normal play.
 
   <img src="media/story-jump.webp" width="640" alt="Story jump: before jumping it lists the quest, date and changes filled in, lets you bond with someone, and lets you pick each fork on the way">
 
-- **Collection**: records from all playthroughs. Story counts how much of each quest's dialogue you have read; endings, deaths, achievements and ending CGs show their gallery numbers and whether you have them. For anything missing it says where and how to get it. Each entry lists the quests that lead to it; click one to open that quest's story map. On the ending CG page, **Watch the credits** replays the end credits in a story scene; press Esc to stop.
+- **Collection**: records from all playthroughs, split into story, endings, deaths, achievements and ending CGs.
+  - Story counts how much of each quest's dialogue you have read; endings, deaths, achievements and ending CGs show their gallery numbers and whether you have them. For anything missing it says where and how to get it.
+  - Each entry lists the quests that lead to it; click one to open that quest's story map.
+  - On the ending CG page, **Watch the credits** replays the end credits in a story scene; press Esc to stop.
 
   <img src="media/story-endings.webp" width="640" alt="Collection: story, endings, deaths, achievements and ending CGs, filter by done or not">
 
 ### Story helpers
 
 - **Pick dice results**: click a line on the dice wheel to choose that result.
-- **Option results**: dialogue options and dice lines show what they will change; locked options show their real unlock conditions, and **Unlock** next to them sets the conditions. With **Force locked options** on (only the **All on** preset turns it on), options that are hidden when their conditions aren't met are listed too, marked **Conditions not met** in red with the conditions on hover; locked options whose conditions can't be set get **Force unlock**, which unlocks them without changing flags. **Option results** in settings shows these always, only on hover (no spoilers unless you look), or never.
+- **Option results**: dialogue options and dice lines show what they will change.
+  - Locked options show their real unlock conditions, and **Unlock** next to them sets the conditions.
+  - With **Force locked options** on, options that are hidden when their conditions aren't met are listed too, marked **Conditions not met** in red; hover over one to see its conditions. Locked options whose conditions can't be set get **Force unlock**, which unlocks them without changing flags.
+  - **Option results** in settings shows these always, only when you hover over an option, or never.
 
   <img src="media/option-hint.webp" width="640" alt="Options followed by their results and unlock conditions">
 
-- **Read marks**: dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen). Toggle **Read marks on choices** in the settings; the Advanced and All on presets turn it on.
-
-- **Pick random events**: when working, wandering and so on, see each event's odds and changes (changes that depend on a condition show the condition), then choose which one triggers or roll with the normal odds. Events you haven't seen yet are marked **Not seen**. Branch checks that roll a random number also let you pick the path. Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off. With **Force locked events** on in settings (only the **All on** preset turns it on), those events are also folded below with what they need; clicking one triggers it regardless, without changing flags.
+- **Read marks on choices**: dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen).
+- **Pick random events**: when working, wandering and so on, see each event's odds and changes, then choose which one triggers or roll with the normal odds.
+  - Changes that depend on a condition show the condition; events you haven't seen yet are marked **Not seen**.
+  - Branch checks that roll a random number also let you pick the path.
+  - Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off.
+  - With **Force locked events** on, events whose conditions aren't met are also listed below with what they need; clicking one triggers it regardless, without changing flags.
 
   <img src="media/event-picker.webp" width="480" alt="Pick random events: the events that can trigger, their odds and changes">
 
-- **Manual branch choice**: at a story check that branches on conditions, the game stops first when another branch has unread lines or leads to a different scene. It lists each branch's conditions, current values and whether its lines were seen, and takes the branch you pick: by default values are left alone and only this one check goes that way; with **Auto-adjust for branches** on, stats, affection and flags are first changed just enough for that branch (the changes stay), and the branch is taken directly when they can't be. Checks with only one possible branch, or where other branches add nothing new, don't stop; with **Stop for seen branches too** on, it also stops when another branch has lines you've already seen. Fast-forward is stopped when it pops up.
-
-- **Map event hints**: hover over a building on the training map to see its main and side quests (can they trigger, conditions) and the odds of its random events; buildings with a quest you can trigger now stay lit. Turn on "Map hints: triggerable only" in settings to list only the quests that would trigger now; the rest are only counted. Inside a building, hover over an option such as chopping wood or training to see the random events it can roll, their odds and which you have not seen; the same goes for moving and peddling in the Go out list.
-- **Timed story reminder**: when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left, until when, and where to go to trigger it; the Now tab marks these quests too. Assist and higher presets turn it on.
-- **Memos** (F10): a small window floating over the game that keeps track of "get this done by that date". Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline; the window shows the current value, progress and periods left, and notes at its top when a goal is met, stops being met, is about to be due or is overdue. It can be dragged, resized and collapsed.
-- **Item uses** (may reveal quest names): item descriptions in the bag and shops end with what using the item does and which stories check for it or take it. Setting: "Show item uses".
-- **Branch checks** (spoilers): lists the conditions of each branch check, in a panel on the left or as a notice at the top of the screen, met in green and unmet in red.
+- **Manual branch choice**: at a story check that branches on conditions, the game stops first when another branch has unread lines or leads to a different scene. It lists each branch's conditions, current values and whether its lines were seen, and takes the branch you pick.
+  - By default values are left alone and only this one check goes that way. With **Auto-adjust for branches** on, stats, affection and flags are first changed just enough for that branch (the changes stay), and the branch is taken directly when they can't be.
+  - Checks with only one possible branch, or where other branches add nothing new, don't stop. With **Stop for seen branches too** on, it also stops when another branch has lines you've already seen.
+  - Fast-forward is stopped when it pops up.
+- **Map building hints**: hover over a building on the training map to see its main and side quests (can they trigger, conditions) and the odds of its random events; buildings with a quest you can trigger now stay lit.
+  - Turn on **Map: triggerable only** to list only the quests that would trigger now; the rest are only counted.
+  - Inside a building, hover over an option such as chopping wood or training to see the random events it can roll, their odds and which you have not seen; the same goes for moving and peddling in the Go out list.
+- **Timed story reminder**: when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left, until when, and where to go to trigger it; the Now tab marks these quests too.
+- **Memos** (F10): a small window floating over the game that keeps track of "get this done by that date".
+  - Search for a condition among stats, affection, talents, facilities, items, flags, and the layers and progress of martial arts, forging and alchemy, then set a target and a deadline.
+  - The window shows the current value, progress and periods left, and notes at its top when a goal is met, stops being met, is about to be due or is overdue.
+  - It can be dragged, resized and collapsed.
+- **Show item uses** (may reveal quest names): item descriptions in the bag and shops end with what using the item does and which stories check for it or take it.
+- **Show branch checks** (spoilers): lists the conditions of each branch check, in a panel on the left or as a notice at the top of the screen, met in green and unmet in red.
 
   <img src="media/branch-panel.webp" width="480" alt="Branch panel: met conditions in green, unmet in red">
 
-- **Flag change notices** (spoilers): a notice when the story changes a flag; how long it stays and its text size can be set.
-- **Checks in the backlog**: story checks, their conditions and your values are recorded in the backlog.
+- **Show flag changes** (spoilers): a notice at the top of the screen when the story changes a flag; how long it stays and its text size can be set.
+- **Check log**: story checks, their conditions and your values are recorded in the backlog.
 - **Hide UI for CGs**: right-click in a story scene to leave only the background, CG and portraits; right-click, left-click or press any other key to restore.
 
 ### Saves
 
-- **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots. F5 saves, F7 loads the latest, F6 lists them all (notes, the dialogue at that point, grouped by save slot, save time or game date, with filters and group delete); no limit by default, set one in Settings. Not available in combat. Loading hides the fast-forward, shows progress and mutes the sound.
-- **Roll back**: after seeing a check, press F4 to go back to the line before it, adjust stats with F9 and continue; the check is re-evaluated.
+- **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots; not available in combat.
+  - F5 saves, F7 loads the latest, F6 opens the list.
+  - In the list you can write notes, see the dialogue at that point, group saves by save slot, save time or game date, filter them and delete a whole group.
+  - No limit by default; set one in Settings.
+  - Loading hides the fast-forward, shows progress and mutes the sound.
 
   <img src="media/anytime-save.webp" width="640" alt="Save-anywhere page: all saves, load, note, delete">
 
-- **New save/load screen** (can switch back to the original): a list with your love interest's portrait, date and note, and a detail pane with their full portrait (a shy expression once you have bonded with her in that save) and the first lines after loading; manual and auto saves on separate pages. It opens on the save you made last; a switch at the top right of the load page lists them by slot or newest first; with newest first, the save page starts with an empty slot.
+- **Roll back** (F4): after seeing a check, press F4 to go back to the line before it, adjust stats with F9 and continue; the check is re-evaluated.
+- **New save/load screen**: you can switch back to the original.
+  - The list shows your love interest's portrait, date and note; the detail pane shows her full portrait (a shy expression once you have bonded with her in that save) and the first lines after loading.
+  - Manual and auto saves are on separate pages; the screen opens on the save you made last.
+  - A switch at the top right of the load page lists them by slot or newest first; with newest first, the save page starts with an empty slot.
 
   <img src="media/save-browser.webp" width="640" alt="New load screen: save list with portraits and notes, and a detail pane with the portrait and the dialogue after loading">
 
-- **More slots**: 100 manual saves (20 in the base game), 5 pages of legend slots (1 page of 12), and 5 extra old copies of each auto save.
-- **Save notes**, synced with Steam Cloud; notes from LOM_SaveSlotExpander are imported.
+- **More slots**: 100 manual saves (20 in the base game), 5 pages of legend slots (1 page of 12), and 5 extra old copies of each auto save; all of these numbers can be changed in Settings.
+- **Save notes**: on the save screen, select a manual save and press F8 to write a note. Notes are synced with Steam Cloud, and notes from LOM_SaveSlotExpander are imported.
 
 ### Training
 
-Switches in the training group of the settings page (F8):
-
-- Game speed 1x / 2x / 3x / 5x (battles and lines that advance by themselves stay at normal speed; turn on "Speed up battles too" in settings to speed up battles as well)
-- Action points: normal / not consumed / N per period
+- **Action points**: normal / not consumed / N per period.
   > ⚠️ The last two can make some story events not trigger or trigger early, and may block key main quests. Use with care and keep saves.
-- Break the 100 stat cap; training, forging and alchemy use up no attempts or points, and forging and alchemy cost no silver
-- Develop gear without story requirements: the forge and alchemy room can develop new gear and medicines before the story that unlocks them; level and sect size requirements still apply
-- Swap development items: the forge and alchemy room development screens also list other branches of the same type, so you can swap without going back to the default item when your item level and sect size are high enough
-- Pinball total score; the fourth senior brother sells every item
-
-Also:
-
-- **Skip turn**: in the ESC menu on the training and study maps; uses one action without triggering events.
-- **Speed-ups**: faster scene changes, loading and skipping, shorter pauses after stat changes, no idle wait between duel rounds.
+- **Unlimited training and forging**: training, forging and alchemy use up no attempts or points; **Free forging**, which removes the silver cost of forging and alchemy, is a separate switch.
+- **Break stat cap**: stats that normally cap at 100 can go up to 9999.
+- **Gear dev: no story req**: the forge and alchemy room can develop new gear and medicines before the story that unlocks them; level and sect size requirements still apply.
+- **Swap development items**: the forge and alchemy room development screens also list other branches of the same type, so you can swap without going back to the default item when your item level and sect size are high enough.
+- **Pinball score**: when you leave the pinball minigame, the total score is set to the value in this setting.
+- **4th Brother sells all**: the fourth senior brother's shop sells every book, sundry and special item (except 《证类本草》).
+- **Skip turn**: in the ESC menu on the training and study maps; uses one action without triggering events. A key can also be bound to it under **Hotkeys**.
 
 ### Combat
 
-Switches in the combat group of the settings page (F8):
-
-- Stronger duel enemies: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones. Enemies also choose moves based on both sides' stamina and health and on the move you keep repeating
-- Duel enemy forecast: shows the enemy's chosen move; the window can be moved and resized
-- Death-on-defeat notice (spoilers): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death; deaths caused by options are not shown
-- Duel round events (spoilers): when reaching a round in a duel ends the fight or changes a flag, the top of the screen shows the next such round
-- Duel invincibility and no damage to enemies; no damage to your side and no ultimate cooldown in battles
-- Better battle controls: fixes direction keys not responding after a stun; normal attacks turn to the nearest enemy and reach further, with a ring at your feet showing their range; thrown knives aim at the nearest enemy and charged throws no longer miss; your own ultimate covers a larger area; drops are picked up from further away; weapons, traps and poison clouds from your side no longer hurt you
-- Choose battle allies: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names
-
-Also:
-
+- **Stronger duel enemies**: raises enemy health and stats at the start of a duel based on the total of your six main stats; strong enemies stay clearly stronger than ordinary ones. Enemies also choose moves based on both sides' stamina and health and on the move you keep repeating.
+- **Enemy move forecast**: shows the enemy's chosen move; the window can be moved and resized.
+- **Death-on-defeat notice** (spoilers): when losing a fight leads to a death, the top of the screen shows its name and whether you have collected it for the whole fight. If other conditions also apply after the loss, it says the loss may mean death; deaths caused by options are not shown.
+- **Duel round events** (spoilers): when reaching a round in a duel ends the fight or changes a flag, the top of the screen shows the next such round.
+- **Better battle controls**:
+  - Fixes direction keys not responding after a stun.
+  - Normal attacks turn to the nearest enemy and reach further, with a ring at your feet showing their range.
+  - Thrown knives aim at the nearest enemy and charged throws no longer miss.
+  - Your own ultimate covers a larger area, and drops are picked up from further away.
+  - Weapons, traps and poison clouds from your side no longer hurt you.
+- **Choose battle allies**: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names.
 - **Win now**: in the ESC menu during duels and battles.
-- **Skill list columns**: in battle, a long skill list is split into columns.
+- **Show all skills**: in battle, a long skill list is split into columns.
+- **Combat cheats**: four switches, **Invincible in duels**, **Enemy unhurt in duels**, **Unhurt in battles** and **No ultimate cooldown**; no preset turns them on.
 
 ### Stats page (F9)
 
 Stats, martial arts, sects, relationships (everyone), talents, training and crafting points, facilities, books, items and flags on one page; add, subtract or set any value, and search by name, ID, description, the first letters of the words or Chinese pinyin initials.
 
 - **Books and items**: set the count directly; quests advance as if bought in a shop. Hover over a martial manual to see what each layer adds when learned; learned layers are ticked.
-- **Stats** can be set below the bonus from manuals and the like, even below zero, and stay there through later story changes and loading.
-- Your **love interest** is shown by name; mood, the four personality stats and yin-yang show their current title after the value. These, silver and contribution each have a **lock** that keeps story and options from changing them; locks stay on across restarts and saves.
-- **Titles**: pick any title or write your own.
+- **Stats**: can be set below the bonus from manuals and the like, even below zero, and stay there through later story changes and loading.
+- **Love interest and titles**: your love interest is shown by name; mood, the four personality stats and yin-yang show their current title after the value. Pick any title or write your own.
+- **Locks**: mood, the four personality stats, yin-yang, silver and contribution each have a lock that keeps story and options from changing them; locks stay on across restarts and saves.
 - **Flags**: over a thousand, grouped by sect favour, characters, story and more.
 - **Reverse lookup**: click a flag, book or item to list the scenes that change or check it; click a name under relationships to list the scenes that check it. Each links to the story map.
-- **Stat presets**: values you change on the Stats tab are recorded; click "Stat presets" to save them as a preset. After loading another save or starting a new game, click Apply to set them all at once; values you didn't change are left alone.
+- **Stat presets**: values you change on the Stats page are recorded; click **Stat presets** to save them as a preset. After loading another save or starting a new game, click **Apply** to set them all at once; values you didn't change are left alone.
 
 <img src="media/stats.webp" width="640" alt="Stats page: stats, martial arts, sects, titles, relationships and more, all editable">
 
 Changing values or flags at random can break the story; save first.
 
-### Other
+### Speed-ups
 
+- **Game speed**: 1x / 2x / 3x / 5x. Battles and lines that advance by themselves stay at normal speed; turn on **Speed up battles too** to speed up battles as well.
+- **Skip read dialogue** (F2): press once in a story scene to keep skipping dialogue you have read, and press again to stop; it stops by itself at unread dialogue.
+- **Faster flow**: faster scene changes, loading and skipping, shorter pauses after stat changes, no idle wait between duel rounds.
+- **Faster startup**: the title animation is sped up, and the installer can skip the opening logos.
+
+### Title screen
+
+The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
+
+- **Training Pagoda**: plays the demo's Training Pagoda mode, including the deaths only this mode can trigger.
+- **Gallery**: has CG, Portraits, Animations and Music pages and supports gamepads.
+  - CG: CGs appear once you have seen them; all scene images are open, and a switch on the page shows locked content.
+  - Portraits: pick a background, place characters and change variants, then hide the UI for screenshots.
+  - Animations: plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs.
+  - Music: all 39 official soundtrack tracks, with pause and playback progress.
+- **Title screen partner**: choose which character appears on the title screen, or show everyone or nobody.
+
+### Interface and other
+
+- **Interface**: window colours can be light, dark or follow the system; Source Han Serif or Microsoft YaHei font; separate opacity for the main window, small windows and hint boxes; larger game text and dialogue text.
 - **Gamepad**: the whole window works with a gamepad (L3 opens it, the left stick moves the pointer, A clicks, LB / RB switch tabs); dice, skip turn and the event picker too.
-- **Interface**: dark mode; Source Han Serif or Microsoft YaHei font; separate opacity for the main window, small windows and hint boxes; larger dialogue text.
 - **Languages**: Simplified Chinese, Traditional Chinese and Korean following the game language, Japanese with the [Japanese patch](https://dlaqe2334.github.io/LOM-JPMOD/), English with an English patch; can also be chosen in settings.
+- **Lecture Hall**: hover over an ending or death entry to see how to reach it; everything can also be shown as unlocked.
+- **Export legend**: export this playthrough's legend as a txt at any time from Status → Legend.
+- **Run in background**: the game keeps running when you switch to another window.
 - **Export diagnostics**: ESC → Settings → **Export diagnostics** packs logs and settings to the desktop (no saves); also in the installer.
 - **Conflict detection**: warns about conflicting old mods at the top of settings (mods that only change the same game code alongside this one and work with it aren't flagged); if another mod uses the same key, this mod gives it up.
-- **Export legend**: export this playthrough's legend as a txt at any time from Status → Legend.
-- **Faster start**: the title animation is sped up, and the installer can skip the opening logos.
-- **Training Pagoda**: the Training Pagoda button on the title screen plays the demo's Training Pagoda mode, including the deaths only this mode can trigger.
-- **Gallery**: the Gallery button on the title screen has CG, Portraits, Animations and Music pages and supports gamepads. CGs appear once you have seen them (all scene images are open, and a switch on the page shows locked content). The Portraits page lets you pick a background, place characters and change variants, then hide the UI for screenshots. The Animations page plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs. Music has all 39 official soundtrack tracks, with pause and playback progress.
-- **Also**: choose who appears on the title screen, or show everyone; the lecture hall shows how to reach each ending and death, or everything unlocked; the game can keep running in the background; the window's top right shows each version's changes and a red note when a new version is out.
+- **Update notice**: the window's top right shows each version's changes and a red note when a new version is out.
 
 ## FAQ
 
@@ -207,25 +276,6 @@ Changing values or flags at random can break the story; save first.
 **Works with other mods?** Yes, mods whose features don't overlap can be installed alongside it. If a hotkey clashes, this mod gives way automatically, and you can bind another key under Settings > Hotkeys. If another mod ships its own BepInEx, run this mod's installer again after installing it. Story mods loaded with Binarizer also work: the Story map and Gallery read the mod's scripts, and save-anywhere can save and load inside them. Checks written directly in a mod's scripts aren't shown, and after installing a mod, older save-anywhere saves that passed through scripts it changed can't be loaded.
 
 **Linux / Steam Deck?** Install manually and add `WINEDLLOVERRIDES="winhttp=n,b" %command%` to the Steam launch options.
-
-## Settings
-
-Everything is on the settings page of the window (F8). Changes are saved immediately; ones that need a restart are marked; hover over a name for details. Settings are also stored in `BepInEx\config\LOMAssistant.cfg`.
-
-<img src="media/settings.webp" width="640" alt="Settings page: switches, numbers, game speed and hotkeys by group">
-
-**Presets**: at the top of the settings page you can switch in one click to **As intended**, **Assist**, **Advanced** or **All on**. They only change story hints, life-sim and combat aids and cheats; saves, speed-ups, interface and hotkeys stay as they are. Changing any of those switches makes it **Custom**, which you can switch back to later. New players pick one the first time they open the window; if they don't, it stays on **Assist**.
-
-| Preset | Turned on |
-|---|---|
-| As intended | Everything listed below is off |
-| Assist | Option hints; Option results; One-click unlock; Pick dice results; Map building hints; Timed story reminder; Skip turn button; Win-duel button; Win-battle button; Death-on-defeat notice; Duel round events; Lecture Hall unlock; Better battle controls; Unlimited training; Unlimited forging; Free forging |
-| Advanced | Everything in Assist, plus: Show branch checks; Show flag changes; Pick random events; Show item uses; Read marks on choices; Story jump; Choose battle allies |
-| All on | Everything in Advanced, plus: Manual branch choice; Force locked events; Force locked options; 4th Brother sells all; Gear dev: no story req; Enemy move forecast; full Lecture Hall unlock display |
-
-Anything not listed does not change with presets and can be switched on its own in Settings.
-
-<img src="media/presets.webp" width="640" alt="Choosing a preset: four cards saying who each one suits and what it changes">
 
 ## Building
 
@@ -253,7 +303,7 @@ The installer (`咖啡伴侣安装器 Installer.exe`) is built from this reposit
 
 - When opened, the installer reads the latest version and release notes from GitHub, and downloads the new zip when you click Install. With "No online update check (install this zip's version)" ticked, it does not go online.
 - After the game starts, the mod reads the latest version number from GitHub. Turning off the "Check for updates" setting keeps it offline.
-- The AI Companion sends your question and the related game information to the AI provider you set up, only when you ask something.
+- When you ask something, the AI Companion sends your question and the related game information to the AI provider you set up; once you turn on "Proactive companion", it sends the recent dialogue and events to the same provider before each remark.
 
 ## Credits
 
