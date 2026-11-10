@@ -697,7 +697,8 @@ public partial class StoryReviewPanel
 				if (!ConfigManager.AiCompanion.Value)
 				{
 					ConfigManager.AiCompanion.Value = true;
-					Notice("主动陪玩已开启：每次发言会将最近的对白和事件发送给服务商");
+					// 这句话写在这一排后面：窗口顶上那条提示夹在页签和版本号之间，放不下这么长
+					_aiCompanionNoticeUntil = Time.realtimeSinceStartup + 10f;
 				}
 			}
 		}
@@ -716,11 +717,18 @@ public partial class StoryReviewPanel
 			Hover(swap, "由上方选中的人设陪玩");
 			x = swap.xMax + S(12);
 		}
-		if (AiCompanion.TokensUsed > 0)
+		if (ConfigManager.AiCompanion.Value && Time.realtimeSinceStartup < _aiCompanionNoticeUntil)
+		{
+			GUI.Label(new Rect(x, r.y, r.xMax - x, r.height), "主动陪玩已开启：每次发言会将最近的对白和事件发送给服务商", Middle(_small));
+		}
+		else if (AiCompanion.TokensUsed > 0)
 		{
 			GUI.Label(new Rect(x, r.y, r.xMax - x, r.height), string.Format(AiCompanion.Capped ? "陪玩已用 {0} token（已达上限）" : "陪玩已用 {0} token", AiCompanion.TokensUsed), Middle(_muted));
 		}
 	}
+
+	// 刚开启主动陪玩：这一排后面写一阵「会把对白发给服务商」
+	private float _aiCompanionNoticeUntil = -100f;
 
 	private void DrawAiHistory(Rect r)
 	{
