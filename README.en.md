@@ -54,9 +54,13 @@ Connect a large language model with your own API key to ask about the story and 
 - **Edits**: when the AI wants to change stats, affection, your sweetheart, story flags or this mod's settings, it shows a card first; nothing changes until you confirm.
 - **Chats**: each character's chats are stored locally; start new ones, switch between them, delete them, or export them to the desktop. Replies appear as they are written.
 - **Deep mode**: switches to a stronger model that checks the facts before answering: more accurate, but costlier and slower.
+- **Proactive companion**: a persona of your choice stays on the game screen and says a line or two when you make a choice, roll the dice, finish a fight, gain or lose affection, or a timed event is about to expire. It only comments and advises. There are three levels of talkativeness (Quiet, Normal, Chatty), an optional separate model and a token cap per game launch. The figure can be dragged, shrunk or paused, and clicking its bubble takes you to the AI companion tab to follow up.
+- **Custom personas**: put a persona text and images in a folder to add a persona of your own, available both on the AI companion tab and as the proactive companion. You can also replace the images and persona text of the built-in ones. Open the folder from AI settings; a readme inside explains how.
 - **Cost and privacy**: you pay the provider's own rates; the mod charges nothing. Your key and chats go only to the provider you choose, and the key is hidden in diagnostics exports.
 
 <img src="media/ai-companion.webp" width="640" alt="AI companion: 郁竹 answers in her own voice, with a guide tip below">
+
+<img src="media/companion.webp" width="640" alt="Proactive companion: a persona at the bottom right of the screen, speaking about what just happened in the story and about the result of a training action">
 
 ### Story overview (Tab)
 
