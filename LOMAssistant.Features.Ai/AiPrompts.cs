@@ -96,6 +96,21 @@ internal static class AiPrompts
 		}
 		string name = TextConverter.ForDisplay(persona.Name);
 		bool woman = persona.Heroine != null;
+		if (persona.Custom)
+		{
+			// 自建人设是男是女不知道：只说是谁在对谁说话
+			switch (TextConverter.DisplayLanguage)
+			{
+				case UiText.English:
+					return " The message is spoken by " + persona.Name + " to Zhao Huo, a young man; the actions in parentheses are " + persona.Name + "'s.";
+				case UiText.Korean:
+					return " 이 글의 화자는 " + persona.Name + "이며, 대화 상대는 젊은 남자 조활입니다. 괄호 속 동작은 " + persona.Name + "의 동작입니다.";
+				case UiText.Japanese:
+					return " この文は" + persona.Name + "が若い男性の趙活に話しかけている言葉で、括弧内の動作は" + persona.Name + "のものです。";
+				default:
+					return "";
+			}
+		}
 		switch (TextConverter.DisplayLanguage)
 		{
 			case UiText.English:

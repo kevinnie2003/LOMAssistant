@@ -11,24 +11,77 @@ using UnityEngine.UI;
 namespace LOMAssistant.Features.Ai;
 
 /// <summary>
-/// 小伙伴的形象：按表情取图，告诉画的人取图上哪一块。内置的只有一种，从人设的立绘上裁；
-/// 以后玩家自带的图（比如 Q 版）另写一个实现、在 For 里按设置挑，画的代码不用动。
+/// 小伙伴的形象：按表情取图，告诉画的人取图上哪一块。两种：内置人设从游戏立绘上裁（PortraitLook）；
+/// 玩家自己放了图的（给内置人设换图，或自建人设），整张照原样画（CustomLook）。
 /// </summary>
 internal abstract class CompanionLook
 {
 	/// <summary>这个表情的图和要画的那一块（贴图坐标 0～1，原点左下）、宽高比；图还没载入返回 false。head 为真只要头。</summary>
 	public abstract bool Frame(string mood, bool head, out Texture texture, out Rect uv, out float aspect);
 
-	private static readonly Dictionary<string, CompanionLook> Built = new Dictionary<string, CompanionLook>();
+	/// <summary>整张图照原样放：大小跟着图的宽高比定，缩小时也是。立绘是裁出固定的一块，不算。</summary>
+	public virtual bool Whole => false;
 
-	/// <summary>这位人设现在用的形象：现在只有人设自带的立绘这一种。以后加玩家自带的图，在这里按设置挑。</summary>
+	/// <summary>下缘淡出的那一段占多高：半身像胸口那道切边要淡出；整张图不用，返回 0。</summary>
+	public virtual float Fade(bool head) => head ? 0.1f : 0.14f;
+
+	private static readonly Dictionary<string, CompanionLook> Built = new Dictionary<string, CompanionLook>();
+	private static readonly Dictionary<string, CompanionLook> Own = new Dictionary<string, CompanionLook>();
+
+	/// <summary>
+	/// 这位（null = 攻略助手）现在用的形象：玩家放了图就用玩家的，否则内置人设用立绘。
+	/// 攻略助手、没放图的自建人设没有图可画，返回 null（画一方朱砂印）。
+	/// </summary>
 	public static CompanionLook For(AiPersona persona)
 	{
-		if (!Built.TryGetValue(persona.Id, out CompanionLook look))
+		string id = persona?.Id ?? "";
+		if (AiCustom.Has(persona))
 		{
-			Built[persona.Id] = look = new PortraitLook(persona);
+			if (!Own.TryGetValue(id, out CompanionLook own))
+			{
+				Own[id] = own = new CustomLook(persona);
+			}
+			return own;
+		}
+		if (persona == null || persona.Custom)
+		{
+			return null;
+		}
+		if (!Built.TryGetValue(id, out CompanionLook look))
+		{
+			Built[id] = look = new PortraitLook(persona);
 		}
 		return look;
+	}
+}
+
+/// <summary>玩家自己放的图（见 AiCustom）：整张照原样画，不裁，下缘不淡出；缩小时用头像那张。</summary>
+internal sealed class CustomLook : CompanionLook
+{
+	// 只拿来认是哪一位：自建人设改了文件会换成新的对象，编号不变
+	private readonly AiPersona _persona;
+
+	public CustomLook(AiPersona persona)
+	{
+		_persona = persona;
+	}
+
+	public override bool Whole => true;
+
+	public override float Fade(bool head) => 0f;
+
+	public override bool Frame(string mood, bool head, out Texture texture, out Rect uv, out float aspect)
+	{
+		uv = new Rect(0f, 0f, 1f, 1f);
+		aspect = 1f;
+		Texture2D image = AiCustom.Image(_persona, mood, head);
+		texture = image;
+		if (image == null)
+		{
+			return false;
+		}
+		aspect = (float)image.width / Mathf.Max(1, image.height);
+		return true;
 	}
 }
 
@@ -89,7 +142,8 @@ internal sealed class CompanionPet : MonoBehaviour
 	private GUIStyle _box, _text, _button, _seal, _chip;
 	private Texture _lastTexture;
 	private Rect _lastUv;
-	private float _lastAspect = 0.875f;
+	// 平时那张图、缩小时那张图的宽高比（立绘缩小时裁成正方形）；淡出多高
+	private float _lastAspect = 0.875f, _lastHeadAspect = 1f, _lastFade = 0.14f;
 	private string _lastLook = "";
 	private readonly List<Rect> _avoid = new List<Rect>();
 
@@ -131,8 +185,9 @@ internal sealed class CompanionPet : MonoBehaviour
 			RefreshAvoid(scene);
 		}
 		AiPersona persona = AiCompanion.Persona;
+		CompanionLook look = CompanionLook.For(persona);
 		bool collapsed = ConfigManager.AiCompanionCollapsed.Value;
-		Rect figure = FigureRect(persona, collapsed, scale);
+		Rect figure = FigureRect(look, collapsed, scale);
 		Vector2 mouse = Event.current.mousePosition;
 
 		// 鼠标在它身上（或刚离开一会儿）：旁边出几个小按钮
@@ -152,14 +207,14 @@ internal sealed class CompanionPet : MonoBehaviour
 			DrawAsk(figure, scale);
 		}
 		HandlePointer(figure, scale);
-		DrawFigure(figure, persona, collapsed, scale, now);
+		DrawFigure(figure, persona, look, collapsed, scale, now);
 		DrawBubble(figure, scale, now, mouse);
 		InputGuard.Report("Companion", hover ? reach : figure);
 	}
 
 	// ---------------- 形象 ----------------
 
-	private Rect FigureRect(AiPersona persona, bool collapsed, float scale)
+	private Rect FigureRect(CompanionLook look, bool collapsed, float scale)
 	{
 		if (!_placed || _screenWidth != Screen.width || _screenHeight != Screen.height)
 		{
@@ -170,11 +225,19 @@ internal sealed class CompanionPet : MonoBehaviour
 			_placed = true;
 		}
 		float w, h;
-		if (collapsed)
+		if (look != null && look.Whole)
+		{
+			// 玩家自己放的图：整张放进一个框里，保持图的宽高比。平时宽 150、最高 240，缩小时 84 见方
+			float aspect = Mathf.Clamp(collapsed ? _lastHeadAspect : _lastAspect, 0.2f, 5f);
+			float boxWidth = (collapsed ? 84f : 150f) * scale, boxHeight = (collapsed ? 84f : 240f) * scale;
+			w = Mathf.Min(boxWidth, boxHeight * aspect);
+			h = w / aspect;
+		}
+		else if (collapsed)
 		{
 			w = h = 84f * scale;
 		}
-		else if (persona == null)
+		else if (look == null)
 		{
 			w = h = 104f * scale;
 		}
@@ -188,7 +251,7 @@ internal sealed class CompanionPet : MonoBehaviour
 		return new Rect(_corner.x - w, _corner.y - h, w, h);
 	}
 
-	private void DrawFigure(Rect figure, AiPersona persona, bool collapsed, float scale, float now)
+	private void DrawFigure(Rect figure, AiPersona persona, CompanionLook look, bool collapsed, float scale, float now)
 	{
 		if (Event.current.type != EventType.Repaint)
 		{
@@ -197,29 +260,43 @@ internal sealed class CompanionPet : MonoBehaviour
 		Color before = GUI.color;
 		// 不说话的时候（暂停、到上限）画淡一些
 		GUI.color = new Color(1f, 1f, 1f, AiCompanion.Muted || AiCompanion.Capped ? 0.55f : 1f);
-		if (persona == null)
+		if (look == null)
 		{
-			GUI.Label(figure, "攻", _seal);
+			// 没有图可画：攻略助手是「攻」，没放图的自建人设是名字的第一个字（名字照原样写，不查表翻译）
+			GUI.Label(figure, persona == null ? "攻" : TextConverter.Verbatim + persona.Initial, _seal);
 		}
 		else
 		{
+			string id = persona?.Id ?? "";
 			string mood = AiCompanion.Mood;
-			string key = persona.Id + "|" + mood + "|" + collapsed;
-			if (CompanionLook.For(persona).Frame(mood, collapsed, out Texture texture, out Rect uv, out float aspect))
+			string key = id + "|" + mood + "|" + collapsed;
+			if (look.Frame(mood, collapsed, out Texture texture, out Rect uv, out float aspect))
 			{
 				_lastTexture = texture;
 				_lastUv = uv;
-				_lastAspect = collapsed ? _lastAspect : aspect;
+				if (collapsed)
+				{
+					_lastHeadAspect = aspect;
+				}
+				else
+				{
+					_lastAspect = aspect;
+				}
+				_lastFade = look.Fade(collapsed);
 				_lastLook = key;
 			}
-			else if (!_lastLook.StartsWith(persona.Id + "|") || _lastLook.EndsWith("|" + collapsed) == false)
+			else if (!_lastLook.StartsWith(id + "|") || _lastLook.EndsWith("|" + collapsed) == false)
 			{
 				// 换了人或换了展开、收起，新图还没载入：先不画，免得画成上一位
 				_lastTexture = null;
 			}
-			if (_lastTexture != null)
+			if (_lastTexture != null && _lastFade > 0f)
 			{
-				DrawFading(figure, _lastTexture, _lastUv, collapsed ? 0.1f : 0.14f);
+				DrawFading(figure, _lastTexture, _lastUv, _lastFade);
+			}
+			else if (_lastTexture != null)
+			{
+				GUI.DrawTextureWithTexCoords(new Rect(Mathf.Round(figure.x), Mathf.Round(figure.y), Mathf.Round(figure.width), Mathf.Round(figure.height)), _lastTexture, _lastUv);
 			}
 		}
 		GUI.color = before;

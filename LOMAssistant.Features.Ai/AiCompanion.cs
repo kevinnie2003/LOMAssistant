@@ -788,7 +788,8 @@ public static class AiCompanion
 	private static ChatMessage Prepare(AiPersona persona, string scene, string card, float started, out List<ChatMessage> send)
 	{
 		// 系统提示词一段时间里保持不变（服务商的缓存靠它）：换人、换语言、换剧透档，或者过了十分钟（经历多了几条）才重拼
-		string systemKey = (persona?.Id ?? "") + "|" + TextConverter.DisplayLanguage + "|" + ConfigManager.AiSpoiler.Value + "|" + StoryAtlas.Ready;
+		// （自建人设的文件改过也重拼：Stamp 跟着文件变）
+		string systemKey = (persona?.Id ?? "") + "|" + (persona?.Stamp ?? "") + "|" + TextConverter.DisplayLanguage + "|" + ConfigManager.AiSpoiler.Value + "|" + StoryAtlas.Ready;
 		if (systemKey != _systemKey || started - _systemAt > 600f)
 		{
 			_system = AiCompanionPrompts.SystemPrompt(persona);

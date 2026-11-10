@@ -445,9 +445,10 @@ public static class AiChat
 		AiSessions.Save(session);
 	}
 
-	private static readonly System.Text.RegularExpressions.Regex MoodTag = new System.Text.RegularExpressions.Regex(@"\[\s*(?:表情|mood)\s*[:：]\s*([A-Za-z_0-9]+)\s*\]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+	private static readonly System.Text.RegularExpressions.Regex MoodTag = new System.Text.RegularExpressions.Regex(@"\[\s*(?:表情|mood)\s*[:：]\s*([^\[\]\s:：]+)\s*\]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-	// 回复末尾的「[表情: shy]」拿出来，不显示；不在她能用的表情里就用默认
+	// 回复末尾的「[表情: shy]」拿出来，不显示；不在她能用的表情里就用默认。
+	// 表情名不限英文：自建人设的表情名是玩家起的文件名；内置人设写成别的（比如中文的意思）也照样拿掉，换成默认
 	internal static string TakeMood(string answer, AiPersona persona, out string mood)
 	{
 		mood = persona.Moods[0];

@@ -37,6 +37,26 @@ public sealed class AiPersona
 	public bool NoMetFlag;
 	/// <summary>能用的表情（立绘文件名），第一个是默认。</summary>
 	public string[] Moods = { "normal" };
+	/// <summary>
+	/// 玩家自建的人设（AiCustom）：名字是文件夹名，Traits 是玩家写的人设文字，表情是玩家放的图的文件名。
+	/// 没有游戏里的对白、人物志、好感可用，提示词里这几段都是空的。
+	/// </summary>
+	public bool Custom;
+	/// <summary>自建人设的文件有没有动过（主动陪玩记着拼好的提示词，靠它知道要重拼）。</summary>
+	public string Stamp = "";
+
+	/// <summary>名字的第一个字：自建人设没放图时，拿它当头像。</summary>
+	public string Initial => Name.Length > 1 && char.IsSurrogatePair(Name, 0) ? Name.Substring(0, 2) : Name.Length > 0 ? Name.Substring(0, 1) : "";
+
+	// 自建人设的人设文字前面那一行（问答和主动陪玩共用）
+	private static string OwnTraitsHeading => AiPrompts.L("【你是怎样的人】（玩家写的设定，照此扮演，不要整段复述）",
+		"[Who you are] (a profile written by the player; play the part from it, do not recite it)",
+		"[당신은 어떤 사람인가] (플레이어가 작성한 설정입니다. 이를 바탕으로 연기하되 통째로 읊지 마세요)",
+		"【あなたはどんな人か】（プレイヤーが書いた設定です。これをもとに演じ、そのまま読み上げないでください）",
+		"【你是怎樣的人】（玩家寫的設定，照著它扮演，不要整段複述）");
+
+	/// <summary>表情名的中文意思（内置人设的那些）；不认识的返回空。</summary>
+	internal static string MoodMeaningOf(string mood) => MoodMeaning.TryGetValue(mood, out string meaning) ? meaning : "";
 
 	public const string AssistantId = "";
 
@@ -155,7 +175,9 @@ public sealed class AiPersona
 		},
 	};
 
-	public static AiPersona Find(string id) => All.FirstOrDefault(p => p.Id == id);
+	/// <summary>按编号找人设：内置的，或玩家自建的（编号以 custom: 开头）。攻略助手（空编号）和找不到的返回 null。</summary>
+	public static AiPersona Find(string id) =>
+		All.FirstOrDefault(p => p.Id == id) ?? (id != null && id.StartsWith(AiCustom.IdPrefix) ? AiCustom.Find(id) : null);
 
 	public StoryRomance.Heroine Heroine => Lover >= 0 && Lover < StoryRomance.All.Length ? StoryRomance.All[Lover] : null;
 
@@ -164,7 +186,7 @@ public sealed class AiPersona
 	{
 		var list = new List<(string, string)>();
 		ReadStorySystem read = ReadStorySystem.Instance;
-		if (read == null)
+		if (read == null || Custom)
 		{
 			return list;
 		}
@@ -220,6 +242,10 @@ public sealed class AiPersona
 	public List<string> Intros()
 	{
 		var list = new List<string>();
+		if (Custom)
+		{
+			return list;
+		}
 		try
 		{
 			bool all = LOMAssistant.Config.ConfigManager.AiSpoiler.Value == 0;
@@ -438,7 +464,14 @@ public sealed class AiPersona
 			TextConverter.ForDisplay(Name));
 		var lines = ReadLines();
 		var sb = new StringBuilder();
-		sb.Append(L("你是" + Name + "，武侠游戏《活侠传》里的人物，此刻陪在赵活（玩家操控的主角）身边，看着他经历眼前的事。",
+		sb.Append(Custom
+			// 自建人设不一定是这个游戏里的人：只说她此刻陪着赵活，赵活是谁
+			? L("你是" + Name + "，此刻陪在赵活身边，看着他经历眼前的事。赵活是武侠游戏《活侠传》的主角，由玩家操控。",
+				"You are " + Name + ". Right now you are at the side of Zhao Huo (赵活), the protagonist of the wuxia game Legend of Mortal whom the player controls, watching what he goes through.",
+				"당신은 " + Name + "입니다. 지금 당신은 무협 게임 『활협전』의 주인공이자 플레이어가 조작하는 조활(赵活)의 곁에서 그가 겪는 일을 지켜보고 있습니다.",
+				"あなたは" + Name + "です。いまは、武侠ゲーム『活俠傳』の主人公でプレイヤーが操作する趙活（赵活）のそばにいて、彼が経験していることを見守っています。",
+				"你是" + Name + "，此刻陪在趙活身邊，看著他經歷眼前的事。趙活是武俠遊戲《活俠傳》的主角，由玩家操控（資料裡寫作「赵活」）。")
+			: L("你是" + Name + "，武侠游戏《活侠传》里的人物，此刻陪在赵活（玩家操控的主角）身边，看着他经历眼前的事。",
 			"You are " + me + " (" + Name + "), a character in the wuxia game Legend of Mortal. Right now you are at the side of Zhao Huo (赵活), the protagonist the player controls, watching what he goes through.",
 			"당신은 무협 게임 『활협전』의 인물 " + me + "(" + Name + ")입니다. 지금 당신은 플레이어가 조작하는 주인공 조활(赵活)의 곁에서 그가 겪는 일을 지켜보고 있습니다. 괄호 속 인물명과 뒤에 이어지는 호칭 설정은 모드 내부 자료입니다. 말할 때는 제공된 한국어 명칭과 말투를 사용하세요.",
 			"あなたは武侠ゲーム『活俠傳』の登場人物、" + me + "（" + Name + "）です。いまは、プレイヤーが操作する主人公の趙活（赵活）のそばにいて、彼が経験していることを見守っています。",
@@ -464,7 +497,7 @@ public sealed class AiPersona
 				sb.Append(intro).Append('\n');
 			}
 		}
-		sb.Append('\n').Append(L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
+		sb.Append('\n').Append(Custom ? OwnTraitsHeading : L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
 			"【你的性子和小習慣】")).Append('\n').Append(Traits).Append('\n');
 
 		var rng = new Random(Id.GetHashCode() ^ lines.Count);
@@ -532,13 +565,17 @@ public sealed class AiPersona
 			"你就是" + me + "，不提 AI、模型、遊戲、玩家、劇情、選項、存檔這些詞；好感的數字不說出口。")).Append('\n');
 		sb.Append("- ").Append(spoiler).Append('\n');
 		sb.Append("- ").Append(language).Append('\n');
-		sb.Append("- ").Append(L("回复最后另起一行写你此刻的表情：[表情: 名字]，只能从这些里选：",
-			"End your reply with a new line giving your expression as [表情: name], exactly in that form, choosing only from: ",
-			"답의 마지막 줄에는 모드가 읽을 표정 표식을 [表情: 이름] 형식으로 쓰세요. 이름은 다음 목록의 식별자를 그대로 사용하세요: ",
-			"返答の最後の行に、今の表情を [表情: 名前] の形のまま書いてください。次の中からだけ選びます：",
-			"回覆最後另起一行寫你此刻的表情：[表情: 名字]（照這個寫法），只能從這些裡選：")).Append(MoodGuide())
-			.Append(L("。神情要跟着话走。", ". Match it to what you say.", ". 표정은 말에 맞추세요.", "。表情は話す内容に合わせてください。",
-			"。神情要跟著話走。")).Append('\n');
+		// 只有一种表情时不用写（自建人设没放表情图）
+		if (Moods.Length > 1)
+		{
+			sb.Append("- ").Append(L("回复最后另起一行写你此刻的表情：[表情: 名字]，只能从这些里选：",
+				"End your reply with a new line giving your expression as [表情: name], exactly in that form, choosing only from: ",
+				"답의 마지막 줄에는 모드가 읽을 표정 표식을 [表情: 이름] 형식으로 쓰세요. 이름은 다음 목록의 식별자를 그대로 사용하세요: ",
+				"返答の最後の行に、今の表情を [表情: 名前] の形のまま書いてください。次の中からだけ選びます：",
+				"回覆最後另起一行寫你此刻的表情：[表情: 名字]（照這個寫法），只能從這些裡選：")).Append(MoodGuide())
+				.Append(L("。神情要跟着话走。", ". Match it to what you say.", ". 표정은 말에 맞추세요.", "。表情は話す内容に合わせてください。",
+				"。神情要跟著話走。")).Append('\n');
+		}
 		return sb.ToString();
 	}
 
@@ -553,7 +590,13 @@ public sealed class AiPersona
 			TextConverter.ForDisplay(Name));
 		var lines = ReadLines();
 		var sb = new StringBuilder();
-		sb.Append(L("你是" + Name + "，武侠游戏《活侠传》里的人物。跟你说话的是赵活（玩家操控的主角）。",
+		sb.Append(Custom
+			? L("你是" + Name + "。跟你说话的是赵活，武侠游戏《活侠传》的主角，由玩家操控。",
+				"You are " + Name + ". The one talking to you is Zhao Huo (赵活), the protagonist of the wuxia game Legend of Mortal, controlled by the player.",
+				"당신은 " + Name + "입니다. 당신에게 말을 거는 사람은 무협 게임 『활협전』의 주인공 조활(赵活)이며, 플레이어가 조작합니다.",
+				"あなたは" + Name + "です。話しかけてくるのは、武侠ゲーム『活俠傳』の主人公で、プレイヤーが操作する趙活（赵活）です。",
+				"你是" + Name + "。跟你說話的是趙活，武俠遊戲《活俠傳》的主角，由玩家操控（資料裡寫作「赵活」）。")
+			: L("你是" + Name + "，武侠游戏《活侠传》里的人物。跟你说话的是赵活（玩家操控的主角）。",
 			"You are " + me + " (" + Name + "), a character in the wuxia game Legend of Mortal. The one talking to you is Zhao Huo (赵活), the protagonist the player controls.",
 			"당신은 무협 게임 『활협전』의 인물 " + me + "(" + Name + ")입니다. 당신에게 말을 거는 사람은 플레이어가 조작하는 주인공 조활(赵活)입니다. 괄호 속 인물명과 뒤에 이어지는 호칭 설정은 모드 내부 자료입니다. 대화에서는 제공된 한국어 명칭과 말투를 사용하세요.",
 			"あなたは武侠ゲーム『活俠傳』の登場人物、" + me + "（" + Name + "）です。話しかけてくるのは、プレイヤーが操作する主人公の趙活（赵活）です。",
@@ -581,7 +624,7 @@ public sealed class AiPersona
 				sb.Append(intro).Append('\n');
 			}
 		}
-		sb.Append('\n').Append(intros.Count > 0
+		sb.Append('\n').Append(Custom ? OwnTraitsHeading : intros.Count > 0
 			? L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
 			"【你的性子和小習慣】")
 			: L("【你是怎样的人】", "[Who you are]", "[당신은 어떤 사람인가] (모드가 작성한 기본 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたはどんな人か】",
@@ -767,24 +810,32 @@ public sealed class AiPersona
 				+ "趙活にカードが出て、彼が確認して初めて変わるので、「自分で決めて」「確認してきなよ」のようなことだけ言い、もう変えたとは言わないでください。",
 			"趙活求你幫他改數值、好感、心上人時，照你的性子決定肯不肯（可以嘴硬、討價還價" + (heroine ? "、吃醋" : "、起鬨") + "），肯的話用 propose_change 提出修改；" + "這會給趙活一張卡片，他按確認才會改，所以只說「你自己看著辦」「去確認吧」這類話，不要說已經改好了。")).Append('\n');
 		// 「你对我的好感」：说的是她（他）对赵活的好感，数值页里记在她（他）的名字下；赵活自己没有好感这一项
-		sb.Append("- ").Append(L("赵活说「你对我的好感」「好感度」时，指的是你对他的好感，修改时写「好感·" + Name + "」；数值页里没有「好感·赵活」这一项。",
-			"When Zhao Huo says \"your affection for me\" or \"affection\", he means your affection for him; when changing it, write the item exactly as 「好感·" + Name + "」. There is no 「好感·赵活」.",
-			"조활이 「나에 대한 호감도」「호감도」라고 하면 당신이 그에게 가진 호감도를 말합니다. 도구를 호출할 때 name 인자에는 내부 항목명 「好感·" + Name + "」를 그대로 쓰세요. 이는 모드가 찾는 식별자이며 답변 본문에 표시하는 이름이 아닙니다. 「好感·赵活」라는 항목은 없습니다.",
-			"趙活が「僕への好感度」「好感度」と言ったら、あなたの彼への好感度のことです。変えるときは項目を「好感·" + Name + "」のまま書いてください。「好感·赵活」という項目はありません。",
-			"趙活說「你對我的好感」「好感度」時，指的是你對他的好感，修改時項目寫「好感·" + Name + "」（照這個寫法，不要改成繁體）；數值頁裡沒有「好感·赵活」這一項。")).Append('\n');
+		// 自建人设在数值页里没有好感这一项
+		if (!Custom)
+		{
+			sb.Append("- ").Append(L("赵活说「你对我的好感」「好感度」时，指的是你对他的好感，修改时写「好感·" + Name + "」；数值页里没有「好感·赵活」这一项。",
+				"When Zhao Huo says \"your affection for me\" or \"affection\", he means your affection for him; when changing it, write the item exactly as 「好感·" + Name + "」. There is no 「好感·赵活」.",
+				"조활이 「나에 대한 호감도」「호감도」라고 하면 당신이 그에게 가진 호감도를 말합니다. 도구를 호출할 때 name 인자에는 내부 항목명 「好感·" + Name + "」를 그대로 쓰세요. 이는 모드가 찾는 식별자이며 답변 본문에 표시하는 이름이 아닙니다. 「好感·赵活」라는 항목은 없습니다.",
+				"趙活が「僕への好感度」「好感度」と言ったら、あなたの彼への好感度のことです。変えるときは項目を「好感·" + Name + "」のまま書いてください。「好感·赵活」という項目はありません。",
+				"趙活說「你對我的好感」「好感度」時，指的是你對他的好感，修改時項目寫「好感·" + Name + "」（照這個寫法，不要改成繁體）；數值頁裡沒有「好感·赵活」這一項。")).Append('\n');
+		}
 		sb.Append("- ").Append(L("要修改就调用 propose_change 工具，不要把工具名、参数写进回复里。",
 			"To change something, call the propose_change tool; never write tool names or arguments into your reply.",
 			"바꾸려면 propose_change 도구를 호출하고, 도구 이름이나 인자를 답에 쓰지 마세요.",
 			"変えるときは propose_change ツールを呼び出し、ツール名や引数を返答に書かないでください。",
 			"要修改就呼叫 propose_change 工具，不要把工具名稱、參數寫進回覆裡。")).Append('\n');
 		sb.Append("- ").Append(language).Append('\n');
-		sb.Append("- ").Append(L("回复最后另起一行写你此刻的表情：[表情: 名字]，只能从这些里选：",
-			"End your reply with a new line giving your expression as [表情: name], exactly in that form, choosing only from: ",
-			"답의 마지막 줄에는 모드가 읽을 표정 표식을 [表情: 이름] 형식으로 쓰세요. 이름은 다음 목록의 식별자를 그대로 사용하세요: ",
-			"返答の最後の行に、今の表情を [表情: 名前] の形のまま書いてください。次の中からだけ選びます：",
-			"回覆最後另起一行寫你此刻的表情：[表情: 名字]（照這個寫法），只能從這些裡選：")).Append(MoodGuide())
-			.Append(L("。神情要跟着话走。", ". Match it to what you say.", ". 표정은 말에 맞추세요.", "。表情は話す内容に合わせてください。",
-			"。神情要跟著話走。")).Append('\n');
+		// 只有一种表情时不用写（自建人设没放表情图）
+		if (Moods.Length > 1)
+		{
+			sb.Append("- ").Append(L("回复最后另起一行写你此刻的表情：[表情: 名字]，只能从这些里选：",
+				"End your reply with a new line giving your expression as [表情: name], exactly in that form, choosing only from: ",
+				"답의 마지막 줄에는 모드가 읽을 표정 표식을 [表情: 이름] 형식으로 쓰세요. 이름은 다음 목록의 식별자를 그대로 사용하세요: ",
+				"返答の最後の行に、今の表情を [表情: 名前] の形のまま書いてください。次の中からだけ選びます：",
+				"回覆最後另起一行寫你此刻的表情：[表情: 名字]（照這個寫法），只能從這些裡選：")).Append(MoodGuide())
+				.Append(L("。神情要跟着话走。", ". Match it to what you say.", ". 표정은 말에 맞추세요.", "。表情は話す内容に合わせてください。",
+				"。神情要跟著話走。")).Append('\n');
+		}
 		return sb.ToString();
 	}
 }

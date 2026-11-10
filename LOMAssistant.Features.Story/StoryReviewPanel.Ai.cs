@@ -306,6 +306,20 @@ public partial class StoryReviewPanel
 		GUILayout.EndVertical();
 
 		GUILayout.Space(S(8));
+		GUILayout.Label("自定义人设", _heading);
+		GUILayout.BeginVertical(_card, GUILayout.Width(width));
+		GUILayout.Label("可添加自行编写的人设和图片，也可替换内置人设的图片。放置方法见文件夹内的说明文件。", _muted);
+		GUILayout.Space(S(4));
+		GUILayout.BeginHorizontal();
+		if (GUILayout.Button("打开文件夹", _button, GUILayout.Width(TextWidth("打开文件夹", _button, S(160))), Ctl()))
+		{
+			OpenAiPersonaFolder();
+		}
+		GUILayout.FlexibleSpace();
+		GUILayout.EndHorizontal();
+		GUILayout.EndVertical();
+
+		GUILayout.Space(S(8));
 		GUILayout.Label("调试记录", _heading);
 		GUILayout.BeginVertical(_card, GUILayout.Width(width));
 		bool log = ConfigManager.AiDebugLog.Value;
@@ -392,18 +406,43 @@ public partial class StoryReviewPanel
 		}
 	}
 
-	// 能选的人设：攻略助手 + 玩家见过的女主角（读过她的对白）；每 5 秒重算一次
-	private List<AiPersona> _aiPersonas = new List<AiPersona>();
+	// 能选的人设：攻略助手 + 玩家见过的女主角（读过她的对白）+ 玩家自建的人设；每隔几秒重算一次
+	private List<AiPersona> _aiPersonas = new List<AiPersona>(), _aiMet = new List<AiPersona>();
 	private float _aiPersonasAt = -100f;
 
 	private List<AiPersona> MetPersonas()
 	{
-		if (Time.realtimeSinceStartup - _aiPersonasAt > 5f && StoryAtlas.Ready)
+		// 剧情数据还没整理好时见没见过算不出来：先只有自建的，一秒看一次
+		if (Time.realtimeSinceStartup - _aiPersonasAt > (StoryAtlas.Ready ? 5f : 1f))
 		{
 			_aiPersonasAt = Time.realtimeSinceStartup;
-			_aiPersonas = AiPersona.All.Where(p => p.Met()).ToList();
+			if (StoryAtlas.Ready)
+			{
+				_aiMet = AiPersona.All.Where(p => p.Met()).ToList();
+			}
+			_aiPersonas = _aiMet.Concat(AiCustom.Personas).ToList();
 		}
 		return _aiPersonas;
+	}
+
+	// 自定义人设的文件夹：建好、写上说明，再打开
+	private void OpenAiPersonaFolder()
+	{
+		try
+		{
+			var shown = MetPersonas().ToList();
+			if (AiCompanion.Persona != null)
+			{
+				shown.Add(AiCompanion.Persona);
+			}
+			string dir = AiCustom.Prepare(shown);
+			System.Diagnostics.Process.Start("explorer.exe", "\"" + dir + "\"");
+		}
+		catch (System.Exception ex)
+		{
+			FileLogger.LogWarning("[AI] 打开自定义人设文件夹失败: " + ex.Message);
+			Notice("打不开这个文件夹", true);
+		}
 	}
 
 	// 立绘：Addressables 里 Images/Characters/文件夹/表情.png；没有这个表情就用默认的
@@ -520,6 +559,27 @@ public partial class StoryReviewPanel
 	// 立绘：所有人按同一个像素比例画（游戏里的立绘都是同一个比例，只是画布留白不同），头顶对齐这一栏顶端、头居中。头约 280 像素宽，画成栏宽的一半
 	private void DrawAiPortrait(Rect r, AiPersona p)
 	{
+		// 玩家自己放了图（给内置人设换图，或自建人设）：整张放进这一栏，靠上居中，不裁；小图最多放大到两倍
+		Texture2D own = AiCustom.Image(p, AiChat.Mood, false);
+		if (own != null)
+		{
+			if (Event.current.type == EventType.Repaint)
+			{
+				float fit = Mathf.Min(2f, Mathf.Min(r.width / own.width, (r.height - S(10)) / own.height));
+				float w = Mathf.Round(own.width * fit), h = Mathf.Round(own.height * fit);
+				GUI.DrawTexture(new Rect(Mathf.Round(r.x + (r.width - w) / 2f), Mathf.Round(r.y + S(10)), w, h), own);
+			}
+			return;
+		}
+		if (p.Custom)
+		{
+			// 没放图的自建人设：一方朱砂印，写名字的第一个字
+			if (Event.current.type == EventType.Repaint)
+			{
+				GUI.Label(new Rect(Mathf.Round(r.x + (r.width - S(160)) / 2f), Mathf.Round(r.y + S(40)), S(160), S(160)), TextConverter.Verbatim + p.Initial, _aiBigSeal);
+			}
+			return;
+		}
 		Sprite sprite = AiPortrait(p, AiChat.Mood);
 		if (sprite == null || Event.current.type != EventType.Repaint)
 		{
@@ -557,6 +617,8 @@ public partial class StoryReviewPanel
 	{
 		"这里应该怎么选？", "怎样才能和你走得更近？", "你最近在忙些什么？", "接下来有什么事件能增加你的好感？", "你觉得我这个人怎么样？",
 	};
+	// 自建人设没有好感、结缘可问
+	private static readonly string[] CustomStarters = { "这里应该怎么选？", "你最近在忙些什么？", "你觉得我这个人怎么样？" };
 	private float _aiRefocusLogged = -100f;
 	// 自己画的光标：闪烁从光标最后一次移动算起，打字、移动时一直亮着
 	private int _aiCaretIndex = -1;
@@ -755,7 +817,7 @@ public partial class StoryReviewPanel
 	}
 
 	// AI 页自己的样式：气泡、名牌、折叠的查资料行。跟着窗口缩放、深浅色重建
-	private GUIStyle _aiUser, _aiBot, _aiCard, _aiName, _aiFold, _aiSmallButton, _aiPlate, _aiTabText, _aiTabTextOn, _aiField, _aiHint, _aiHintBox, _aiHintTitle, _aiHintText, _aiListOff, _aiListOn;
+	private GUIStyle _aiUser, _aiBot, _aiCard, _aiName, _aiFold, _aiSmallButton, _aiPlate, _aiTabText, _aiTabTextOn, _aiField, _aiHint, _aiHintBox, _aiHintTitle, _aiHintText, _aiListOff, _aiListOn, _aiBigSeal;
 	private float _aiStyleScale = -1f;
 	private bool _aiStyleDark;
 	private float _aiStyleOpacity = -1f;
@@ -815,6 +877,8 @@ public partial class StoryReviewPanel
 		_aiPlate = new GUIStyle(_seal) { fontSize = Mathf.RoundToInt(20 * _scale) };
 		_aiPlate.normal.background = Framed(Cinnabar, new Color(Cinnabar.r * 0.7f, Cinnabar.g * 0.7f, Cinnabar.b * 0.7f, 1f));
 		_aiPlate.border = new RectOffset(2, 2, 2, 2);
+		// 没放图的自建人设：左栏一方大朱砂印，写名字的第一个字
+		_aiBigSeal = new GUIStyle(_aiPlate) { fontSize = Mathf.RoundToInt(84 * _scale), clipping = TextClipping.Clip };
 	}
 
 	// 气泡宽度跟着字走：最长一行有多宽就多宽，超过上限才折行
@@ -1074,6 +1138,25 @@ public partial class StoryReviewPanel
 					}
 					GUI.Label(icon, "攻", _seal);
 				}
+				else if (personas[i - 1].Custom)
+				{
+					// 自建人设：头像那张图上裁一块；没放图就和攻略助手一样画朱砂印，写名字的第一个字
+					if (AiCustom.Icon(personas[i - 1], out Texture own, out Rect ownUv))
+					{
+						if (Event.current.type == EventType.Repaint)
+						{
+							GUI.DrawTextureWithTexCoords(icon, own, ownUv);
+						}
+					}
+					else
+					{
+						if (Event.current.type == EventType.Repaint)
+						{
+							Fill(icon, i == current ? new Color(1f, 1f, 1f, 0.25f) : Cinnabar);
+						}
+						GUI.Label(icon, TextConverter.Verbatim + personas[i - 1].Initial, _seal);
+					}
+				}
 				else if (personas[i - 1].IconCrop != null)
 				{
 					// 大师兄没有游戏里的心上人头像：从立绘上裁出脸
@@ -1091,6 +1174,11 @@ public partial class StoryReviewPanel
 
 		// 左栏：女主角立绘和名牌；攻略助手时是一张用法说明
 		AiPersona persona = AiPersona.Find(AiChat.PersonaId);
+		// 选着的自建人设没了（文件夹删了、改名了）：回到攻略助手，免得名字对不上人
+		if (persona == null && AiChat.PersonaId.Length > 0 && !AiChat.Busy)
+		{
+			AiChat.PersonaId = AiPersona.AssistantId;
+		}
 		float pw = S(320);
 		var left = new Rect(r.x, r.y, pw, r.height);
 		if (persona != null)
@@ -1434,7 +1522,7 @@ public partial class StoryReviewPanel
 		{
 			GUILayout.Space(S(12));
 			GUILayout.Label("可以这样问：", _muted);
-			foreach (string q in persona != null ? HeroineStarters : AssistantStarters)
+			foreach (string q in persona == null ? AssistantStarters : persona.Custom ? CustomStarters : HeroineStarters)
 			{
 				GUILayout.BeginHorizontal();
 				// 宽度按界面语言量：按中文原文量，英文、韩文会被截掉

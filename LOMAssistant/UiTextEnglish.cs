@@ -357,6 +357,8 @@ public static class UiTextEnglish
 		["只说当前和走过的"] = "Only current and past",
 		["只给方向提示"] = "Hints only",
 		["主动陪玩"] = "Proactive companion",
+		["自定义人设"] = "Custom personas",
+		["可添加自行编写的人设和图片，也可替换内置人设的图片。放置方法见文件夹内的说明文件。"] = "Add personas and images of your own, or replace the images of the built-in personas. See the readme file in the folder for how.",
 		["连接"] = "Connection",
 		["问答模型"] = "Q&A model",
 		["与问答模型相同"] = "Same as the Q&A model",
