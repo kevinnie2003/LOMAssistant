@@ -360,9 +360,11 @@ internal static class AiCustom
 	public static string Prepare(IEnumerable<AiPersona> shown)
 	{
 		Directory.CreateDirectory(Folder);
-		var listed = new List<AiPersona> { null };
-		listed.AddRange(shown.Where(p => p != null && !p.Custom).Distinct());
 		var existing = Directory.GetDirectories(Folder).Select(Path.GetFileName).ToList();
+		// 见过的几位，加上以前已经建过文件夹的：在标题画面打开时算不出见过谁，不能因此漏掉已有的文件夹
+		var wanted = new HashSet<AiPersona>(shown.Where(p => p != null && !p.Custom));
+		var listed = new List<AiPersona> { null };
+		listed.AddRange(AiPersona.All.Where(p => wanted.Contains(p) || FolderNames(p).Any(n => existing.Contains(n, StringComparer.OrdinalIgnoreCase))));
 		var rows = new List<(string Folder, AiPersona Persona)>();
 		foreach (AiPersona p in listed)
 		{
