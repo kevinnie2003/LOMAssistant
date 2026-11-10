@@ -176,7 +176,7 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/anytime-save.webp" width="640" alt="Save-anywhere page: all saves, load, note, delete">
 
-- **Roll back** (F4): after seeing a check, press F4 to go back to the line before it, adjust stats with F9 and continue; the check is re-evaluated.
+- **Roll back** (F4): story checks and branch choice boxes are saved temporarily; press F4 to return to the line before and check or choose again.
 - **New save/load screen**: you can switch back to the original.
   - The list shows your love interest's portrait, date and note; the detail pane shows her full portrait (a shy expression once you have bonded with her in that save) and the first lines after loading.
   - Manual and auto saves are on separate pages; the screen opens on the save you made last.
