@@ -244,10 +244,11 @@ Changing values or flags at random can break the story; save first.
 The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
 
 - **Training Pagoda**: plays the demo's Training Pagoda mode, including the deaths only this mode can trigger.
-- **Gallery**: has CG, Portraits, Animations and Music pages and supports gamepads.
+- **Gallery**: has CG, Portraits, Animations, Duels and Music pages and supports gamepads.
   - CG: CGs appear once you have seen them; all scene images are open, and a switch on the page shows locked content.
   - Portraits: pick a background, place characters and change variants, then hide the UI for screenshots.
   - Animations: plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs.
+  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs.
   - Music: all 39 official soundtrack tracks, with pause and playback progress.
 - **Title screen partner**: choose which character appears on the title screen, or show everyone or nobody.
 
