@@ -47,9 +47,9 @@ public sealed partial class Gallery : MonoBehaviour
 		public string Key, Title;
 	}
 
-	private const int PictureTab = 0, MusicTab = 1, StageTab = 2, FramesTab = 3;
+	private const int PictureTab = 0, MusicTab = 1, StageTab = 2, FramesTab = 3, FoesTab = 4;
 
-	private static readonly int[] TabOrder = { PictureTab, StageTab, FramesTab, MusicTab };
+	private static readonly int[] TabOrder = { PictureTab, StageTab, FramesTab, FoesTab, MusicTab };
 
 	private const int Columns = 4, Rows = 3, TrackColumns = 3;
 
@@ -229,6 +229,7 @@ public sealed partial class Gallery : MonoBehaviour
 		Trim(new HashSet<string>());
 		CloseStage();
 		CloseFrames();
+		CloseFoes();
 		GamepadCursor.Release();
 		// 用手柄操作时点击会清掉 uGUI 的选中，选回来才能继续用十字键
 		if (_titleButton != null)
@@ -566,6 +567,10 @@ public sealed partial class Gallery : MonoBehaviour
 		{
 			OpenFrames();
 		}
+		else if (tab == FoesTab)
+		{
+			OpenFoes();
+		}
 		else
 		{
 			_tab = tab;
@@ -707,6 +712,11 @@ public sealed partial class Gallery : MonoBehaviour
 			DrawFrames(screen);
 			return;
 		}
+		if (_tab == FoesTab)
+		{
+			DrawFoes(screen);
+			return;
+		}
 		if (_pictures == null)
 		{
 			GUI.Label(screen, TextConverter.ForDisplay("正在读取剧本"), _center);
@@ -746,13 +756,17 @@ public sealed partial class Gallery : MonoBehaviour
 		{
 			OpenFrames();
 		}
-		if (GUI.Button(new Rect(S(560f), S(30f), S(120f), S(46f)), TextConverter.ForDisplay("音乐"), _tab == MusicTab ? _primary : _button))
+		if (GUI.Button(new Rect(S(560f), S(30f), S(120f), S(46f)), TextConverter.ForDisplay("决斗"), _tab == FoesTab ? _primary : _button))
+		{
+			OpenFoes();
+		}
+		if (GUI.Button(new Rect(S(690f), S(30f), S(120f), S(46f)), TextConverter.ForDisplay("音乐"), _tab == MusicTab ? _primary : _button))
 		{
 			_tab = MusicTab;
 		}
 		if (_tab == PictureTab)
 		{
-			GUI.Label(new Rect(S(700f), S(38f), S(360f), S(36f)), string.Format(TextConverter.ForDisplay("已解锁 {0} / {1}"), _shown.Count, Listed.Count()), _muted);
+			GUI.Label(new Rect(S(830f), S(38f), S(360f), S(36f)), string.Format(TextConverter.ForDisplay("已解锁 {0} / {1}"), _shown.Count, Listed.Count()), _muted);
 			bool showLocked = ConfigManager.GalleryShowLocked.Value;
 			if (GUI.Button(new Rect(Screen.width - S(420f), S(30f), S(250f), S(46f)), TextConverter.ForDisplay("显示未解锁内容"), showLocked ? _primary : _button))
 			{

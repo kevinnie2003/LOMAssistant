@@ -117,6 +117,19 @@ public static class UiTextEnglish
 
 	public static readonly Dictionary<string, string> Table = new Dictionary<string, string>
 	{
+		["决斗"] = "Duels",
+		["从中间选一个变体"] = "Pick a pose in the middle",
+		["立绘变体"] = "Poses",
+		["选一个变体"] = "Pick a pose",
+		["载入中…"] = "Loading…",
+		["重置视图"] = "Reset view",
+		["导出 PNG"] = "Export PNG",
+		["导出失败，换个目录试试"] = "Export failed — try another folder",
+		["{0} 张立绘"] = "{0} poses",
+		["攻击"] = "Attack",
+		["受击"] = "Hurt",
+		["滚轮缩放，按住拖动"] = "Scroll to zoom, drag to pan",
+		["找不到游戏资源目录，无法读取决斗立绘"] = "Game asset folder not found — duel poses unavailable",
 		// 窗口和各页
 		["此刻"] = "Now",
 		["路线图"] = "Route map",

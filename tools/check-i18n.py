@@ -31,7 +31,7 @@ HOLE = re.compile(r'\{\d+\}')
 GAPS = os.path.join('tools', 'i18n-gaps.txt')
 # 不显示给玩家：日志、自测、诊断；文字表本身；AI 提示词（自带四语言，由 AiTests 查）
 SKIP_FILES = re.compile(r'^(?:Ui(?:Text|TextEnglish|Descriptions|Traditional|ConditionNames|EventNames|FlagNames|QuestNames)\.cs'
-                        r'|GalleryMusic\.cs|GalleryMoods\.cs|Pinyin.*|SelfTest.*|Diagnostics.*|FileLogger\.cs|BattleLogPatch\.cs|StoryWorkbenchCompat\.cs'
+                        r'|GalleryMusic\.cs|GalleryMoods\.cs|GalleryFoeNames\.cs|Pinyin.*|SelfTest.*|Diagnostics.*|FileLogger\.cs|BattleLogPatch\.cs|StoryWorkbenchCompat\.cs'
                         r'|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval|Debug|Chat).*)$')
 NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|new Regex\(|Console\.Write')
 # 这些位置的中文是用来比较游戏数据的，不显示

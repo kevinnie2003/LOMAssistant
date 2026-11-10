@@ -180,6 +180,8 @@ public static class ConfigManager
 	public static ConfigElement<int> GalleryFrameBg;
 	public static ConfigElement<string> GalleryFrameExportDir;
 
+	public static ConfigElement<string> GalleryFoeExportDir;
+
 	public static ConfigElement<bool> TitleTower;
 
 	public static ConfigElement<bool> GalleryShowLocked;
@@ -605,6 +607,7 @@ public static class ConfigManager
 		GalleryFrameFps = new ConfigElement<int>("GalleryFrameFps", "鉴赏「动图」页的播放帧率（每秒几帧，1～50；再快 GIF 存不下，导出会按 50 算）", 12);
 		GalleryFrameBg = new ConfigElement<int>("GalleryFrameBg", "鉴赏「动图」页播放区的底色：0=深色棋盘格（默认），1=白色，2=黑色。透明底的图在深色底上看不清时换白色", 0);
 		GalleryFrameExportDir = new ConfigElement<string>("GalleryFrameExportDir", "鉴赏「动图」页导出 GIF 的位置：默认是桌面。可以在动图页顶部改，目录不存在会自动建", defaultValue: DefaultGalleryExportDir());
+		GalleryFoeExportDir = new ConfigElement<string>("GalleryFoeExportDir", "鉴赏「决斗」页导出立绘 PNG 的位置：默认在本 Mod 目录下新建 GalleryFoes 文件夹。可以在决斗页顶部改，目录不存在会自动建", defaultValue: DefaultFoeExportDir());
 		SaveListOrder = new ConfigElement<int>("SaveListOrder", "新版存档、读档界面里手动存档的排列：0=按栏位号（默认），1=最近保存的在上面，2=按栏位号、读档页也列出所有空栏位（点空栏位在那一格开新游戏，同原版）。打开界面时都会选中并滚到上次保存的那个存档", 0);
 		SaveSlotCount = new ConfigElement<int>("SaveSlotCount", "手动存档栏位数量（原版 20，小于 20 时按 20）", 100);
 		LegendSlotPages = new ConfigElement<int>("LegendSlotPages", "传奇栏位页数：保存传奇和图鉴的传奇界面每页 12 格，多于 1 页时下面出现翻页按钮（原版 1 页）", 5);
@@ -624,6 +627,24 @@ public static class ConfigManager
 		LogToFile = new ConfigElement<bool>("LogToFile", "是否写入独立日志文件。日志位置：BepInEx\\plugins\\LOMAssistant\\logs\\", defaultValue: true);
 		EnableUpdateCheck = new ConfigElement<bool>("EnableUpdateCheck", "进游戏后联网（GitHub）看有没有新版本，有就在咖啡伴侣窗口右上角用小字提示，不弹窗。true=开（默认），false=关", defaultValue: true);
 		LastSeenVersion = new ConfigElement<string>("LastSeenVersion", "上次看过更新提示的版本（自动记录，不用改）", "");
+	}
+
+	/// <summary>决斗页导出立绘的默认目录：本 Mod 的 dll 所在的文件夹下面新建一个 GalleryFoes。</summary>
+	private static string DefaultFoeExportDir()
+	{
+		try
+		{
+			string dir = Path.GetDirectoryName(typeof(ConfigManager).Assembly.Location);
+			if (!string.IsNullOrEmpty(dir))
+			{
+				return Path.Combine(dir, "GalleryFoes");
+			}
+		}
+		catch (Exception)
+		{
+			// 取不到就用配置文件目录
+		}
+		return Path.Combine(BepInEx.Paths.ConfigPath, "GalleryFoes");
 	}
 
 	/// <summary>动图页导出 GIF 的默认目录：桌面（和传奇、AI 对话的导出一样）；取不到桌面才用本 Mod 的 dll 所在的文件夹下面开一个 GalleryGif。</summary>
