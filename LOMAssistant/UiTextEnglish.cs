@@ -784,6 +784,7 @@ public static class UiTextEnglish
 		["正在读取随时存档 {0}"] = "Loading save-anywhere {0}",
 		["没有可以回退的判定"] = "No check to roll back to",
 		["已回退到判定前"] = "Rolled back before the check",
+		["已回退到分支选择前"] = "Rolled back before the branch choice",
 		["掷骰前"] = "Before the roll",
 		["掷骰结果：{0}（待确认）"] = "Roll result: {0} (not confirmed)",
 		["选项：{0}"] = "Option: {0}",

@@ -27,13 +27,26 @@ public partial class AnytimeSave
 
 	private string restoreLabel = "";
 
-	public int RollbackCount => rollbackPoints.Count;
+	// 分支选择框（分支判定手动选择、事件自选）弹出时记下的回退点：弹框前一句。
+	// 不占普通回退点的名额，回到地图、养成界面或进了下一段剧情也留着，下次弹框时换掉；回标题、读档时作废。
+	private SaveFile branchPoint;
+	// 分支回退点是不是这一段剧情里记的：是的话，比它早的普通回退点是同一份执行记录的前缀，退回去后照样能用
+	private bool branchInRun;
+
+	public int RollbackCount => rollbackPoints.Count + (branchPoint != null ? 1 : 0);
 
 	private void ClearRollback()
 	{
 		rollbackPoints.Clear();
 		lastInteraction = -1;
 		lastSnapshot = null;
+		branchInRun = false;
+	}
+
+	internal void ClearBranchPoint()
+	{
+		branchPoint = null;
+		branchInRun = false;
 	}
 
 	/// <summary>记录模式下开始一个新的台词/选项/掷骰。</summary>
@@ -63,21 +76,52 @@ public partial class AnytimeSave
 		{
 			return;
 		}
-		EnsureSnapshot();
-		if (lastSnapshot == null || (rollbackPoints.Count > 0 && rollbackPoints[rollbackPoints.Count - 1].target == lastInteraction))
+		if (rollbackPoints.Count > 0 && rollbackPoints[rollbackPoints.Count - 1].target == lastInteraction)
 		{
 			return;
+		}
+		var point = PointAtLastInteraction();
+		if (point == null)
+		{
+			return;
+		}
+		rollbackPoints.Add(point);
+		if (rollbackPoints.Count > MaxRollbackPoints)
+		{
+			rollbackPoints.RemoveAt(0);
+		}
+	}
+
+	/// <summary>分支选择框弹出了：把弹框前一句记成分支回退点，换掉上一个。剧本一开头就弹框（前面没有台词）时记不了。</summary>
+	internal void MarkBranchPoint()
+	{
+		if (Replaying || Restoring || lastInteraction < 0 || SceneManager.GetActiveScene().name != "Story")
+		{
+			return;
+		}
+		var point = PointAtLastInteraction();
+		if (point == null)
+		{
+			return;
+		}
+		branchPoint = point;
+		branchInRun = true;
+	}
+
+	/// <summary>最近一句台词/选项/掷骰时的回退点（快照 + 到这一句为止的执行记录）；快照失败是 null。</summary>
+	private SaveFile PointAtLastInteraction()
+	{
+		EnsureSnapshot();
+		if (lastSnapshot == null)
+		{
+			return null;
 		}
 		var point = lastSnapshot;
 		point.rootScript = rootScript;
 		point.target = lastInteraction;
 		point.trace = trace.Take(lastInteraction + 1).Select(e => new Entry { kind = e.kind, label = e.label, type = e.type, value = e.value }).ToList();
 		point.scripts = new List<ScriptStamp>(stamps);
-		rollbackPoints.Add(point);
-		if (rollbackPoints.Count > MaxRollbackPoints)
-		{
-			rollbackPoints.RemoveAt(0);
-		}
+		return point;
 	}
 
 	private void EnsureSnapshot()
@@ -107,11 +151,25 @@ public partial class AnytimeSave
 		}
 	}
 
-	/// <summary>回退到最近一个判定前；连按继续往前退。</summary>
+	/// <summary>回退到最近一个判定前；连按继续往前退。有分支回退点时先退到它。</summary>
 	public void Rollback()
 	{
 		if (!installed || Replaying || Restoring || pendingLoad) return;
-		if (SceneManager.GetActiveScene().name != "Story" || SceneController.Instance == null || SceneController.Instance.IsPrepare || SceneController.Instance.IsLoading) return;
+		if (SceneController.Instance == null || SceneController.Instance.IsPrepare || SceneController.Instance.IsLoading) return;
+		string scene = SceneManager.GetActiveScene().name;
+		// 分支回退点在地图、养成界面也能退：和读随时存档一样，从剧情入口重放到那一句
+		if (branchPoint != null && (scene == "Story" || scene == "Free"))
+		{
+			var branch = branchPoint;
+			var before = branchInRun ? rollbackPoints.Where(p => p.target < branch.target).ToList() : new List<SaveFile>();
+			ClearBranchPoint();
+			restoreLabel = "已回退到分支选择前";
+			LoadFrom(branch);
+			rollbackPoints.Clear();
+			rollbackPoints.AddRange(before);
+			return;
+		}
+		if (scene != "Story") return;
 		if (rollbackPoints.Count == 0)
 		{
 			Notice("没有可以回退的判定");

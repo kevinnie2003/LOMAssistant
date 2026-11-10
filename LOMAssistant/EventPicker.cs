@@ -212,6 +212,7 @@ public class EventPicker : MonoBehaviour
 			}
 			Choices.AddRange(unmet);
 			_state = State.Waiting;
+			MarkRollback();
 			_pool = pool;
 			_switch = null;
 			_branchMode = false;
@@ -290,6 +291,7 @@ public class EventPicker : MonoBehaviour
 				Choices.Add(new Choice { Key = SwitchRandom.RuleKey(name, arm.Branch), Forced = arm.Value, Rate = arm.Count, Name = label, Effects = condition });
 			}
 			_state = State.Waiting;
+			MarkRollback();
 			_pool = pool;
 			_switch = name;
 			_branchMode = false;
@@ -336,6 +338,7 @@ public class EventPicker : MonoBehaviour
 			Choices.Add(new Choice { Key = SwitchRandom.RuleKey(name, arm.Branch), Forced = arm.Branch, Name = label, Effects = detail, Exits = arm.Exits });
 		}
 		_state = State.Waiting;
+		MarkRollback();
 		_pool = pool;
 		_switch = name;
 		_branchMode = true;
@@ -343,6 +346,19 @@ public class EventPicker : MonoBehaviour
 		StopSkip();
 		FileLogger.Log($"[分支] {name}：{arms.Count} 支，游戏会走第 {predicted} 支，等待选择");
 		return true;
+	}
+
+	// 弹出选择框时记一个分支回退点（弹框前一句）：选一支看完后按 F4 回到这里，再选另一支
+	private static void MarkRollback()
+	{
+		try
+		{
+			AnytimeSave.Instance?.MarkBranchPoint();
+		}
+		catch (System.Exception ex)
+		{
+			FileLogger.LogWarning("[分支] 记分支回退点失败: " + ex.Message);
+		}
 	}
 
 	// 弹出选择框时停住快进（按住 Ctrl、一键快进已读），选完要看的剧情不会被快进带过去

@@ -162,6 +162,8 @@ public partial class AnytimeSave : MonoBehaviour
 	{
 		active = -1; busy = false;
 		if (next.name != "Story" && !Restoring) { trace.Clear(); stamps.Clear(); rootScript = null; ClearRollback(); }
+		// 回到标题（之后可能读别的档、开新游戏）：分支回退点作废；读随时存档、回退时经过标题界面不算
+		if (next.name == "Title" && !Restoring) ClearBranchPoint();
 	}
 
 	// 恢复途中剧本的 Lua 协程报错就停了，剧情不会再往下走；不用等 180 秒超时，直接停下并说明
@@ -516,6 +518,7 @@ public partial class AnytimeSave : MonoBehaviour
 		try { data = ReadSave(Path.Combine(StoreRoot, name)); }
 		catch (Exception ex) { Notice("无法读取：" + ex.Message); return; }
 		ClearRollback();
+		ClearBranchPoint();
 		SaveSummary summary = Saves().FirstOrDefault(x => x.file == name);
 		restoreLabel = "已读取随时存档 " + (summary != null ? DisplayName(summary) : name);
 		LoadFrom(data);
@@ -889,6 +892,14 @@ public static class AnytimeSavePatches
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(SaveSystem), "DeleteSaveData")]
 	public static bool DeleteSaveData_Prefix() => AllowWrite();
+
+	// 读原版存档：分支回退点是读档前那条剧情线上的，作废
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(SaveSystem), "ExecuteLoadGameData")]
+	public static void ExecuteLoadGameData_Postfix()
+	{
+		if (!AnytimeSave.Replaying && !AnytimeSave.Restoring) AnytimeSave.Instance?.ClearBranchPoint();
+	}
 
 	private static bool AllowWrite() => !AnytimeSave.Replaying && !AnytimeSave.Restoring && !AnytimeSave.Faulted;
 
