@@ -10,7 +10,7 @@ namespace LOMAssistant.Features.Extras;
 public class SaveNoteEditor : MonoBehaviour
 {
 	private const int WindowId = 0x4E4F54; // "NOT"
-	private const int MaxLength = 30;
+	internal const int MaxLength = 30;
 	private const string FieldName = "LOMAssistant_SaveNote";
 
 	private static SaveNoteEditor _instance;
