@@ -460,6 +460,8 @@ public sealed class AiPersona
 	public string CompanionPrompt(string language, string spoiler)
 	{
 		string L(string zh, string en, string ko, string ja, string hant) => AiPrompts.L(zh, en, ko, ja, hant);
+		// 玩家在这位的文件夹里放了 persona.txt：用它代替 Mod 写的称呼和性子（人物志、原话、经历照旧）
+		string own = AiCustom.TextFor(this);
 		string me = AiPrompts.L(Name, TextConverter.ForDisplay(Name), TextConverter.ForDisplay(Name), Name,
 			TextConverter.ForDisplay(Name));
 		var lines = ReadLines();
@@ -476,7 +478,7 @@ public sealed class AiPersona
 			"당신은 무협 게임 『활협전』의 인물 " + me + "(" + Name + ")입니다. 지금 당신은 플레이어가 조작하는 주인공 조활(赵活)의 곁에서 그가 겪는 일을 지켜보고 있습니다. 괄호 속 인물명과 뒤에 이어지는 호칭 설정은 모드 내부 자료입니다. 말할 때는 제공된 한국어 명칭과 말투를 사용하세요.",
 			"あなたは武侠ゲーム『活俠傳』の登場人物、" + me + "（" + Name + "）です。いまは、プレイヤーが操作する主人公の趙活（赵活）のそばにいて、彼が経験していることを見守っています。",
 			"你是" + me + "，武俠遊戲《活俠傳》裡的人物，此刻陪在趙活（玩家操控的主角，資料裡寫作「赵活」）身邊，看著他經歷眼前的事。"))
-			.Append(Address).Append('\n');
+			.Append(own != null ? "" : Address).Append('\n');
 		string call = LatestCall(lines);
 		if (call.Length > 0)
 		{
@@ -497,8 +499,8 @@ public sealed class AiPersona
 				sb.Append(intro).Append('\n');
 			}
 		}
-		sb.Append('\n').Append(Custom ? OwnTraitsHeading : L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
-			"【你的性子和小習慣】")).Append('\n').Append(Traits).Append('\n');
+		sb.Append('\n').Append(Custom || own != null ? OwnTraitsHeading : L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
+			"【你的性子和小習慣】")).Append('\n').Append(own ?? Traits).Append('\n');
 
 		var rng = new Random(Id.GetHashCode() ^ lines.Count);
 		// 原话里的换行（对白框里的折行）换成空格，一句占一行
@@ -586,6 +588,8 @@ public sealed class AiPersona
 	public string Prompt(string language, string spoiler, bool fast = false)
 	{
 		string L(string zh, string en, string ko, string ja, string hant) => AiPrompts.L(zh, en, ko, ja, hant);
+		// 玩家在这位的文件夹里放了 persona.txt：用它代替 Mod 写的称呼和性子（人物志、原话、经历照旧）
+		string own = AiCustom.TextFor(this);
 		string me = AiPrompts.L(Name, TextConverter.ForDisplay(Name), TextConverter.ForDisplay(Name), Name,
 			TextConverter.ForDisplay(Name));
 		var lines = ReadLines();
@@ -601,7 +605,7 @@ public sealed class AiPersona
 			"당신은 무협 게임 『활협전』의 인물 " + me + "(" + Name + ")입니다. 당신에게 말을 거는 사람은 플레이어가 조작하는 주인공 조활(赵活)입니다. 괄호 속 인물명과 뒤에 이어지는 호칭 설정은 모드 내부 자료입니다. 대화에서는 제공된 한국어 명칭과 말투를 사용하세요.",
 			"あなたは武侠ゲーム『活俠傳』の登場人物、" + me + "（" + Name + "）です。話しかけてくるのは、プレイヤーが操作する主人公の趙活（赵活）です。",
 			"你是" + me + "，武俠遊戲《活俠傳》裡的人物。跟你說話的是趙活（玩家操控的主角，資料裡寫作「赵活」）。"))
-			.Append(Address).Append('\n');
+			.Append(own != null ? "" : Address).Append('\n');
 		string call = LatestCall(lines);
 		if (call.Length > 0)
 		{
@@ -624,11 +628,11 @@ public sealed class AiPersona
 				sb.Append(intro).Append('\n');
 			}
 		}
-		sb.Append('\n').Append(Custom ? OwnTraitsHeading : intros.Count > 0
+		sb.Append('\n').Append(Custom || own != null ? OwnTraitsHeading : intros.Count > 0
 			? L("【你的性子和小习惯】", "[Your temperament and habits]", "[당신의 성격과 버릇] (모드가 작성한 보충 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたの性格と癖】",
 			"【你的性子和小習慣】")
 			: L("【你是怎样的人】", "[Who you are]", "[당신은 어떤 사람인가] (모드가 작성한 기본 설정입니다. 중국어 부분도 성격을 이해하기 위한 입력 자료로 참고하세요)", "【あなたはどんな人か】",
-			"【你是怎樣的人】")).Append('\n').Append(Traits).Append('\n');
+			"【你是怎樣的人】")).Append('\n').Append(own ?? Traits).Append('\n');
 
 		// 声音：她读过的原话，抽 30 句短的（不剧透：玩家都读过）
 		var rng = new Random(Id.GetHashCode() ^ lines.Count);

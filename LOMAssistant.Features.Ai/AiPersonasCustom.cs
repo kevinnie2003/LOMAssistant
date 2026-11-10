@@ -10,7 +10,7 @@ namespace LOMAssistant.Features.Ai;
 
 /// <summary>
 /// 玩家自己放的人设和图。都在 BepInEx\config\LOMAssistant_AI\personas\ 下，一个子文件夹一位：
-/// 文件夹名和内置人设（或「攻略助手」）同名的，只换图，人设文字仍用内置的；
+/// 文件夹名和内置人设（或「攻略助手」）同名的，换它的图；里面放了 persona.txt 就代替 Mod 写的称呼和性子（人物志、对白、经历照旧）；
 /// 别的名字、里面有 persona.txt 的，是自建人设：名字就是文件夹名，人设文字是那个文件，没有游戏里的对白、人物志、好感可用。
 /// 图按文件名认（png、jpg）：default 是平时的，head 是头像和缩小时用的，其余的文件名是表情名。整张照原样画，不裁。
 /// 每隔几秒看一眼文件夹有没有变，改了不用重启。
@@ -34,6 +34,8 @@ internal static class AiCustom
 		/// <summary>换的是哪位内置人设的图（攻略助手是空字符串）；自建人设为 null。</summary>
 		public string BuiltIn;
 		public AiPersona Persona;
+		/// <summary>persona.txt 里的人设文字；内置人设的文件夹里没放就是 null。</summary>
+		public string Text;
 		/// <summary>表情名（小写）→ 文件。</summary>
 		public readonly SortedDictionary<string, string> Files = new SortedDictionary<string, string>(StringComparer.Ordinal);
 		public readonly Dictionary<string, Texture2D> Textures = new Dictionary<string, Texture2D>();
@@ -57,6 +59,18 @@ internal static class AiCustom
 	{
 		Refresh();
 		return _personas.FirstOrDefault(p => p.Id == id);
+	}
+
+	/// <summary>玩家给这位内置人设另写的人设文字（文件夹里的 persona.txt），代替 Mod 写的称呼和性子；没写返回 null。</summary>
+	public static string TextFor(AiPersona persona)
+	{
+		return persona == null || persona.Custom ? null : EntryFor(persona)?.Text;
+	}
+
+	/// <summary>这位的文件夹里的文件有没有动过（主动陪玩记着拼好的提示词，靠它知道要重拼）；没有文件夹是空字符串。</summary>
+	public static string StampFor(AiPersona persona)
+	{
+		return persona == null ? "" : EntryFor(persona)?.Stamp ?? "";
 	}
 
 	/// <summary>这位（null = 攻略助手）有没有玩家放的图。</summary>
@@ -239,7 +253,9 @@ internal static class AiCustom
 	{
 		string name = Path.GetFileName(dir);
 		int match = builtIn.FindIndex(b => b.Names.Contains(name, StringComparer.OrdinalIgnoreCase));
-		string textFile = match < 0 ? Directory.GetFiles(dir).FirstOrDefault(f => string.Equals(Path.GetFileName(f), TextName, StringComparison.OrdinalIgnoreCase)) : null;
+		// 攻略助手没有人设文字可换，它的文件夹里只认图
+		string textFile = match >= 0 && builtIn[match].Id.Length == 0 ? null
+			: Directory.GetFiles(dir).FirstOrDefault(f => string.Equals(Path.GetFileName(f), TextName, StringComparison.OrdinalIgnoreCase));
 		if (match < 0 && textFile == null)
 		{
 			return null;
@@ -272,6 +288,12 @@ internal static class AiCustom
 		if (textFile != null)
 		{
 			string text = ReadText(textFile).Trim();
+			if (match >= 0)
+			{
+				// 内置人设：这段文字代替 Mod 写的称呼和性子；空文件当没写
+				entry.Text = text.Length == 0 ? null : text.Length > MaxText ? text.Substring(0, MaxText) : text;
+				return entry;
+			}
 			if (text.Length == 0)
 			{
 				return null;
@@ -399,18 +421,23 @@ internal static class AiCustom
 	{
 		string note = L(
 			"这是 Mod 给这位内置人设写的人设文字，只供参照，改这个文件不起作用。\n"
+			+ "想改这位的人设文字，把改好的内容另存为同一文件夹里的 persona.txt，它会代替下面这段。\n"
 			+ "对话时还会加上游戏里的人物志、玩家读过的她的对白、这一局和她有关的经历，那些取自游戏，不在这里。\n"
 			+ "自建人设时，在自己的子文件夹里新建 persona.txt，照这样写这个人是谁、性格、说话的方式、怎么称呼赵活，用哪种语言写都可以。",
 			"This is the persona text the mod wrote for this built-in persona. It is for reference only; editing this file changes nothing.\n"
+			+ "To change this persona's text, save your edited version as persona.txt in the same folder; it replaces the text below.\n"
 			+ "In a conversation the mod also adds the character's entry in the game's records, lines of theirs the player has read and what happened with them in this playthrough. Those come from the game and are not shown here.\n"
 			+ "For your own persona, create persona.txt in your own subfolder and describe who the person is, their personality, how they talk and what they call Zhao Huo. Write it in any language. The text below is in Simplified Chinese, the only version the mod has.",
 			"이 파일은 모드가 이 기본 인물에게 써 둔 인물 설정입니다. 참고용이며, 이 파일을 고쳐도 반영되지 않습니다.\n"
+			+ "이 인물의 설정을 바꾸려면, 고친 내용을 같은 폴더에 persona.txt로 저장하세요. 아래 내용을 대신합니다.\n"
 			+ "대화할 때는 게임의 인물지, 플레이어가 읽은 이 인물의 대사, 이번 회차에서 이 인물과 관련해 겪은 일도 함께 넣습니다. 그 내용은 게임에서 가져오며 여기에는 없습니다.\n"
 			+ "인물을 직접 만들 때는 자신의 하위 폴더에 persona.txt를 새로 만들고, 이 인물이 누구인지, 성격, 말투, 조활을 어떻게 부르는지를 적으세요. 어떤 언어로 써도 됩니다. 아래 내용은 중국어 간체이며, 모드에는 이 한 가지만 있습니다.",
 			"このファイルは、Mod がこの内蔵キャラクターのために書いたキャラクター設定です。参考用で、このファイルを書き換えても反映されません。\n"
+			+ "このキャラクターの設定を変えたいときは、書き換えた内容を同じフォルダに persona.txt として保存してください。下の文章の代わりに使われます。\n"
 			+ "会話のときは、ゲームの人物誌、プレイヤーが読んだこの人の台詞、今回のプレイでこの人と関わった出来事も加えます。それらはゲームから取るもので、ここにはありません。\n"
 			+ "自分でキャラクターを作るときは、自分のサブフォルダに persona.txt を新しく作り、この人が誰か、性格、話し方、趙活の呼び方を書いてください。どの言語で書いてもかまいません。下の文章は簡体字中国語で、Mod にはこの一種類しかありません。",
 			"這是 Mod 幫這位內建人設寫的人設文字，只供參照，改這個檔案不會生效。\n"
+			+ "想改這位的人設文字，把改好的內容另存為同一個資料夾裡的 persona.txt，它會取代下面這段。\n"
 			+ "對話時還會加上遊戲裡的人物誌、玩家讀過的她的對白、這一局和她有關的經歷，那些取自遊戲，不在這裡。\n"
 			+ "自建人設時，在自己的子資料夾裡新增 persona.txt，照這樣寫這個人是誰、個性、說話的方式、怎麼稱呼趙活，用哪種語言寫都可以。下面的文字是簡體中文，Mod 只有這一份。");
 		var sb = new StringBuilder(note).Append("\n\n----------\n\n");
@@ -451,9 +478,11 @@ internal static class AiCustom
 	private const string ReadmeZh =
 		"咖啡伴侣 · AI 陪玩的自定义人设和图片\n\n"
 		+ "这个文件夹里，一个子文件夹对应一位人设。改完几秒后生效，不用重启游戏。\n\n"
-		+ "【给内置人设换图】\n"
-		+ "子文件夹的名字和内置人设相同（文末列出了已经建好的），放进去的图会替换 AI 陪玩页的立绘和游戏画面上的形象。人设文字仍用内置的。\n"
-		+ "攻略助手只换游戏画面上的形象。\n\n"
+		+ "【改内置人设的图和文字】\n"
+		+ "子文件夹的名字和内置人设相同（文末列出了已经建好的）。\n"
+		+ "- 放进去的图会替换 AI 陪玩页的立绘和游戏画面上的形象。\n"
+		+ "- 放一个 persona.txt，会代替 Mod 给这位写的称呼和性子（原文见同一文件夹里的 reference.txt）。游戏里的人物志、对白和经历照旧会用上。\n"
+		+ "攻略助手只换游戏画面上的形象，没有人设文字可改。\n\n"
 		+ "【自建人设】\n"
 		+ "1. 新建一个子文件夹，文件夹名就是这位的名字。\n"
 		+ "2. 在里面放一个 persona.txt，写这个人是谁、性格、说话的方式、怎么称呼赵活。存成 UTF-8，最多读前 8000 字。写法可以参照内置人设文件夹里的 reference.txt。\n"
@@ -471,9 +500,11 @@ internal static class AiCustom
 	private const string ReadmeHant =
 		"咖啡伴侶 · AI 陪玩的自訂人設和圖片\n\n"
 		+ "這個資料夾裡，一個子資料夾對應一位人設。改完幾秒後生效，不用重新啟動遊戲。\n\n"
-		+ "【幫內建人設換圖】\n"
-		+ "子資料夾的名稱和內建人設相同（文末列出了已經建好的），放進去的圖會取代 AI 陪玩頁的立繪和遊戲畫面上的形象。人設文字仍用內建的。\n"
-		+ "攻略助手只換遊戲畫面上的形象。\n\n"
+		+ "【改內建人設的圖和文字】\n"
+		+ "子資料夾的名稱和內建人設相同（文末列出了已經建好的）。\n"
+		+ "- 放進去的圖會取代 AI 陪玩頁的立繪和遊戲畫面上的形象。\n"
+		+ "- 放一個 persona.txt，會取代 Mod 幫這位寫的稱呼和個性（原文見同一個資料夾裡的 reference.txt）。遊戲裡的人物誌、對白和經歷照舊會用上。\n"
+		+ "攻略助手只換遊戲畫面上的形象，沒有人設文字可改。\n\n"
 		+ "【自建人設】\n"
 		+ "1. 新增一個子資料夾，資料夾名稱就是這位的名字。\n"
 		+ "2. 在裡面放一個 persona.txt，寫這個人是誰、個性、說話的方式、怎麼稱呼趙活。存成 UTF-8，最多讀前 8000 字。寫法可以參照內建人設資料夾裡的 reference.txt。\n"
@@ -491,9 +522,11 @@ internal static class AiCustom
 	private const string ReadmeEn =
 		"Coffee Companion · Custom personas and images for the AI Companion\n\n"
 		+ "Each subfolder here is one persona. Changes take effect a few seconds after you save; no restart is needed.\n\n"
-		+ "[Replacing a built-in persona's images]\n"
-		+ "Name the subfolder after a built-in persona (the ones already created are listed at the end). Images in it replace the portrait on the AI Companion tab and the figure on the game screen. The persona text stays built-in.\n"
-		+ "For the Guide, only the figure on the game screen is replaced.\n\n"
+		+ "[Changing a built-in persona's images and text]\n"
+		+ "Name the subfolder after a built-in persona (the ones already created are listed at the end).\n"
+		+ "- Images in it replace the portrait on the AI Companion tab and the figure on the game screen.\n"
+		+ "- A persona.txt in it replaces the personality and forms of address the mod wrote for this persona (the original is in reference.txt in the same folder). The character's entry in the game's records, their lines and your shared history are still used.\n"
+		+ "For the Guide, only the figure on the game screen is replaced; it has no persona text to change.\n\n"
 		+ "[Adding your own persona]\n"
 		+ "1. Create a subfolder; its name is the persona's name.\n"
 		+ "2. Put a persona.txt in it describing who this is, their personality, how they talk and what they call Zhao Huo. Save it as UTF-8; only the first 8000 characters are read. The reference.txt in each built-in persona's folder shows how the built-in ones are written.\n"
@@ -511,9 +544,11 @@ internal static class AiCustom
 	private const string ReadmeKo =
 		"커피 동반자 · AI 동행의 사용자 지정 인물과 이미지\n\n"
 		+ "이 폴더에서는 하위 폴더 하나가 인물 한 명입니다. 저장하고 몇 초 뒤에 반영되며, 게임을 다시 시작할 필요가 없습니다.\n\n"
-		+ "[기본 인물의 이미지 바꾸기]\n"
-		+ "하위 폴더 이름을 기본 인물의 이름과 같게 하면(이미 만들어 둔 폴더는 맨 아래에 적혀 있습니다), 그 안의 이미지가 AI 동행 탭의 스탠딩 일러스트와 게임 화면의 모습을 대신합니다. 인물 설정은 기본 것을 그대로 씁니다.\n"
-		+ "공략 도우미는 게임 화면의 모습만 바뀝니다.\n\n"
+		+ "[기본 인물의 이미지와 설정 바꾸기]\n"
+		+ "하위 폴더 이름을 기본 인물의 이름과 같게 합니다(이미 만들어 둔 폴더는 맨 아래에 적혀 있습니다).\n"
+		+ "- 그 안의 이미지가 AI 동행 탭의 스탠딩 일러스트와 게임 화면의 모습을 대신합니다.\n"
+		+ "- persona.txt를 넣으면 모드가 이 인물에게 써 둔 호칭과 성격 설정을 대신합니다(원문은 같은 폴더의 reference.txt에 있습니다). 게임의 인물지, 대사, 함께 겪은 일은 그대로 사용합니다.\n"
+		+ "공략 도우미는 게임 화면의 모습만 바뀌며, 바꿀 인물 설정이 없습니다.\n\n"
 		+ "[인물 직접 만들기]\n"
 		+ "1. 하위 폴더를 새로 만듭니다. 폴더 이름이 곧 인물의 이름입니다.\n"
 		+ "2. 그 안에 persona.txt를 넣고, 이 인물이 누구인지, 성격, 말투, 조활을 어떻게 부르는지를 적습니다. UTF-8로 저장하세요. 앞에서부터 8000자까지만 읽습니다. 쓰는 방식은 기본 인물 폴더에 있는 reference.txt를 참고하세요.\n"
@@ -531,9 +566,11 @@ internal static class AiCustom
 	private const string ReadmeJa =
 		"珈琲のおとも · AIお供のカスタムキャラクターと画像\n\n"
 		+ "このフォルダでは、サブフォルダ一つがキャラクター一人です。保存して数秒後に反映され、ゲームの再起動は不要です。\n\n"
-		+ "【内蔵キャラクターの画像を差し替える】\n"
-		+ "サブフォルダの名前を内蔵キャラクターと同じにすると（作成済みのものは末尾に記載）、中の画像が AIお供タブの立ち絵とゲーム画面の姿に置き換わります。キャラクター設定は内蔵のものをそのまま使います。\n"
-		+ "攻略アシスタントは、ゲーム画面の姿だけが変わります。\n\n"
+		+ "【内蔵キャラクターの画像と設定を変える】\n"
+		+ "サブフォルダの名前を内蔵キャラクターと同じにします（作成済みのものは末尾に記載）。\n"
+		+ "- 中の画像が AIお供タブの立ち絵とゲーム画面の姿に置き換わります。\n"
+		+ "- persona.txt を置くと、Mod がこのキャラクターに書いた呼び方と性格の設定の代わりに使われます（元の文章は同じフォルダの reference.txt にあります）。ゲームの人物誌、台詞、一緒に経験した出来事はそのまま使います。\n"
+		+ "攻略アシスタントはゲーム画面の姿だけが変わり、変えられるキャラクター設定はありません。\n\n"
 		+ "【自分でキャラクターを作る】\n"
 		+ "1. サブフォルダを新しく作ります。フォルダ名がそのままキャラクターの名前になります。\n"
 		+ "2. その中に persona.txt を置き、この人が誰か、性格、話し方、趙活の呼び方を書きます。UTF-8 で保存してください。読み込むのは先頭から 8000 字までです。書き方は、内蔵キャラクターのフォルダにある reference.txt を参考にしてください。\n"

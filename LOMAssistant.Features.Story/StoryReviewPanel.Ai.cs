@@ -308,7 +308,7 @@ public partial class StoryReviewPanel
 		GUILayout.Space(S(8));
 		GUILayout.Label("自定义人设", _heading);
 		GUILayout.BeginVertical(_card, GUILayout.Width(width));
-		GUILayout.Label("可添加自行编写的人设和图片，也可替换内置人设的图片。放置方法见文件夹内的说明文件。", _muted);
+		GUILayout.Label("可添加自行编写的人设和图片，也可替换内置人设的图片和人设文字。放置方法见文件夹内的说明文件。", _muted);
 		GUILayout.Space(S(4));
 		GUILayout.BeginHorizontal();
 		if (GUILayout.Button("打开文件夹", _button, GUILayout.Width(TextWidth("打开文件夹", _button, S(160))), Ctl()))
