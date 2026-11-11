@@ -13,6 +13,19 @@ namespace LOMAssistant.Tests;
 /// </summary>
 public static partial class Tests
 {
+	public static void TestGalleryPersonalityTranslations()
+	{
+		foreach (string language in new[] { LOMAssistant.UiText.Korean, LOMAssistant.UiText.Japanese, LOMAssistant.UiText.English })
+		{
+			foreach (string label in new[] { "角色四维", "性情", "处世", "道德", "修养", "恶棍", "坏人", "中庸", "好人", "侠客", "懦夫", "谨慎", "勇敢", "莽夫", "矫情", "知礼", "豪爽", "粗鲁", "疯狂", "暴躁", "沉着", "君子" })
+			{
+				string translation = LOMAssistant.UiText.TableTranslation(label, language);
+				Assert(!string.IsNullOrWhiteSpace(translation), "Missing trait translation: " + language + " / " + label);
+				Assert(LOMAssistant.UiText.Translate(label, language) == translation, "Trait label hit the wrong translation pattern: " + label);
+			}
+		}
+	}
+
 	public static void TestGalleryDuelUiTranslations()
 	{
 		string[] labels = { "面板与技能", "搜索剧情 / 配置", "角色技能", "无固有技能",

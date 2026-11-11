@@ -258,6 +258,7 @@ public sealed partial class Gallery
 			if (sideBySide) GUILayout.BeginHorizontal();
 			GUILayout.BeginVertical(GUILayout.Width(chartWidth));
 			DrawFoeRadar(profile.Six, chartWidth, chartHeight);
+			DrawFoePersonality(profile, chartWidth);
 			GUILayout.EndVertical();
 			GUILayout.BeginVertical();
 			GUILayout.Label(TextConverter.ForDisplay("角色技能"), _foeStatsHeading);

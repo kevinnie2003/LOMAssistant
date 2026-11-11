@@ -1634,6 +1634,8 @@ public static class UiTextEnglish
 		["此立绘没有关联的决斗配置"] = "No duel profile is linked to this portrait",
 		["血量 {0}/{1} · 气力 {2}/{3} · 嘴力 {4}"] = "HP {0}/{1} · Energy {2}/{3} · Eloquence {4}",
 		["角色技能"] = "Character skills",
+		["角色四维"] = "Character traits",
+		["处世"] = "Conduct",
 		["无固有技能"] = "No innate skills",
 		["未启用"] = "Inactive",
 		["剧情状态变化"] = "Story state changes",

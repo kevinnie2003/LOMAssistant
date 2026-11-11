@@ -144,7 +144,14 @@ internal sealed class GalleryDuelRadar : IDisposable
 
 	private Sprite LoadGameBackground()
 	{
-		DuelRadarResource source = GalleryDuelCatalog.Instance.Radar;
+		_ownedTexture = LoadGameTexture(GalleryDuelCatalog.Instance.Radar);
+		_ownedSprite = Sprite.Create(_ownedTexture, new Rect(0, 0, _ownedTexture.width, _ownedTexture.height), new Vector2(0.5f, 0.5f));
+		return _ownedSprite;
+	}
+
+	/// <summary>只读取已校验的游戏纹理；六维图和四维滑条共用，不把游戏图片打包进 Mod。</summary>
+	internal static Texture2D LoadGameTexture(DuelRadarResource source)
+	{
 		if (source == null || Path.GetFileName(source.File) != source.File || source.Size <= 0 || source.Size > 16 * 1024 * 1024)
 			throw new InvalidDataException("Invalid radar resource metadata");
 		byte[] bytes;
@@ -158,15 +165,22 @@ internal sealed class GalleryDuelRadar : IDisposable
 		using (SHA256 hash = SHA256.Create())
 			if (BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant() != source.Sha256)
 				throw new InvalidDataException("Game radar resource changed; regenerate gallery catalog");
-		_ownedTexture = new Texture2D(source.Width, source.Height, (TextureFormat)source.Format, false)
+		var texture = new Texture2D(source.Width, source.Height, (TextureFormat)source.Format, false)
 		{
 			name = source.Name, hideFlags = HideFlags.HideAndDontSave, filterMode = FilterMode.Bilinear,
 			wrapMode = TextureWrapMode.Clamp,
 		};
-		_ownedTexture.LoadRawTextureData(bytes);
-		_ownedTexture.Apply(false, true);
-		_ownedSprite = Sprite.Create(_ownedTexture, new Rect(0, 0, source.Width, source.Height), new Vector2(0.5f, 0.5f));
-		return _ownedSprite;
+		try
+		{
+			texture.LoadRawTextureData(bytes);
+			texture.Apply(false, true);
+			return texture;
+		}
+		catch
+		{
+			UnityEngine.Object.Destroy(texture);
+			throw;
+		}
 	}
 
 	public void Dispose()

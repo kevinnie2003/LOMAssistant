@@ -69,7 +69,7 @@ def extract(game):
         if obj.type.name != "TextAsset":
             continue
         text = obj.read()
-        if text.m_Name not in ["Talent_zh-cn", "CombatCharacter_zh-cn", "CombatEffects_zh-cn", "CombatInfo_zh-cn"]:
+        if text.m_Name not in ["Talent_zh-cn", "CombatCharacter_zh-cn", "CombatEffects_zh-cn", "CombatInfo_zh-cn", "Stat_zh-cn"]:
             continue
         for line in text.m_Script.splitlines():
             key, sep, value = line.partition(" = ")
@@ -106,6 +106,7 @@ def extract(game):
                    Name=locale.get("CombatCharacter/Name/" + d["Name"], d["m_Name"][6:]),
                    Folders=folders, Note=d["_note"],
                    Six=[d[k] for k in ["Strength", "Stamina", "Dexterity", "Fist", "Sword", "MartialWeapon"]],
+                   Four=[d[k] for k in ["Disposition", "Behaviour", "Karma", "Training"]],
                    Health=d["DefaultHealth"], MaxHealth=d["MaxHealth"], Energy=d["DefaultStamina"],
                    MaxEnergy=d["MaxStamina"], Talking=d["Talking"], Skills=sorted(talents,key=lambda t:t["Priority"]))
         stats.append(row)
@@ -176,18 +177,29 @@ def extract(game):
     # Only embed the texture's location and fingerprint, never the game's artwork.
     # At runtime the gallery reads this small range from the user's installed game.
     ui = UnityPy.load(str(root / "sharedassets2.assets"))
-    sprite = next(o.read() for o in ui.objects if o.type.name == "Sprite" and o.read().m_Name == "pic_stat_chart_6")
-    texture = sprite.m_RD.texture.deref().read()
-    stream = texture.m_StreamData
-    assert texture.m_MipCount == 1 and sprite.m_RD.textureRect.x == 0 and sprite.m_RD.textureRect.y == 0
-    with (root / pathlib.Path(stream.path).name).open("rb") as f:
-        f.seek(stream.offset)
-        texture_bytes = f.read(stream.size)
-    radar = dict(Name=sprite.m_Name, File=pathlib.Path(stream.path).name, Offset=stream.offset, Size=stream.size,
-                 Width=texture.m_Width, Height=texture.m_Height, Format=texture.m_TextureFormat,
-                 Sha256=hashlib.sha256(texture_bytes).hexdigest())
+    def texture_resource(name):
+        sprite = next(o.read() for o in ui.objects if o.type.name == "Sprite" and o.read().m_Name == name)
+        texture = sprite.m_RD.texture.deref().read()
+        stream = texture.m_StreamData
+        rect = sprite.m_RD.textureRect
+        assert texture.m_MipCount == 1 and rect.x == 0 and rect.y == 0
+        assert rect.width == texture.m_Width and rect.height == texture.m_Height
+        with (root / pathlib.Path(stream.path).name).open("rb") as f:
+            f.seek(stream.offset)
+            texture_bytes = f.read(stream.size)
+        return dict(Name=sprite.m_Name, File=pathlib.Path(stream.path).name, Offset=stream.offset, Size=stream.size,
+                    Width=texture.m_Width, Height=texture.m_Height, Format=texture.m_TextureFormat,
+                    Sha256=hashlib.sha256(texture_bytes).hexdigest())
+
+    radar = texture_resource("pic_stat_chart_6")
+    personality_keys = [prefix + kind + suffix
+                        for kind in ["disposition", "behaviour", "karma", "training"]
+                        for prefix, suffix in [("PlayerStat/", "")] + [("StatLevel/", f"{n:02}") for n in range(1, 6)]]
+    personality_labels = {key: locale[key] for key in personality_keys}
     result = dict(Schema=1, Sources=sources, Stats=sorted(stats,key=lambda r:r["Id"]),
-                  Levels=sorted(levels,key=lambda r:r["Id"]), Modes=modes, Radar=radar)
+                  Levels=sorted(levels,key=lambda r:r["Id"]), Modes=modes, Radar=radar,
+                  PersonalityBar=texture_resource("icon_back_bar_1"),
+                  PersonalityPointer=texture_resource("icon_pointer_1"), PersonalityLabels=personality_labels)
     raw = json.dumps(result,ensure_ascii=False,separators=(",", ":")).encode("utf-8")
     if b"\xef\xbf\xbd" in raw:
         raise ValueError("Invalid UTF-8 replacement characters in catalog")

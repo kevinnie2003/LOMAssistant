@@ -8,6 +8,36 @@ namespace LOMAssistant.Tests;
 
 public static class GalleryDuelTests
 {
+	public static void TestGalleryPersonalityLevelBoundaries()
+	{
+		int[] values = { -1, 0, 19, 20, 39, 40, 50, 59, 60, 79, 80, 99, 100, 101 };
+		int[] expected = { 0, 0, 0, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4 };
+		for (int i = 0; i < values.Length; i++)
+			Assert(GalleryDuelPersonality.Level(values[i]) == expected[i], "Incorrect game trait tier at " + values[i]);
+		Assert(GalleryDuelPersonality.Position(-1) == 0f && GalleryDuelPersonality.Position(50) == 0.5f
+			&& GalleryDuelPersonality.Position(100) == 1f && GalleryDuelPersonality.Position(101) == 1f, "Slider range differs from game");
+	}
+
+	public static void TestGalleryPersonalityDataAndNativeAssets()
+	{
+		var c = GalleryDuelCatalog.Instance;
+		Assert(c.Stats.All(p => p.Four != null && p.Four.Length == 4 && p.Four.All(v => v >= 0 && v <= 100)), "Missing or invalid personality values");
+		Assert(c.Stats.GroupBy(p => p.CharacterId).Any(g => g.Select(p => string.Join(",", p.Four)).Distinct().Count() > 1), "Story-specific personality variants were lost");
+		foreach (string key in GalleryDuelPersonality.Keys)
+		{
+			Assert(c.PersonalityLabels.ContainsKey("PlayerStat/" + key), "Missing stat name");
+			for (int i = 1; i <= 5; i++) Assert(!string.IsNullOrEmpty(c.PersonalityLabels["StatLevel/" + key + i.ToString("00")]), "Missing tier label");
+		}
+		Assert(c.PersonalityLabels["StatLevel/karma03"] == "中庸" && c.PersonalityLabels["StatLevel/karma04"] == "好人", "Rating fallback differs from game");
+		foreach (var r in new[] { c.PersonalityBar, c.PersonalityPointer })
+		{
+			using var file = new BinaryReader(File.OpenRead(Path.Combine(Program.Game, "Mortal_Data", r.File)));
+			file.BaseStream.Position = r.Offset;
+			using var hash = SHA256.Create();
+			Assert(BitConverter.ToString(hash.ComputeHash(file.ReadBytes(r.Size))).Replace("-", "").ToLowerInvariant() == r.Sha256, "Trait asset differs from installed game");
+		}
+	}
+
 	public static void TestGalleryNativeRadarAxisOrderAndOverflow()
 	{
 		var six = new[] { 100, 80, 60, 40, 20, 0 };
