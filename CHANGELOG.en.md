@@ -2,10 +2,6 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
-## Unreleased
-
-- **Duel backlog** (new, on by default): press L or click **Duel backlog** to review taunts, character dialogue and narration actually shown in the current duel, in order. Opening it pauses the duel; closing it resumes play. The window clears on leaving the duel. Dialogue is also copied to the game's backlog for the current session and is not written to saves. Supports Simplified and Traditional Chinese, English, Japanese and Korean, with a configurable hotkey.
-
 ## 3.7.0 (2026-11-09)
 
 - **Proactive companion** (new, off by default): a persona of your choice stays on the game screen and says a line or two when you make a choice, roll dice, finish a fight, see affection change, or have a timed story about to run out. It only comments and advises. Talk frequency has three levels (Quiet, Normal, Chatty), and it can use its own model and a token cap per game launch. The switch is on the AI companion tab.
