@@ -25,6 +25,8 @@ internal sealed class GalleryDuelRadar : IDisposable
 	private int _createdFrame;
 	private bool _failed;
 	internal string Error { get; private set; }
+	/// <summary>画上了游戏的六维图底图（深色）；读不到时只有六边形，背景透明。</summary>
+	internal bool HasBackground { get; private set; }
 
 	// 游戏从上方逆时针：体力、轻功、刀剑、暗器、拳掌、内力。
 	internal static readonly int[] Order = { 0, 2, 4, 5, 3, 1 };
@@ -72,7 +74,19 @@ internal sealed class GalleryDuelRadar : IDisposable
 	private void Create()
 	{
 		Sprite background = Resources.FindObjectsOfTypeAll<Sprite>().FirstOrDefault(s => s.name == "pic_stat_chart_6");
-		if (background == null) background = LoadGameBackground();
+		if (background == null)
+		{
+			// 游戏更新后资源位置或内容变了：不画底图，只画两层六边形，不让整张图失效
+			try
+			{
+				background = LoadGameBackground();
+			}
+			catch (Exception e)
+			{
+				FileLogger.LogWarning("[鉴赏] 六维图底图读不到，只画六边形: " + e.Message);
+			}
+		}
+		HasBackground = background != null;
 		_root = new GameObject("LOMAssistant_GalleryRadar") { hideFlags = HideFlags.HideAndDontSave, layer = 31 };
 		_root.transform.position = new Vector3(100000f, 100000f, 0f);
 		GameObject canvasObject = Child("Canvas", _root.transform, typeof(RectTransform), typeof(Canvas));
@@ -81,6 +95,7 @@ internal sealed class GalleryDuelRadar : IDisposable
 		((RectTransform)canvas.transform).sizeDelta = new Vector2(440f, 500f);
 		Image image = Child("pic_stat_chart_6", canvas.transform, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image)).GetComponent<Image>();
 		image.sprite = background;
+		image.enabled = background != null;
 		image.raycastTarget = false;
 		image.rectTransform.sizeDelta = new Vector2(440f, 500f);
 		_normal = Polygon(canvas.transform, "RadarValue", new Color(0.8470588f, 0.8352941f, 0.8352941f, 1f));

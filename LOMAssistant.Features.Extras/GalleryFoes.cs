@@ -63,7 +63,6 @@ public sealed partial class Gallery
 	private Coroutine _foeLoadRoutine;
 	private bool _foeLoading;
 	private GUIStyle _foeRow, _foeRowOn, _foeSmall, _foeName, _foeNameOn, _foeHint;
-	private GUIStyle _foeSelectedButton;
 	private float _foeStyleScale = -1f;
 	private bool _foeStyleDark;
 	private float _foeStatsShare = 0.61f;
@@ -389,21 +388,14 @@ public sealed partial class Gallery
 		}
 		_foeStyleScale = _scale;
 		_foeStyleDark = PanelTheme.Dark;
-		// 选中项沿用纸色与墨色，仅轻微加深底色和边框，不反转成朱砂底白字。
-		_foeSelectedButton = new GUIStyle(_track);
-		Color selected = Color.Lerp(PanelTheme.Paper, PanelTheme.PaperDeep, 0.65f);
-		Color edge = Color.Lerp(PanelTheme.PaperDeep, PanelTheme.Edge, 0.45f);
-		_foeSelectedButton.normal.background = PanelTheme.Framed(selected, edge);
-		_foeSelectedButton.hover.background = _foeSelectedButton.active.background = PanelTheme.Framed(PanelTheme.PaperDeep, edge);
-		_foeSelectedButton.normal.textColor = _foeSelectedButton.hover.textColor = _foeSelectedButton.active.textColor = PanelTheme.Ink;
 		_foeRow = new GUIStyle(_track) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
-		_foeRowOn = new GUIStyle(_foeSelectedButton) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
+		_foeRowOn = new GUIStyle(_trackOn) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
 		_foeSmall = PanelTheme.Label(_scale, 16, PanelTheme.InkMuted, wrap: false);
 		// 行里的名字：不带底框，颜色和按钮字一样（选中的那行跟着选中按钮的字色）
 		_foeName = new GUIStyle(_foeSmall) { fontSize = _foeRow.fontSize, clipping = TextClipping.Clip };
 		_foeName.normal.textColor = _track.normal.textColor;
 		_foeNameOn = new GUIStyle(_foeName);
-		_foeNameOn.normal.textColor = PanelTheme.Ink;
+		_foeNameOn.normal.textColor = _trackOn.normal.textColor;
 		_foeHint = new GUIStyle(_foeSmall) { alignment = TextAnchor.MiddleLeft };
 	}
 
@@ -521,10 +513,13 @@ public sealed partial class Gallery
 	{
 		// 面板与技能属于当前立绘详情；展开后立绘、姿势列表及导出操作始终可见。
 		Fill(area, PanelTheme.PaperDeep);
-		float toggleWidth = Mathf.Min(S(220f), area.width * 0.4f);
-		GUI.Label(new Rect(area.x + S(12f), area.y, area.width - toggleWidth - S(24f), S(44f)), FoeDisplay(_foe), _body);
-		if (GUI.Button(new Rect(area.xMax - toggleWidth, area.y, toggleWidth, S(44f)),
-			TextConverter.ForDisplay("面板与技能") + (_foeShowStats ? " ▴" : " ▾"), _foeShowStats ? _foeSelectedButton : _track))
+		// 标题栏（到下面立绘、面板开始处，高 52）：按钮贴在右端、上下占满，宽度跟着文字
+		float bar = S(52f);
+		string toggle = TextConverter.ForDisplay("面板与技能");
+		float toggleWidth = Mathf.Min(_track.CalcSize(new GUIContent(toggle)).x + S(48f), area.width * 0.4f);
+		GUI.Label(new Rect(area.x + S(16f), area.y, area.width - toggleWidth - S(32f), bar), FoeDisplay(_foe), _body);
+		if (GUI.Button(new Rect(area.xMax - toggleWidth, area.y, toggleWidth, bar),
+			TextConverter.ForDisplay("面板与技能"), _foeShowStats ? _trackOn : _track))
 		{
 			_foeShowStats = !_foeShowStats;
 			EndFoeResize();
@@ -532,7 +527,7 @@ public sealed partial class Gallery
 			_foeZoom = 0f;
 			_foePan = Vector2.zero;
 		}
-		var content = new Rect(area.x, area.y + S(52f), area.width, area.height - S(52f));
+		var content = new Rect(area.x, area.y + bar, area.width, area.height - bar);
 		if (_foeShowStats)
 		{
 			float gap = S(14f);
@@ -543,12 +538,10 @@ public sealed partial class Gallery
 			DrawFoePortrait(portrait);
 			DrawFoeStats(new Rect(portrait.xMax + gap, content.y, statsWidth, content.height));
 			var divider = new Rect(portrait.xMax, content.y, gap, content.height);
+			// 分隔线：一根细线，鼠标移上去或拖动时加粗变亮，整条都能拖
 			bool active = _foeResizeControl != 0 || divider.Contains(Event.current.mousePosition);
-			float fade = active ? 0.12f : 0f;
-			Fill(new Rect(divider.center.x - S(1f), divider.y, S(2f), divider.height), Color.Lerp(PanelTheme.Edge, Color.white, fade));
-			Rect grip = new Rect(divider.x, divider.center.y - S(28f), divider.width, S(56f));
-			Fill(grip, Color.Lerp(PanelTheme.PaperDeep, Color.white, fade));
-			GUI.Label(grip, "↔", _center);
+			float line = active ? S(3f) : S(1f);
+			Fill(new Rect(divider.center.x - line / 2f, divider.y, line, divider.height), active ? PanelTheme.Ink : PanelTheme.Edge);
 		}
 		else DrawFoePortrait(content);
 	}

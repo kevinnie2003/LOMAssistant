@@ -64,12 +64,6 @@ internal sealed class DuelProfile
 	public int[] Six;
 	public int Health, MaxHealth, Energy, MaxEnergy, Talking;
 	public List<DuelSkill> Skills;
-	public DuelBalance Balance;
-}
-
-internal sealed class DuelBalance
-{
-	public float Threshold, K, Maximum, Inheritance;
 }
 
 internal sealed class DuelEncounter
@@ -98,36 +92,4 @@ internal sealed class DuelEvent
 	public int Target;
 	public bool Remove;
 	public DuelEffect Effect;
-}
-
-/// <summary>
-/// 难度单独作用于基础面板的预览，不冒充技能/事件生效后的实战值。
-/// 顺序来自 CombatManager.InitCombatRound：继承加成 → 友善削弱 → 技能 → 追赶加成。
-/// 这里跳过技能，界面明确说明；勇者和友善是独立开关，可以同时生效。
-/// </summary>
-internal static class GalleryDuelDifficulty
-{
-	internal static int Round(float value) => (int)Math.Round(value, MidpointRounding.ToEven);
-
-	internal static int[] Preview(DuelProfile profile, bool brave, bool friendly, int playerTotal, int inheritedTotal)
-	{
-		var result = (int[])profile.Six.Clone();
-		DuelBalance b = profile.Balance;
-		if (brave && b != null)
-		{
-			int add = Round(Math.Max(0, inheritedTotal) / 6f * b.Inheritance);
-			for (int i = 0; i < result.Length; i++) result[i] += add;
-		}
-		if (friendly)
-			for (int i = 0; i < result.Length; i++) result[i] += Round(result[i] * -0.5f);
-		if (brave && b != null)
-		{
-			float gap = Math.Max(0f, Math.Max(0, playerTotal) / 100f - result.Sum() / 100f - b.Threshold);
-			float ratio = gap > 0f ? b.Maximum * (gap / (gap + b.K)) : 0f;
-			// 游戏 S_053 漏了拳掌，暗器写两次；AddModify 同 key 去重，暗器只加一次。
-			for (int i = 0; i < result.Length; i++)
-				if (i != 3) result[i] += Round(result[i] * ratio);
-		}
-		return result;
-	}
 }

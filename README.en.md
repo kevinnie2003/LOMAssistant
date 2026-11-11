@@ -250,7 +250,7 @@ The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
   - CG: CGs appear once you have seen them; all scene images are open, and a switch on the page shows locked content.
   - Portraits: pick a background, place characters and change variants, then hide the UI for screenshots.
   - Animations: plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs.
-  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. A collapsible Stats & skills subpanel beside the portrait has a draggable width divider. Select a story encounter to view the game's native six-stat radar, skill levels and descriptions, and story state changes. Separate character configurations and encounter difficulties are preserved. Normal, Brave and Friendly difficulty previews accept player and inherited stat totals; they exclude skill, event and other mod modifiers.
+  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs.
   - Music: all 39 official soundtrack tracks, with pause and playback progress.
 - **Title screen partner**: choose which character appears on the title screen, or show everyone or nobody.
 

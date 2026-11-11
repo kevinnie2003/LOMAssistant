@@ -38,7 +38,7 @@ public static class GalleryDuelTests
 		var catalog = GalleryDuelCatalog.Instance;
 		Assert(catalog.Stats.Count == 248 && catalog.Levels.Count == 397, "Snapshot extraction lost profiles or encounters");
 		Assert(catalog.Levels.Select(e => e.Id).Distinct().Count() == catalog.Levels.Count, "Encounter identity collision");
-		Assert(catalog.Stats.All(s => s.Six.Length == 6 && s.Folders.Length > 0 && s.Balance != null), "Incomplete profile");
+		Assert(catalog.Stats.All(s => s.Six.Length == 6 && s.Folders.Length > 0), "Incomplete profile");
 		Assert(catalog.Stats.All(s => s.Skills.All(k => !string.IsNullOrEmpty(k.Name) && !string.IsNullOrEmpty(k.Description))), "Missing skill text");
 		foreach (var level in catalog.Levels)
 		{
@@ -49,7 +49,7 @@ public static class GalleryDuelTests
 			Assert(profile.Folders.All(folder => catalog.ForFolder(folder).Any(e => e.StatId == profile.Id)), "Orphan profile hidden: " + profile.Id);
 	}
 
-	public static void TestGalleryDuelStoryVariantsAndDifficulty()
+	public static void TestGalleryDuelStoryVariants()
 	{
 		var c = GalleryDuelCatalog.Instance;
 		DuelProfile normal = c.Profile("Enemy_小蘭_001"), weakened = c.Profile("Enemy_小蘭_002");
@@ -64,31 +64,5 @@ public static class GalleryDuelTests
 		Assert(c.Stats.GroupBy(s => s.CharacterId).Any(g => g.SelectMany(s => s.Folders).Distinct().Count() > 1), "Fixture must include shared dialogue identifiers");
 		Assert(c.ForFolder("bandit_山賊_01").Count > 0, "Bandit portrait should have profiles");
 		Assert(c.ForFolder("bandit_山賊_01").All(e => c.Profile(e.StatId).Folders.Contains("bandit_山賊_01")), "Shared dialogue ID mixed portraits");
-	}
-
-	private static DuelProfile Sample() => new DuelProfile
-	{
-		Six = new[] { 101, 81, 61, 41, 21, 11 },
-		Balance = new DuelBalance { Threshold = 0.02f, K = 0.1f, Maximum = 0.3f, Inheritance = 0.5f },
-	};
-
-	public static void TestGalleryDuelFriendlyRoundingAndNoMutation()
-	{
-		var p = Sample();
-		Assert(GalleryDuelDifficulty.Preview(p, false, false, 0, 0).SequenceEqual(p.Six), "Normal preview changes baseline");
-		Assert(GalleryDuelDifficulty.Preview(p, false, true, 0, 0).SequenceEqual(new[] { 51, 41, 31, 21, 11, 5 }), "Must add the rounded negative modifier, not round the final half");
-		Assert(p.Six.SequenceEqual(new[] { 101, 81, 61, 41, 21, 11 }), "Preview mutated the shared profile");
-	}
-
-	public static void TestGalleryDuelBraveOrderAndActualGameQuirk()
-	{
-		var p = Sample();
-		var inherited = GalleryDuelDifficulty.Preview(p, true, false, 0, 120);
-		Assert(inherited.SequenceEqual(p.Six.Select(n => n + 10)), "Inheritance must precede catch-up");
-		Assert(GalleryDuelDifficulty.Preview(p, true, true, 0, 120).SequenceEqual(new[] { 55, 45, 35, 25, 15, 11 }), "Independent friendly flag must apply after inheritance");
-		var boost = GalleryDuelDifficulty.Preview(p, true, false, 1000, 0);
-		Assert(boost.SequenceEqual(new[] { 131, 105, 79, 41, 27, 14 }), "Catch-up must exclude fists and apply hidden weapons only once");
-		Assert(boost[0] > 100, "Gallery must not cap high stats at 100");
-		Assert(GalleryDuelDifficulty.Preview(p, true, false, 0, -100).SequenceEqual(p.Six), "Negative input should be normalized");
 	}
 }

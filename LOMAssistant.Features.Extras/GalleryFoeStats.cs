@@ -9,14 +9,14 @@ namespace LOMAssistant.Features.Extras;
 public sealed partial class Gallery
 {
 	private bool _foeShowStats;
-	private bool _foeBrave, _foeFriendly, _foePickEncounter;
+	private bool _foePickEncounter;
 	private GalleryDuelRadar _foeRadar;
-	private string _foeEncounterSearch = "", _foePlayerTotal = "300", _foeInheritedTotal = "0", _foeCatalogError;
+	private string _foeEncounterSearch = "", _foeCatalogError;
 	private List<DuelEncounter> _foeEncounters = new List<DuelEncounter>();
 	private DuelEncounter _foeEncounter;
 	private Vector2 _foeEncounterScroll, _foeStatsScroll;
 	private GUISkin _foeStatsSkin;
-	private GUIStyle _foeWrapped, _foeStatsHeading;
+	private GUIStyle _foeWrapped, _foeStatsHeading, _foeStatsSubheading, _foeSubtitle;
 	private float _foeStatsScale;
 	private bool _foeStatsDark;
 	private static readonly string[] SixNames = { "体力", "内力", "轻功", "拳掌", "刀剑", "暗器" };
@@ -31,7 +31,10 @@ public sealed partial class Gallery
 		_foeCatalogError = null;
 		try
 		{
-			_foeEncounters = GalleryDuelCatalog.Instance.ForFolder(_foe.Folder);
+			var all = GalleryDuelCatalog.Instance.ForFolder(_foe.Folder);
+			// 「测试」关卡（CL_0000_*）是开发用的，玩家碰不到；只有测试关卡的角色才留着
+			var real = all.Where(e => !e.Id.StartsWith("CL_0000", StringComparison.Ordinal)).ToList();
+			_foeEncounters = real.Count > 0 ? real : all;
 			_foeEncounter = _foeEncounters.FirstOrDefault();
 		}
 		catch (Exception e)
@@ -50,13 +53,23 @@ public sealed partial class Gallery
 		_foeWrapped.richText = false; // 原游戏说明有富文本，走纯文本以免固定色在深色主题下不可读。
 		_foeStatsHeading = PanelTheme.Label(_scale, 22, PanelTheme.Ink, wrap: true);
 		_foeStatsHeading.fontStyle = FontStyle.Bold;
+		// 去掉左右外边距：GUILayout 排的正文和 GUI.Label 画的标题左边对齐
+		foreach (GUIStyle style in new[] { _foeWrapped, _foeStatsHeading })
+			style.margin = new RectOffset(0, 0, style.margin.top, style.margin.bottom);
+		// 技能名、事件时机：比栏目标题小一号
+		_foeStatsSubheading = PanelTheme.Label(_scale, 18, PanelTheme.Ink, wrap: true);
+		_foeStatsSubheading.fontStyle = FontStyle.Bold;
+		_foeStatsSubheading.margin = new RectOffset(0, 0, _foeStatsSubheading.margin.top, _foeStatsSubheading.margin.bottom);
+		_foeSubtitle = PanelTheme.Label(_scale, 16, PanelTheme.InkMuted, wrap: false);
+		_foeSubtitle.clipping = TextClipping.Clip;
+		_foeSubtitle.margin = new RectOffset();
 		if (_foeStatsSkin != null) Destroy(_foeStatsSkin);
 		_foeStatsSkin = Instantiate(GUI.skin);
 		_foeStatsSkin.hideFlags = HideFlags.HideAndDontSave;
 		var rail = new GUIStyle(GUI.skin.verticalScrollbar)
 		{
 			name = "verticalScrollbar", fixedWidth = S(10f), padding = new RectOffset(),
-			border = new RectOffset(), margin = new RectOffset(Mathf.RoundToInt(S(8f)), 0, 0, 0),
+			border = new RectOffset(), margin = new RectOffset(Mathf.RoundToInt(S(4f)), 0, 0, 0),
 		};
 		var thumb = new GUIStyle(GUI.skin.verticalScrollbarThumb)
 		{
@@ -82,6 +95,8 @@ public sealed partial class Gallery
 		string value = LocalizationManager.Instance?.LocaleResolver?.GetString(key);
 		if (string.IsNullOrEmpty(value) || value == key) value = fallback;
 		value = System.Text.RegularExpressions.Regex.Replace(value ?? "", @"</?(?:b|i|size|color)(?:=[^>]*)?>", "");
+		// 技能说明开头的「[決鬥]」这类场合标签：这里全是决斗，去掉
+		value = System.Text.RegularExpressions.Regex.Replace(value, @"^\s*\[[^\]\n]{1,6}\]\s*(\\n|\n)?", "");
 		return TextConverter.ForDisplay(value.Replace("\\n", "\n"));
 	}
 
@@ -92,26 +107,34 @@ public sealed partial class Gallery
 		return DuelText(encounter.Title);
 	}
 
+	// 面板四周的边距；滚动条（10 宽 + 4 间隔）放在右边距里，内容的右边缘和标题栏按钮对齐
+	private float FoePad => S(16f);
+	private float FoeGutter => S(14f);
+
 	private void DrawFoeEncounters(Rect area)
 	{
 		FoeStatsStyles();
+		float width = area.width - FoeGutter;
 		GUI.SetNextControlName("LOMAssistant_FoeEncounterSearch");
-		_foeEncounterSearch = GUI.TextField(new Rect(area.x, area.y, area.width, S(40f)), _foeEncounterSearch, _field);
+		_foeEncounterSearch = GUI.TextField(new Rect(area.x, area.y, width, S(40f)), _foeEncounterSearch, _field);
 		if (string.IsNullOrEmpty(_foeEncounterSearch) && GUI.GetNameOfFocusedControl() != "LOMAssistant_FoeEncounterSearch")
-			GUI.Label(new Rect(area.x + S(10f), area.y, area.width - S(20f), S(40f)), TextConverter.ForDisplay("搜索剧情 / 配置"), _foeHint);
+			GUI.Label(new Rect(area.x + S(10f), area.y, width - S(20f), S(40f)), TextConverter.ForDisplay("搜索剧情 / 配置"), _foeHint);
 		string query = TextConverter.ToSimplified(_foeEncounterSearch.Trim());
 		var shown = _foeEncounters.Where(e => query.Length == 0 || TextConverter.ToSimplified(
 			EncounterTitle(e) + " " + e.Title + " " + e.Id + " " + e.StatId).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
-		GUI.Label(new Rect(area.x, area.y + S(44f), area.width, S(28f)),
+		GUI.Label(new Rect(area.x, area.y + S(46f), width, S(26f)),
 			string.Format(TextConverter.ForDisplay("{0} 个剧情 / 状态"), shown.Count), _foeSmall);
+		// 每个剧情一行：名字靠左，编号小字靠右
+		float rowHeight = S(48f), step = rowHeight + S(6f);
 		var box = new Rect(area.x, area.y + S(78f), area.width, Mathf.Max(1f, area.height - S(78f)));
-		float rowWidth = area.width - S(22f), y = 0f;
-		var heights = shown.Select(e => Mathf.Max(S(86f), _foeWrapped.CalcHeight(new GUIContent(EncounterTitle(e)), rowWidth - S(24f)) + S(42f))).ToArray();
-		_foeEncounterScroll = GUI.BeginScrollView(box, _foeEncounterScroll, new Rect(0, 0, rowWidth, Mathf.Max(box.height, heights.Sum() + shown.Count * S(6f))));
+		DragScroll(new Rect(box.x, box.y, width, box.height), ref _foeEncounterScroll);
+		_foeEncounterScroll = GUI.BeginScrollView(box, _foeEncounterScroll, new Rect(0, 0, width, Mathf.Max(box.height, shown.Count * step)));
+		var name = new GUIStyle(_foeName) { alignment = TextAnchor.MiddleLeft };
+		var id = new GUIStyle(_foeSmall) { alignment = TextAnchor.MiddleRight };
 		for (int i = 0; i < shown.Count; i++)
 		{
 			DuelEncounter encounter = shown[i];
-			Rect row = new Rect(0, y, rowWidth, heights[i]);
+			var row = new Rect(0, i * step, width, rowHeight);
 			bool on = encounter == _foeEncounter;
 			if (GUI.Button(row, GUIContent.none, on ? _foeRowOn : _foeRow))
 			{
@@ -119,15 +142,59 @@ public sealed partial class Gallery
 				_foeStatsScroll = Vector2.zero;
 				_foePickEncounter = false;
 			}
-			Color previous = _foeWrapped.normal.textColor;
-			_foeWrapped.normal.textColor = on ? _foeNameOn.normal.textColor : PanelTheme.Ink;
-			GUI.Label(new Rect(S(12f), y + S(7f), rowWidth - S(24f), heights[i] - S(35f)), EncounterTitle(encounter), _foeWrapped);
-			_foeWrapped.normal.textColor = previous;
-			GUI.Label(new Rect(S(12f), row.yMax - S(28f), rowWidth - S(24f), S(24f)),
-				string.IsNullOrEmpty(encounter.Id) ? DuelText(encounter.StatId.Replace("Enemy_", "")) : encounter.Id, _foeSmall);
-			y += heights[i] + S(6f);
+			string code = string.IsNullOrEmpty(encounter.Id) ? DuelText(encounter.StatId.Replace("Enemy_", "")) : encounter.Id;
+			float codeWidth = id.CalcSize(new GUIContent(code)).x;
+			name.normal.textColor = on ? _foeNameOn.normal.textColor : _foeName.normal.textColor;
+			id.normal.textColor = on ? new Color(_foeNameOn.normal.textColor.r, _foeNameOn.normal.textColor.g, _foeNameOn.normal.textColor.b, 0.75f) : PanelTheme.InkMuted;
+			GUI.Label(new Rect(row.x + S(14f), row.y, row.width - codeWidth - S(40f), row.height), EncounterTitle(encounter), name);
+			GUI.Label(new Rect(row.xMax - codeWidth - S(14f), row.y, codeWidth, row.height), code, id);
 		}
 		GUI.EndScrollView();
+	}
+
+	private bool _foeScrollDrag;
+	private Vector2 _foeScrollDragLast;
+	private float _foeScrollDragMoved;
+
+	/// <summary>
+	/// 按住鼠标拖动来滚动（不只是滚轮）。区域不含右边的滚动条，拖滚动条照旧。
+	/// 拖过一小段再松手，这一下不算点击（不会误选列表里的剧情）。在画滚动区之前调用，坐标和 r 一致。
+	/// </summary>
+	private void DragScroll(Rect r, ref Vector2 scroll)
+	{
+		Event e = Event.current;
+		switch (e.type)
+		{
+			case EventType.MouseDown:
+				if (e.button == 0 && r.Contains(e.mousePosition))
+				{
+					_foeScrollDrag = true;
+					_foeScrollDragLast = e.mousePosition;
+					_foeScrollDragMoved = 0f;
+				}
+				break;
+			case EventType.MouseDrag:
+				if (_foeScrollDrag)
+				{
+					float dy = e.mousePosition.y - _foeScrollDragLast.y;
+					_foeScrollDragLast = e.mousePosition;
+					_foeScrollDragMoved += Mathf.Abs(dy);
+					scroll.y = Mathf.Max(0f, scroll.y - dy);
+					e.Use();
+				}
+				break;
+			case EventType.MouseUp:
+				if (_foeScrollDrag)
+				{
+					_foeScrollDrag = false;
+					if (_foeScrollDragMoved > S(6f))
+					{
+						GUIUtility.hotControl = 0;
+						e.Use();
+					}
+				}
+				break;
+		}
 	}
 
 	private void DrawFoeStats(Rect area)
@@ -145,25 +212,37 @@ public sealed partial class Gallery
 	private void DrawFoeStatsContent(Rect area)
 	{
 		Fill(area, PanelTheme.PaperLight);
-		var selector = new Rect(area.x + S(14f), area.y + S(10f), area.width - S(28f), S(62f));
+		// 第一行：角色名（加备注），右边「选择剧情」（只有一个剧情时不显示）；第二行灰字：剧情名、编号、关卡难度。
+		// 「选择剧情」和点开后的「收起」是同一个按钮，宽度按两者里长的算，切换时大小不变
+		float pad = FoePad;
+		var header = new Rect(area.x + pad, area.y + S(12f), area.width - pad * 2f, S(40f));
+		float top = header.y;
 		if (_foeEncounter != null)
 		{
-			int current = _foeEncounters.IndexOf(_foeEncounter);
-			if (GUI.Button(new Rect(selector.x, selector.y, S(36f), selector.height), "‹", _track))
-				SelectFoeEncounter((current + _foeEncounters.Count - 1) % _foeEncounters.Count);
-			var chooseStyle = new GUIStyle(_track) { wordWrap = true, fontSize = Mathf.RoundToInt(S(18f)) };
-			if (GUI.Button(new Rect(selector.x + S(42f), selector.y, selector.width - S(84f), selector.height),
-				EncounterTitle(_foeEncounter) + "  ▾", chooseStyle))
+			DuelProfile current = GalleryDuelCatalog.Instance.Profile(_foeEncounter.StatId);
+			bool many = _foeEncounters.Count > 1;
+			string open = TextConverter.ForDisplay("选择剧情"), close = TextConverter.ForDisplay("收起");
+			float buttonWidth = many ? Mathf.Min(Mathf.Max(_track.CalcSize(new GUIContent(open)).x, _track.CalcSize(new GUIContent(close)).x) + S(32f), header.width * 0.4f) : 0f;
+			var title = new GUIStyle(_foeStatsHeading) { wordWrap = false, clipping = TextClipping.Clip, alignment = TextAnchor.MiddleLeft, padding = new RectOffset() };
+			GUI.Label(new Rect(header.x, header.y, header.width - buttonWidth - S(12f), header.height),
+				DuelLocalized("CombatCharacter/Name/" + current.CharacterId, current.Name)
+				+ (string.IsNullOrWhiteSpace(current.Note) ? "" : " · " + DuelText(current.Note)), title);
+			if (many && GUI.Button(new Rect(header.xMax - buttonWidth, header.y, buttonWidth, header.height), _foePickEncounter ? close : open, _foePickEncounter ? _trackOn : _track))
 				_foePickEncounter = !_foePickEncounter;
-			if (GUI.Button(new Rect(selector.xMax - S(36f), selector.y, S(36f), selector.height), "›", _track))
-				SelectFoeEncounter((current + 1) % _foeEncounters.Count);
+			string sub = EncounterTitle(_foeEncounter)
+				+ (string.IsNullOrEmpty(_foeEncounter.Id) ? "" : " · " + _foeEncounter.Id)
+				+ (_foeEncounter.Difficulty > 0 ? " · " + string.Format(TextConverter.ForDisplay("关卡难度 {0}"), _foeEncounter.Difficulty) : "");
+			GUI.Label(new Rect(header.x, header.yMax + S(2f), header.width, S(24f)), sub, _foeSubtitle);
+			top = header.yMax + S(34f);
 		}
-		var content = new Rect(area.x + S(14f), selector.yMax + S(10f), area.width - S(28f), area.yMax - selector.yMax - S(20f));
+		// 滚动区伸进右边距，滚动条在边距里，内容右边缘仍是 area.xMax - pad
+		var content = new Rect(area.x + pad, top, area.width - pad * 2f + FoeGutter, area.yMax - top - pad);
 		if (_foePickEncounter)
 		{
 			DrawFoeEncounters(content);
 			return;
 		}
+		DragScroll(new Rect(content.x, content.y, content.width - FoeGutter, content.height), ref _foeStatsScroll);
 		GUILayout.BeginArea(content);
 		_foeStatsScroll = GUILayout.BeginScrollView(_foeStatsScroll);
 		if (_foeEncounter == null)
@@ -173,31 +252,12 @@ public sealed partial class Gallery
 		else
 		{
 			DuelProfile profile = GalleryDuelCatalog.Instance.Profile(_foeEncounter.StatId);
-			GUILayout.Label(DuelLocalized("CombatCharacter/Name/" + profile.CharacterId, profile.Name)
-				+ (string.IsNullOrWhiteSpace(profile.Note) ? "" : " · " + DuelText(profile.Note)), _foeStatsHeading);
-			if (_foeEncounter.Difficulty > 0)
-				GUILayout.Label(string.Format(TextConverter.ForDisplay("关卡难度 {0}"), _foeEncounter.Difficulty), _foeWrapped);
-			GUILayout.Space(S(10f));
-			GUILayout.BeginHorizontal();
-			if (GUILayout.Button(TextConverter.ForDisplay("普通"), _foeBrave ? _track : _foeSelectedButton, GUILayout.Height(S(40f)))) _foeBrave = false;
-			if (GUILayout.Button(TextConverter.ForDisplay("勇者模式"), _foeBrave ? _foeSelectedButton : _track, GUILayout.Height(S(40f)))) _foeBrave = true;
-			if (GUILayout.Button(TextConverter.ForDisplay("友善效果") + (_foeFriendly ? " ✓" : ""), _foeFriendly ? _foeSelectedButton : _track, GUILayout.Height(S(40f)))) _foeFriendly = !_foeFriendly;
-			GUILayout.EndHorizontal();
-			if (_foeBrave)
-			{
-				DuelNumberField("主角战斗六维合计", ref _foePlayerTotal);
-				DuelNumberField("继承六维合计", ref _foeInheritedTotal);
-			}
-			int.TryParse(_foePlayerTotal, out int player);
-			int.TryParse(_foeInheritedTotal, out int inherited);
-			int[] preview = GalleryDuelDifficulty.Preview(profile, _foeBrave, _foeFriendly, player, inherited);
-			GUILayout.Space(S(10f));
 			bool sideBySide = content.width >= S(620f);
 			float chartWidth = sideBySide ? Mathf.Min(S(370f), content.width * 0.52f) : Mathf.Min(S(400f), content.width - S(24f));
 			float chartHeight = chartWidth * 500f / 440f;
 			if (sideBySide) GUILayout.BeginHorizontal();
 			GUILayout.BeginVertical(GUILayout.Width(chartWidth));
-			DrawFoeRadar(preview, chartWidth, chartHeight);
+			DrawFoeRadar(profile.Six, chartWidth, chartHeight);
 			GUILayout.EndVertical();
 			GUILayout.BeginVertical();
 			GUILayout.Label(TextConverter.ForDisplay("角色技能"), _foeStatsHeading);
@@ -207,55 +267,56 @@ public sealed partial class Gallery
 				string title = DuelLocalized("PlayerTalent/Name/" + skill.Id, skill.Name);
 				if (skill.DisplayLevel) title += "  Lv." + skill.Level;
 				if (skill.Level <= 0) title += " · " + TextConverter.ForDisplay("未启用");
-				GUILayout.Label(title, _foeStatsHeading);
+				GUILayout.Label(title, _foeStatsSubheading);
 				GUILayout.Label(DuelLocalized("PlayerTalent/Desc/" + skill.Id, skill.Description), _foeWrapped);
-				GUILayout.Space(S(8f));
+				GUILayout.Space(S(6f));
 			}
 			GUILayout.EndVertical();
 			if (sideBySide) GUILayout.EndHorizontal();
 			GUILayout.Label(string.Format(TextConverter.ForDisplay("血量 {0}/{1} · 气力 {2}/{3} · 嘴力 {4}"),
 				profile.Health, profile.MaxHealth, profile.Energy, profile.MaxEnergy, profile.Talking), _foeWrapped);
-			GUILayout.Label(TextConverter.ForDisplay("基础面板；切换难度可预览修正。灰色为 0–100，蓝色为超过 100 的部分。"), _foeWrapped);
-			GUILayout.Space(S(12f));
-			GUILayout.Label(TextConverter.ForDisplay("修正规则"), _foeStatsHeading);
-			{
-				GUILayout.Label(TextConverter.ForDisplay("预览只计算难度修正；未计入角色技能、剧情事件及其他 Mod。血量、气力、嘴力显示基础值。"), _foeWrapped);
-				if (_foeBrave)
-				{
-				GUILayout.Label(TextConverter.ForDisplay("勇者模式：先加继承数值，再按敌我六维差距补强，并额外获得 50% 伤害减免。实际补强在技能生效后计算。"), _foeWrapped);
-				GUILayout.Label(TextConverter.ForDisplay("游戏当前的追赶加成不增加拳掌，暗器只加一次；这里按游戏实际规则预览。"), _foeWrapped);
-				}
-				if (_foeFriendly)
-					GUILayout.Label(TextConverter.ForDisplay("友善效果：敌方六维减半；与勇者模式可同时生效。"), _foeWrapped);
-			}
 			GUILayout.Space(S(12f));
 			GUILayout.Label(TextConverter.ForDisplay("剧情状态变化"), _foeStatsHeading);
 			if (_foeEncounter.Events.Count == 0)
 				GUILayout.Label(TextConverter.ForDisplay("未记录额外状态事件"), _foeWrapped);
+			// 同一个时机（开场、某个条件满足时）只写一次小标题，下面每条效果一行；完全相同的条目只列一次
+			string currentHead = null;
+			var seen = new HashSet<string>(StringComparer.Ordinal);
 			foreach (DuelEvent change in _foeEncounter.Events)
 			{
-				string phase = change.Phase == "Start" ? "开场" : change.Phase == "Round" ? "回合开始" : change.Phase == "Action" ? "行动开始" : "行动结束";
-				GUILayout.Label(TextConverter.ForDisplay(phase) + (string.IsNullOrEmpty(change.Trigger) ? "" : " · " + DuelText(change.Trigger)), _foeStatsHeading);
+				string condition = change.Phase == "Start" ? "" : DuelCondition(change.Trigger);
+				string head = change.Phase == "Start" ? F("开场")
+					: condition.Length > 0 ? condition
+					: F(change.Phase == "Round" ? "回合开始" : change.Phase == "Action" ? "行动开始" : "行动结束");
+				string text;
 				if (change.Effect != null)
 				{
-					string target = change.Target == 1 ? "我方" : "敌方";
-					GUILayout.Label(TextConverter.ForDisplay(target) + " · " + TextConverter.ForDisplay(change.Remove ? "移除" : "获得") + " · "
-						+ DuelLocalized("CombatSkill/Name/" + change.Effect.Key, change.Effect.Name), _foeWrapped);
-					GUILayout.Label(DuelLocalized("CombatSkill/Desc/" + change.Effect.Key, change.Effect.Description), _foeWrapped);
+					string who = F(change.Target == 1 ? "我方" : "敌方");
+					string name = DuelLocalized("CombatSkill/Name/" + change.Effect.Key, change.Effect.Name);
+					string desc = DuelLocalized("CombatSkill/Desc/" + change.Effect.Key, change.Effect.Description).Replace("\n", " ").Trim();
+					// 说明一般以名字开头（「封印：无法使用绝招。」），获得时只写说明
+					text = change.Remove ? string.Format(F("{0}失去「{1}」"), who, name)
+						: string.Format(F("{0}获得：{1}"), who, desc.Length > 0 ? desc : name);
 				}
-				else GUILayout.Label(DuelText(change.Action), _foeWrapped);
-				GUILayout.Space(S(8f));
+				else
+				{
+					text = DuelAction(change.Action);
+				}
+				if (!seen.Add(head + "\n" + text))
+				{
+					continue;
+				}
+				if (head != currentHead)
+				{
+					currentHead = head;
+					GUILayout.Space(S(6f));
+					GUILayout.Label(head, _foeStatsSubheading);
+				}
+				GUILayout.Label(text, _foeWrapped);
 			}
 		}
 		GUILayout.EndScrollView();
 		GUILayout.EndArea();
-	}
-
-	private void SelectFoeEncounter(int index)
-	{
-		_foeEncounter = _foeEncounters[index];
-		_foeStatsScroll = Vector2.zero;
-		_foePickEncounter = false;
 	}
 
 	private void DrawFoeRadar(int[] values, float width, float height)
@@ -265,14 +326,13 @@ public sealed partial class Gallery
 		_foeRadar ??= new GalleryDuelRadar();
 		Texture texture = _foeRadar.Render(values);
 		if (texture != null) GUI.DrawTexture(rect, texture, ScaleMode.ScaleToFit, true);
-		else if (_foeRadar.Error != null)
-			GUI.Label(rect, TextConverter.ForDisplay("游戏六维图资源已变化，请更新资料"), _foeWrapped);
 		// 游戏 StatChart 下六个标签的位置，和游戏图表同方向。
 		Vector2[] positions = { new Vector2(0, 155.7f), new Vector2(143.2f, 78.3f), new Vector2(-139.7f, 79.8f),
 			new Vector2(140.4f, -81.7f), new Vector2(-141.7f, -82.2f), new Vector2(0, -163.1f) };
 		float factor = width / 440f;
 		var label = new GUIStyle(_foeWrapped) { alignment = TextAnchor.MiddleCenter, fontSize = Mathf.Max(10, Mathf.RoundToInt(23f * factor)) };
-		label.normal.textColor = new Color(0.95f, 0.92f, 0.85f);
+		// 游戏底图是深色，字用浅色；底图读不到时画在纸色上，字用墨色
+		label.normal.textColor = _foeRadar.HasBackground ? new Color(0.95f, 0.92f, 0.85f) : PanelTheme.Ink;
 		for (int i = 0; i < 6; i++)
 		{
 			Vector2 center = rect.center + new Vector2(positions[i].x, -positions[i].y) * factor;
@@ -282,12 +342,86 @@ public sealed partial class Gallery
 		}
 	}
 
-	private void DuelNumberField(string label, ref string text)
+	// ---------------- 决斗事件的条件、动作：游戏数据里是开发者起的名字（「我方_血量_LE_PCT_30」），按命名规则写成人话 ----------------
+	// 规则和 tools/make-conditions.py 的 cond_text / action_text 一样；认不出的把下划线换成空格原样显示
+
+	private static readonly Dictionary<string, string> DuelOps = new Dictionary<string, string>
 	{
-		GUILayout.BeginHorizontal();
-		GUILayout.Label(TextConverter.ForDisplay(label), _foeWrapped);
-		string next = GUILayout.TextField(text, 6, _field, GUILayout.Width(S(130f)), GUILayout.Height(S(36f)));
-		if (next.Length == 0 || (int.TryParse(next, out int value) && value >= 0)) text = next;
-		GUILayout.EndHorizontal();
+		["EQ"] = "=", ["NE"] = "≠", ["GE"] = "≥", ["LE"] = "≤", ["GT"] = ">", ["LT"] = "<",
+	};
+	private const string DuelOp = "(EQ|NE|GE|LE|GT|LT)";
+
+	private static string F(string text) => TextConverter.ForDisplay(text);
+
+	private static string DuelCondition(string trigger)
+	{
+		if (string.IsNullOrEmpty(trigger))
+		{
+			return "";
+		}
+		string[] parts = System.Text.RegularExpressions.Regex.Split(TextConverter.ToSimplified(trigger), " (AND|OR) ");
+		var text = new System.Text.StringBuilder();
+		for (int i = 0; i < parts.Length; i += 2)
+		{
+			string part = DuelConditionPart(parts[i]);
+			if (part == null)
+			{
+				continue;
+			}
+			if (text.Length > 0)
+			{
+				text.Append(" " + F(parts[i - 1] == "AND" ? "且" : "或") + " ");
+			}
+			text.Append(part);
+		}
+		return text.ToString();
+	}
+
+	/// <summary>一个条件的人话；游戏内部的通用计数（TC 开头的决斗泛用旗标、A 开头的暂存旗标）玩家看不懂，返回 null 不显示。</summary>
+	private static string DuelConditionPart(string c)
+	{
+		if (System.Text.RegularExpressions.Regex.IsMatch(c, @"^旗标_(TC|A)\d+_"))
+		{
+			return null;
+		}
+		// 「决斗泛用事件旗标」「旗标暂存」这类通用旗标的备注不说明什么，去掉
+		c = System.Text.RegularExpressions.Regex.Replace(c, "（[^）]*(泛用|暂存)[^）]*）", "");
+		System.Text.RegularExpressions.Match m;
+		if ((m = System.Text.RegularExpressions.Regex.Match(c, "^回合数_" + DuelOp + @"_(\d+)$")).Success)
+		{
+			return m.Groups[1].Value == "EQ" ? string.Format(F("第 {0} 回合"), m.Groups[2].Value)
+				: string.Format(F("回合数 {0} {1}"), DuelOps[m.Groups[1].Value], m.Groups[2].Value);
+		}
+		if ((m = System.Text.RegularExpressions.Regex.Match(c, @"^(我方|敌方|敌人)_(\w+?)_" + DuelOp + @"_(PCT_)?(-?\d+)$")).Success)
+		{
+			return string.Format(F("{0}{1} {2} {3}"), F(m.Groups[1].Value), F(m.Groups[2].Value), DuelOps[m.Groups[3].Value],
+				m.Groups[5].Value + (m.Groups[4].Success ? "%" : ""));
+		}
+		if ((m = System.Text.RegularExpressions.Regex.Match(c, @"^数值_(\w+?)_" + DuelOp + @"_(-?\d+)$")).Success)
+		{
+			return string.Format(F("主角{0} {1} {2}"), F(m.Groups[1].Value), DuelOps[m.Groups[2].Value], m.Groups[3].Value);
+		}
+		if ((m = System.Text.RegularExpressions.Regex.Match(c, @"^旗标_(\w+?)_" + DuelOp + @"_(-?\d+)(（.*）)?$")).Success)
+		{
+			return string.Format(F("计数 {0} {1} {2}"), m.Groups[1].Value + DuelText(m.Groups[4].Value), DuelOps[m.Groups[2].Value], m.Groups[3].Value);
+		}
+		if (c.StartsWith("旗标回合_", StringComparison.Ordinal))
+		{
+			return F("到了约定的回合");
+		}
+		return DuelText(c.Replace('_', ' '));
+	}
+
+	private static string DuelAction(string action)
+	{
+		string a = TextConverter.ToSimplified(action ?? "").Replace("格档", "格挡");
+		var m = System.Text.RegularExpressions.Regex.Match(a, @"^(我方|敌方|敌人)_(\w+?)_(加|减)_(\d+)(_PCT)?(?:_(\w+))?$");
+		if (!m.Success)
+		{
+			return DuelText(a.Replace('_', ' '));
+		}
+		string text = string.Format(F(m.Groups[3].Value == "加" ? "{0}{1}增加 {2}" : "{0}{1}减少 {2}"),
+			F(m.Groups[1].Value), F(m.Groups[2].Value), int.Parse(m.Groups[4].Value) + (m.Groups[5].Success ? "%" : ""));
+		return m.Groups[6].Success ? text + "（" + F(m.Groups[6].Value) + "）" : text;
 	}
 }

@@ -102,15 +102,12 @@ def extract(game):
                                 Key=talent["_combatSkillKey"], Priority=talent["_priority"],
                                 Name=locale.get("PlayerTalent/Name/" + key, talent["m_Name"]),
                                 Description=locale.get("PlayerTalent/Desc/" + key, "")))
-        balance = data(obj, d["StatBalanceData"])
         row = dict(Id=d["m_Name"], CharacterId=d["Name"],
                    Name=locale.get("CombatCharacter/Name/" + d["Name"], d["m_Name"][6:]),
                    Folders=folders, Note=d["_note"],
                    Six=[d[k] for k in ["Strength", "Stamina", "Dexterity", "Fist", "Sword", "MartialWeapon"]],
                    Health=d["DefaultHealth"], MaxHealth=d["MaxHealth"], Energy=d["DefaultStamina"],
-                   MaxEnergy=d["MaxStamina"], Talking=d["Talking"], Skills=sorted(talents,key=lambda t:t["Priority"]),
-                   Balance=None if not balance else dict(Threshold=balance["_catchUpThreshold"],
-                       K=balance["_catchUpK"], Maximum=balance["_catchUpMaxBonus"], Inheritance=balance["_baseBonus"]))
+                   MaxEnergy=d["MaxStamina"], Talking=d["Talking"], Skills=sorted(talents,key=lambda t:t["Priority"]))
         stats.append(row)
         stat_ids[(obj.assets_file.name, obj.path_id)] = row["Id"]
 

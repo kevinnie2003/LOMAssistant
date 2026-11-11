@@ -15,9 +15,8 @@ public static partial class Tests
 {
 	public static void TestGalleryDuelUiTranslations()
 	{
-		string[] labels = { "面板与技能", "搜索剧情 / 配置", "勇者模式", "友善效果",
-			"主角战斗六维合计", "继承六维合计", "角色技能", "无固有技能", "修正规则",
-			"剧情状态变化", "未记录额外状态事件", "游戏六维图资源已变化，请更新资料" };
+		string[] labels = { "面板与技能", "搜索剧情 / 配置", "角色技能", "无固有技能",
+			"剧情状态变化", "未记录额外状态事件" };
 		foreach (string language in new[] { LOMAssistant.UiText.Korean, LOMAssistant.UiText.Japanese, LOMAssistant.UiText.English })
 		{
 			foreach (string label in labels)
