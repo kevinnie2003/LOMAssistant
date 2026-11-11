@@ -161,6 +161,8 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			FightDeathHint.Ensure(base.gameObject);
 			TryPatchAll(typeof(DuelPacePatch));
 			DuelActionForecast.Ensure(base.gameObject);
+			DuelDialogueHistoryPanel.Ensure(base.gameObject);
+			TryPatchAll(typeof(DuelDialogueHistoryPatch));
 			TryPatchAll(typeof(DuelActionForecastPatch));
 			TryPatchAll(typeof(SkillColumnsPatch));
 			TryPatchAll(typeof(CombatStackTipPatch));

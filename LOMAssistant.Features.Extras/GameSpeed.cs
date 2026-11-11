@@ -37,7 +37,7 @@ public static class GameSpeed
 		{
 			_base = current; // 游戏自己改的
 		}
-		float target = _base * mult * FlowSpeedup.FreeBoost();
+		float target = LOMAssistant.Features.Combat.DuelDialogueHistoryPanel.IsOpen ? 0f : _base * mult * FlowSpeedup.FreeBoost();
 		if (!Mathf.Approximately(current, target))
 		{
 			Time.timeScale = target;

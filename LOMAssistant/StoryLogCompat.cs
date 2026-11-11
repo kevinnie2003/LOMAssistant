@@ -52,6 +52,21 @@ internal static class StoryLogCompat
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private static void AddTextNow(string shown) => StoryLogData.AddText(shown, false);
 
+	/// <summary>决斗的已显示对白：普通字号，与判定提示分开；旧版也保留说话人。</summary>
+	internal static void AddDialogue(string speaker, string text)
+	{
+		if (Available)
+		{
+			AddTextNow(string.IsNullOrEmpty(speaker) ? text : "<b>" + speaker + "</b>\n" + text);
+			return;
+		}
+		NarrativeLog log = FungusManager.Instance?.NarrativeLog;
+		if (log != null)
+		{
+			log.AddLine(new NarrativeLogEntry { name = speaker ?? "", text = text });
+		}
+	}
+
 	/// <summary>随时存档读档时照游戏的做法另读回想；旧版游戏的回想不进存档，不用读。</summary>
 	internal static void Load(GameSave game)
 	{
