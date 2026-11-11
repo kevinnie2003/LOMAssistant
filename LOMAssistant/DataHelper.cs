@@ -169,6 +169,7 @@ public static class DataHelper
 		_switchConfigs = instance.GetFieldValue<SwitchResultConfig[]>("_switchList");
 		_conditionConfig = instance.GetFieldValue<ConditionResultConfig>("_condition");
 		ConditionBook.Write(_switchConfigs, _conditionConfig);
+		LOMAssistant.Features.Story.StoryRomance.RememberGates(_switchConfigs, _conditionConfig);
 	}
 
 	/// <summary>条件写成文字，不带当前值（「小梅好感 需>=35」），给离开剧情场景后用。</summary>

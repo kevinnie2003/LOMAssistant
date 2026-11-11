@@ -11,7 +11,7 @@ namespace LOMAssistant.Features.Story;
 /// 旗标名、说明都取自游戏数据（FlagData 的说明）；这里只记编号。
 /// 剧本读完后整理每位在哪些任务里加减好感、设结缘旗标，路线图按这个高亮。
 /// </summary>
-public static class StoryRomance
+public static partial class StoryRomance
 {
 	public sealed class Heroine
 	{

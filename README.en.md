@@ -119,12 +119,13 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/story-jump.webp" width="640" alt="Story jump: before jumping it lists the quest, date and changes filled in, lets you bond with someone, and lets you pick each fork on the way">
 
-- **Collection**: records from all playthroughs, split into story, endings, deaths, achievements and ending CGs.
+- **Collection**: records from all playthroughs, split into story, heroine routes, endings, deaths, achievements and ending CGs.
   - Story counts how much of each quest's dialogue you have read; endings, deaths, achievements and ending CGs show their gallery numbers and whether you have them. For anything missing it says where and how to get it.
+  - Heroine routes counts, for each character you can bond with, how much of her route's dialogue you have read and her endings; expand one to see it by quest.
   - Each entry lists the quests that lead to it; click one to open that quest's story map.
   - On the ending CG page, **Watch the credits** replays the end credits in a story scene; press Esc to stop.
 
-  <img src="media/story-endings.webp" width="640" alt="Collection: story, endings, deaths, achievements and ending CGs, filter by done or not">
+  <img src="media/story-endings.webp" width="640" alt="Collection: story, heroine routes, endings, deaths, achievements and ending CGs, filter by done or not">
 
 ### Story helpers
 

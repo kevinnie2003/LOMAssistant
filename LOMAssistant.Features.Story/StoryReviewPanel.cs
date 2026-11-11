@@ -943,10 +943,10 @@ public partial class StoryReviewPanel : MonoBehaviour
 	private string _endingsSearch = "";
 	private int _endingsSection = StorySection, _endingsFilter;
 	// 收集进度：结局、死亡、成就、CG 来自游戏的图鉴，剧情按对白读过多少算，都是全部周目的记录，换存档也不变
-	private static readonly string[] EndingSections = { "结局（汗青书）", "死亡（生死簿）", "成就（风云史）", "结局 CG", "剧情" };
-	private const int AchievementSection = 2, CgSection = 3, StorySection = 4;
+	private static readonly string[] EndingSections = { "结局（汗青书）", "死亡（生死簿）", "成就（风云史）", "结局 CG", "剧情", "女主线" };
+	private const int AchievementSection = 2, CgSection = 3, StorySection = 4, HeroineSection = 5;
 	// 按钮的排列顺序：剧情放最前面
-	private static readonly int[] SectionOrder = { StorySection, 0, 1, AchievementSection, CgSection };
+	private static readonly int[] SectionOrder = { StorySection, HeroineSection, 0, 1, AchievementSection, CgSection };
 	private static readonly string[] EndingFilters = { "全部", "已达成", "未达成" };
 
 	/// <summary>和游戏图鉴一样的编号前缀：汗青书「结局 N　」（按游戏语言），生死簿「N. 」；成就、CG 和图鉴里没有的不加。</summary>
@@ -1008,7 +1008,7 @@ public partial class StoryReviewPanel : MonoBehaviour
 			fx += S(102);
 		}
 		// 再往右：排序方式（成就、剧情没有编号，不显示）
-		if (_endingsSection != AchievementSection && _endingsSection != StorySection)
+		if (_endingsSection != AchievementSection && _endingsSection != StorySection && _endingsSection != HeroineSection)
 		{
 			fx += S(14);
 			string[] sorts = { "按编号", "按时间" };
@@ -1027,8 +1027,10 @@ public partial class StoryReviewPanel : MonoBehaviour
 		float gx = r.x, gy = r.y + S(44);
 		foreach (int i in SectionOrder)
 		{
+			var heroines = i == HeroineSection ? HeroinesDone() : null;
 			string title = i == StorySection
 				? $"{EndingSections[i]}  {StoryMissions().Count(StoryDone)}/{StoryMissions().Count()}"
+				: i == HeroineSection ? (heroines != null ? $"{EndingSections[i]}  {heroines.Value.Done}/{heroines.Value.All}" : EndingSections[i])
 				: $"{EndingSections[i]}  {EndingSection(i).Count(e => e.Achieved)}/{EndingSection(i).Count()}";
 			float width = _tabOn.CalcSize(new GUIContent(title)).x * 0.85f + S(24);
 			bool on = i == _endingsSection && query.Length == 0;
@@ -1055,6 +1057,11 @@ public partial class StoryReviewPanel : MonoBehaviour
 			if (section == StorySection)
 			{
 				shownTotal += DrawStorySection(query);
+				continue;
+			}
+			if (section == HeroineSection)
+			{
+				shownTotal += DrawHeroineSection(query);
 				continue;
 			}
 			var shown = EndingSection(section).Where(e => _endingsFilter == 0 || e.Achieved == (_endingsFilter == 1)).Where(e =>
