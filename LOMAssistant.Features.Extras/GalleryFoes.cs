@@ -357,6 +357,7 @@ public sealed partial class Gallery
 		_foeEncounter = null;
 		_foeRadar?.Dispose();
 		_foeRadar = null;
+		CloseFoePersonality();
 		if (_foeStatsSkin != null) Destroy(_foeStatsSkin);
 		_foeStatsSkin = null;
 	}

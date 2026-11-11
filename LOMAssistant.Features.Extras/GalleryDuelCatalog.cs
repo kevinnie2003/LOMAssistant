@@ -15,6 +15,8 @@ internal sealed class GalleryDuelCatalog
 	public List<DuelProfile> Stats;
 	public List<DuelEncounter> Levels;
 	public DuelRadarResource Radar;
+	public DuelRadarResource PersonalityBar, PersonalityPointer;
+	public Dictionary<string, string> PersonalityLabels;
 	private Dictionary<string, DuelProfile> _byId;
 	private static GalleryDuelCatalog _instance;
 	internal static GalleryDuelCatalog Instance => _instance ??= Load();
@@ -29,7 +31,7 @@ internal sealed class GalleryDuelCatalog
 		if (catalog?.Schema != 1 || catalog.Stats == null || catalog.Levels == null)
 			throw new InvalidDataException("Invalid duel catalog");
 		catalog._byId = catalog.Stats.ToDictionary(s => s.Id, StringComparer.Ordinal);
-		if (catalog.Stats.Any(s => s.Six == null || s.Six.Length != 6 || s.Folders == null || s.Skills == null)
+		if (catalog.Stats.Any(s => s.Six == null || s.Six.Length != 6 || s.Four == null || s.Four.Length != 4 || s.Folders == null || s.Skills == null)
 			|| catalog.Levels.Any(l => !catalog._byId.ContainsKey(l.StatId)))
 			throw new InvalidDataException("Invalid duel profile reference");
 		return catalog;
@@ -62,6 +64,8 @@ internal sealed class DuelProfile
 	public string[] Folders;
 	// 体力、内力、轻功、拳掌、刀剑、暗器；不得截断 100 以上的数值。
 	public int[] Six;
+	// 性情、处世、道德、修养：每份敌方配置独立取值，与主角存档无关。
+	public int[] Four;
 	public int Health, MaxHealth, Energy, MaxEnergy, Talking;
 	public List<DuelSkill> Skills;
 }
