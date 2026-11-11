@@ -28,6 +28,7 @@ mkdir -p bin
 	-resource:LOMAssistant.Features.AnytimeSave/Replay.lua,LOMAssistant.AnytimeSave.Replay.lua \
 	-resource:LOMAssistant.Features.AnytimeSave/contract.tsv.gz,LOMAssistant.AnytimeSave.contract.tsv.gz 	-resource:LOMAssistant.Features.AnytimeSave/contract-6000.tsv.gz,LOMAssistant.AnytimeSave.contract-6000.tsv.gz \
 	-resource:LOMAssistant/conditions.json.gz,LOMAssistant.conditions.json.gz \
+	-resource:LOMAssistant.Features.Extras/gallery-duels.json.gz,LOMAssistant.gallery-duels.json.gz \
 	-resource:CHANGELOG.md,LOMAssistant.CHANGELOG.md \
 	-resource:CHANGELOG.ja.md,LOMAssistant.CHANGELOG.ja.md \
 	-resource:CHANGELOG.ko.md,LOMAssistant.CHANGELOG.ko.md \

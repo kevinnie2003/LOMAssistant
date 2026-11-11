@@ -63,6 +63,12 @@ public sealed partial class Gallery
 	private Coroutine _foeLoadRoutine;
 	private bool _foeLoading;
 	private GUIStyle _foeRow, _foeRowOn, _foeSmall, _foeName, _foeNameOn, _foeHint;
+	private GUIStyle _foeSelectedButton;
+	private float _foeStyleScale = -1f;
+	private bool _foeStyleDark;
+	private float _foeStatsShare = 0.61f;
+	private int _foeResizeControl;
+	private float _foeResizeGrab;
 
 	// ---------------- 扫描 ----------------
 
@@ -186,6 +192,18 @@ public sealed partial class Gallery
 			}
 		}
 
+		// 有配置而没有独立立绘的角色也可查面板，不依赖人名表是否已经收录。
+		try
+		{
+			foreach (DuelProfile profile in GalleryDuelCatalog.Instance.Stats)
+				foreach (string folder in profile.Folders)
+					if (!byFolder.ContainsKey(folder))
+						byFolder[folder] = new Foe { Folder = folder, Id = profile.CharacterId, Name = profile.Name, SortKey = profile.CharacterId };
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("[鉴赏] 补充决斗角色失败: " + e.Message);
+		}
 		foreach (Foe foe in byFolder.Values)
 		{
 			foe.Poses.Sort((a, b) =>
@@ -243,6 +261,7 @@ public sealed partial class Gallery
 		}
 		_foe = foe;
 		_foePose = null;
+		SelectFoeStats();
 		// 立绘包是全部角色共用的，切角色不能卸载，只在关掉鉴赏时统一释放
 		if (foe.Poses.Count > 0)
 		{
@@ -324,6 +343,7 @@ public sealed partial class Gallery
 	/// <summary>关掉鉴赏就卸载，和动图页一样。下次进来再异步加载一遍。</summary>
 	private void CloseFoes()
 	{
+		EndFoeResize();
 		if (_foeLoadRoutine != null)
 		{
 			StopCoroutine(_foeLoadRoutine);
@@ -334,6 +354,12 @@ public sealed partial class Gallery
 		_foes = null;
 		_foe = null;
 		_foePose = null;
+		_foeEncounters.Clear();
+		_foeEncounter = null;
+		_foeRadar?.Dispose();
+		_foeRadar = null;
+		if (_foeStatsSkin != null) Destroy(_foeStatsSkin);
+		_foeStatsSkin = null;
 	}
 
 	/// <summary>立绘包还在不在（Unity 对象可能被回收，引用非空但 == null）。</summary>
@@ -357,19 +383,27 @@ public sealed partial class Gallery
 
 	private void FoeStyles()
 	{
-		if (_foeRow != null && Mathf.Approximately(_frameRowScale, _scale))
+		if (_foeRow != null && Mathf.Approximately(_foeStyleScale, _scale) && _foeStyleDark == PanelTheme.Dark)
 		{
 			return;
 		}
-		_frameRowScale = _scale;
+		_foeStyleScale = _scale;
+		_foeStyleDark = PanelTheme.Dark;
+		// 选中项沿用纸色与墨色，仅轻微加深底色和边框，不反转成朱砂底白字。
+		_foeSelectedButton = new GUIStyle(_track);
+		Color selected = Color.Lerp(PanelTheme.Paper, PanelTheme.PaperDeep, 0.65f);
+		Color edge = Color.Lerp(PanelTheme.PaperDeep, PanelTheme.Edge, 0.45f);
+		_foeSelectedButton.normal.background = PanelTheme.Framed(selected, edge);
+		_foeSelectedButton.hover.background = _foeSelectedButton.active.background = PanelTheme.Framed(PanelTheme.PaperDeep, edge);
+		_foeSelectedButton.normal.textColor = _foeSelectedButton.hover.textColor = _foeSelectedButton.active.textColor = PanelTheme.Ink;
 		_foeRow = new GUIStyle(_track) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
-		_foeRowOn = new GUIStyle(_trackOn) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
+		_foeRowOn = new GUIStyle(_foeSelectedButton) { alignment = TextAnchor.MiddleLeft, clipping = TextClipping.Clip };
 		_foeSmall = PanelTheme.Label(_scale, 16, PanelTheme.InkMuted, wrap: false);
 		// 行里的名字：不带底框，颜色和按钮字一样（选中的那行跟着选中按钮的字色）
 		_foeName = new GUIStyle(_foeSmall) { fontSize = _foeRow.fontSize, clipping = TextClipping.Clip };
 		_foeName.normal.textColor = _track.normal.textColor;
 		_foeNameOn = new GUIStyle(_foeName);
-		_foeNameOn.normal.textColor = _trackOn.normal.textColor;
+		_foeNameOn.normal.textColor = PanelTheme.Ink;
 		_foeHint = new GUIStyle(_foeSmall) { alignment = TextAnchor.MiddleLeft };
 	}
 
@@ -381,7 +415,6 @@ public sealed partial class Gallery
 		float top = S(110f);
 		float left = S(40f);
 		float width = screen.width - S(80f);
-
 		// 导出位置和动图页共用（默认桌面），可以在这里改，目录不存在会自动建
 		if (_frameExportDirEdit == null)
 		{
@@ -397,8 +430,8 @@ public sealed partial class Gallery
 
 		var body = new Rect(left, top + S(58f), width, screen.height - top - S(58f) - S(40f));
 
-		var list = new Rect(body.x, body.y, S(FoeListWidth), body.height);
-		var poses = new Rect(list.xMax + S(12f), body.y, S(FoePoseWidth), body.height);
+		var list = new Rect(body.x, body.y, Mathf.Min(S(FoeListWidth), body.width * 0.14f), body.height);
+		var poses = new Rect(list.xMax + S(12f), body.y, Mathf.Min(S(FoePoseWidth), body.width * 0.115f), body.height);
 		var right = new Rect(poses.xMax + S(12f), body.y, body.width - list.width - poses.width - S(24f), body.height);
 		DrawFoeList(list);
 		DrawFoePoses(poses);
@@ -423,10 +456,10 @@ public sealed partial class Gallery
 			GUI.Label(new Rect(search.x + S(10f), search.y, search.width - S(20f), search.height), TextConverter.ForDisplay("搜索"), _foeHint);
 		}
 		List<Foe> shown = _foes ?? new List<Foe>();
-		string query = (_foeSearch ?? "").Trim();
+		string query = TextConverter.ToSimplified((_foeSearch ?? "").Trim());
 		if (query.Length > 0)
 		{
-			shown = shown.Where(f => (FoeDisplay(f) + " " + f.Name + " " + f.Folder).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+			shown = shown.Where(f => TextConverter.ToSimplified(FoeDisplay(f) + " " + f.Name + " " + f.Folder).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
 		}
 		GUI.Label(new Rect(area.x, search.yMax + S(4f), area.width, S(26f)),
 			_foeLoading ? TextConverter.ForDisplay("正在加载…")
@@ -486,11 +519,90 @@ public sealed partial class Gallery
 
 	private void DrawFoeDetail(Rect area)
 	{
+		// 面板与技能属于当前立绘详情；展开后立绘、姿势列表及导出操作始终可见。
+		Fill(area, PanelTheme.PaperDeep);
+		float toggleWidth = Mathf.Min(S(220f), area.width * 0.4f);
+		GUI.Label(new Rect(area.x + S(12f), area.y, area.width - toggleWidth - S(24f), S(44f)), FoeDisplay(_foe), _body);
+		if (GUI.Button(new Rect(area.xMax - toggleWidth, area.y, toggleWidth, S(44f)),
+			TextConverter.ForDisplay("面板与技能") + (_foeShowStats ? " ▴" : " ▾"), _foeShowStats ? _foeSelectedButton : _track))
+		{
+			_foeShowStats = !_foeShowStats;
+			EndFoeResize();
+			_foeDragging = false;
+			_foeZoom = 0f;
+			_foePan = Vector2.zero;
+		}
+		var content = new Rect(area.x, area.y + S(52f), area.width, area.height - S(52f));
+		if (_foeShowStats)
+		{
+			float gap = S(14f);
+			float available = Mathf.Max(1f, content.width - gap);
+			float statsWidth = ClampFoeStatsWidth(available * _foeStatsShare, available);
+			HandleFoeStatsResize(content, available, gap, ref statsWidth);
+			var portrait = new Rect(content.x, content.y, available - statsWidth, content.height);
+			DrawFoePortrait(portrait);
+			DrawFoeStats(new Rect(portrait.xMax + gap, content.y, statsWidth, content.height));
+			var divider = new Rect(portrait.xMax, content.y, gap, content.height);
+			bool active = _foeResizeControl != 0 || divider.Contains(Event.current.mousePosition);
+			float fade = active ? 0.12f : 0f;
+			Fill(new Rect(divider.center.x - S(1f), divider.y, S(2f), divider.height), Color.Lerp(PanelTheme.Edge, Color.white, fade));
+			Rect grip = new Rect(divider.x, divider.center.y - S(28f), divider.width, S(56f));
+			Fill(grip, Color.Lerp(PanelTheme.PaperDeep, Color.white, fade));
+			GUI.Label(grip, "↔", _center);
+		}
+		else DrawFoePortrait(content);
+	}
+
+	private float ClampFoeStatsWidth(float width, float available)
+	{
+		// 极窄窗口也给立绘和资料各留空间；拖动不改变文字缩放。
+		float minStats = Mathf.Min(S(340f), available * 0.6f);
+		float minPortrait = Mathf.Min(S(200f), available * 0.25f);
+		return Mathf.Clamp(width, minStats, available - minPortrait);
+	}
+
+	private void HandleFoeStatsResize(Rect content, float available, float gap, ref float width)
+	{
+		int id = GUIUtility.GetControlID(0x4C4F4D52, FocusType.Passive, content);
+		Event e = Event.current;
+		Rect divider = new Rect(content.xMax - width - gap, content.y, gap, content.height);
+		if (_foeResizeControl != 0 && !Application.isFocused) EndFoeResize();
+		if (e.type == EventType.MouseDown && e.button == 0 && divider.Contains(e.mousePosition))
+		{
+			_foeResizeControl = id;
+			GUIUtility.hotControl = id;
+			_foeResizeGrab = e.mousePosition.x - divider.center.x;
+			_foeDragging = false;
+			e.Use();
+		}
+		else if (_foeResizeControl == id && e.type == EventType.MouseDrag)
+		{
+			width = ClampFoeStatsWidth(content.xMax - (e.mousePosition.x - _foeResizeGrab + gap / 2f), available);
+			_foeStatsShare = width / available;
+			e.Use();
+		}
+		else if (_foeResizeControl == id && (e.rawType == EventType.MouseUp || e.type == EventType.Ignore))
+		{
+			EndFoeResize();
+			e.Use();
+		}
+	}
+
+	private void EndFoeResize()
+	{
+		if (_foeResizeControl != 0 && GUIUtility.hotControl == _foeResizeControl) GUIUtility.hotControl = 0;
+		_foeResizeControl = 0;
+	}
+
+	private void DrawFoePortrait(Rect area)
+	{
 		// 和动图页一样：上面是图，控制条放在底部
 		float bar = S(44f);
 		var view = new Rect(area.x, area.y, area.width, Mathf.Max(S(120f), area.height - bar - S(10f)));
 		DrawChecker(view);
 		HandleFoeViewMouse(view);
+		GUI.BeginGroup(view);
+		var localView = new Rect(0, 0, view.width, view.height);
 
 		if (_foePose != null && _foePose.Sprite != null)
 		{
@@ -499,22 +611,23 @@ public sealed partial class Gallery
 			float fit = Mathf.Min((view.width - S(16f)) / part.width, (view.height - S(16f)) / part.height);
 			float scale = _foeZoom > 0f ? _foeZoom : fit;
 			float w = part.width * scale, h = part.height * scale;
-			var dst = new Rect(view.center.x - w / 2f + _foePan.x, view.center.y - h / 2f + _foePan.y, w, h);
+			var dst = new Rect(localView.center.x - w / 2f + _foePan.x, localView.center.y - h / 2f + _foePan.y, w, h);
 			GUI.DrawTextureWithTexCoords(dst, sprite.texture,
 				new Rect(part.x / sprite.texture.width, part.y / sprite.texture.height,
 					part.width / sprite.texture.width, part.height / sprite.texture.height));
 		}
 		else
 		{
-			GUI.Label(view, TextConverter.ForDisplay(
+			GUI.Label(localView, TextConverter.ForDisplay(
 				_foeLoading ? "正在加载…" : _foe == null ? "从左边选一个角色" : "从中间选一个变体"), _hint);
 		}
 		if (_foe != null && _foePose != null)
 		{
-			GUI.Label(new Rect(view.x + S(8f), view.yMax - S(26f), view.width - S(16f), S(22f)),
+			GUI.Label(new Rect(S(8f), view.height - S(26f), view.width - S(16f), S(22f)),
 				FoeDisplay(_foe) + " · " + TextConverter.ForDisplay(_foePose.Group)
 				+ "　" + TextConverter.ForDisplay("滚轮缩放，按住拖动"), _foeSmall);
 		}
+		GUI.EndGroup();
 
 		// 底部控制条：重置视图、导出 PNG（按钮高度和动图页底部那排一样）
 		var toolbar = new Rect(area.x, area.yMax - bar, area.width, bar);

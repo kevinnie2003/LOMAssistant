@@ -13,6 +13,29 @@ namespace LOMAssistant.Tests;
 /// </summary>
 public static partial class Tests
 {
+	public static void TestGalleryDuelUiTranslations()
+	{
+		string[] labels = { "面板与技能", "搜索剧情 / 配置", "勇者模式", "友善效果",
+			"主角战斗六维合计", "继承六维合计", "角色技能", "无固有技能", "修正规则",
+			"剧情状态变化", "未记录额外状态事件", "游戏六维图资源已变化，请更新资料" };
+		foreach (string language in new[] { LOMAssistant.UiText.Korean, LOMAssistant.UiText.Japanese, LOMAssistant.UiText.English })
+		{
+			foreach (string label in labels)
+			{
+				string translated = LOMAssistant.UiText.Translate(label, language);
+				Assert(!string.IsNullOrWhiteSpace(translated) && translated != label, language + " missing duel label: " + label);
+			}
+			foreach (string format in new[] { "{0} 个剧情 / 状态", "关卡难度 {0}", "血量 {0}/{1} · 气力 {2}/{3} · 嘴力 {4}" })
+			{
+				string translated = LOMAssistant.UiText.Translate(format, language);
+				Assert(Holes(translated) == Holes(format), language + " duel placeholders changed");
+				string rendered = string.Format(translated, 17, 29, 31, 43, 59);
+				Assert(rendered.Contains("17") && !rendered.Contains("{0}"), language + " duel values were not formatted");
+			}
+		}
+		Assert(LOMAssistant.TextConverter.ToTraditional("面板与技能") == "面板與技能", "Traditional duel label conversion failed");
+	}
+
 	private static void Assert(bool ok, string message)
 	{
 		if (!ok)
