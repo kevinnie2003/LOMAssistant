@@ -117,6 +117,15 @@ public static class UiTextEnglish
 
 	public static readonly Dictionary<string, string> Table = new Dictionary<string, string>
 	{
+		// 决斗对白回想
+		["决斗回想"] = "Duel backlog",
+		["决斗对白记录"] = "Duel dialogue log",
+		["本场决斗还没有对白记录。"] = "No dialogue has been recorded in this duel yet.",
+		["第 {0} 回合"] = "Round {0}",
+		["最近 {0} 条"] = "Latest {0} entries",
+		["回到最新"] = "Jump to latest",
+		["回看时暂停决斗，关闭后继续。"] = "The duel pauses while the backlog is open and resumes when you close it.",
+		["旁白"] = "Narration",
 		// 窗口和各页
 		["此刻"] = "Now",
 		["路线图"] = "Route map",
@@ -1636,6 +1645,8 @@ public static class UiTextEnglish
 		["EnableManualDiceSelection"] = "Click a line on the dice wheel to choose that result.",
 		["EnableLibraryDisplay"] = "Hover over an ending or death in the Lecture Hall to see how to reach it. Can also show everything as unlocked.",
 		["EnableCombatAssist"] = "Adds a 「Win now」 button to the ESC menu in duels.",
+		["EnableDuelDialogueHistory"] = "Records taunts, character dialogue and narration actually shown in the current duel. Press L or click 「Duel backlog」 to review them. The duel pauses while the backlog is open. The duel log is cleared when you leave the duel and is not written to saves. true = on (default), false = off.",
+		["DuelDialogueHistoryKey"] = "Hotkey to open or close the duel backlog (only during duels; L by default).",
 		["EnableSkipAction"] = "Adds a 「Skip turn」 button to the ESC menu on the training map. Uses one action and triggers no event.",
 		["DeadlineReminder"] = "Timed story reminder: when a story whose conditions are met but hasn't triggered yet has 3 periods or fewer left in its window, the top left of the training map shows how many periods are left and where to go to trigger it. The Now tab marks these quests too. true = on (default; Assist and higher presets turn it on), false = off.",
 		["EnableMapHints"] = "Hover over a building on the training map to see its main and side quests and random events with their conditions (green met, red not). Buildings with a quest you can trigger now and haven't seen stay lit.",

@@ -133,7 +133,7 @@ public class InputGuard : MonoBehaviour
 		{
 			foreach (KeyValuePair<string, Region> r in Regions)
 			{
-				if (r.Key != "Branch" && r.Key != "Memo" && !r.Key.StartsWith("Companion", StringComparison.Ordinal) && Time.frameCount - r.Value.Frame <= 2)
+				if (r.Key != "Branch" && r.Key != "Memo" && r.Key != "DuelDialogueHistoryButton" && !r.Key.StartsWith("Companion", StringComparison.Ordinal) && Time.frameCount - r.Value.Frame <= 2)
 				{
 					return true;
 				}
@@ -163,13 +163,14 @@ public class InputGuard : MonoBehaviour
 		}
 	}
 
-	public static bool BlockKeyboard => UiHider.Swallowing || (Application.isFocused && _textFocus);
+	public static bool BlockKeyboard => UiHider.Swallowing || LOMAssistant.Features.Combat.DuelDialogueHistoryPanel.BlocksInput
+		|| (Application.isFocused && _textFocus);
 
 	/// <summary>某个游戏输入回调该不该被挡下（按触发它的设备判断）。</summary>
 	public static bool Suppress(InputAction.CallbackContext context)
 	{
 		// 隐藏界面期间、恢复用的那一下，以及拿来隐藏界面的右键，都不交给游戏
-		if (UiHider.Swallowing || UiHider.ClaimsRightClick(context.control))
+		if (UiHider.Swallowing || UiHider.ClaimsRightClick(context.control) || LOMAssistant.Features.Combat.DuelDialogueHistoryPanel.BlocksInput)
 		{
 			return true;
 		}
