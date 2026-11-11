@@ -2,6 +2,14 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.1 (2026-11-11)
+
+- **Duels gallery page** (new): every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. **Stats & skills** shows each encounter's six stats, skills, and the state changes at battle start or when conditions are met.
+- **Duel backlog** (new): during a duel, press L or click the backlog button above the fast-forward button to read back the taunts, character dialogue and narration shown so far, in order. The duel pauses while you read.
+- **Heroine routes** in Collection (new): for each character you can bond with, how much of her route's dialogue you have read and how many of her endings you have; expand one to see it by quest.
+- **Roll back** (F4): branch choice boxes are saved temporarily too, so F4 returns to before the choice and lets you choose again.
+- **Story map**: where a script stores the next scene for a later script to pick up, the story after it is no longer cut off.
+
 ## 3.7.0 (2026-11-09)
 
 - **Proactive companion** (new, off by default): a persona of your choice stays on the game screen and says a line or two when you make a choice, roll dice, finish a fight, see affection change, or have a timed story about to run out. It only comments and advises. Talk frequency has three levels (Quiet, Normal, Chatty), and it can use its own model and a token cap per game launch. The switch is on the AI companion tab.
