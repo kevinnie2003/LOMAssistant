@@ -295,8 +295,8 @@ public sealed partial class Gallery
 					string name = DuelLocalized("CombatSkill/Name/" + change.Effect.Key, change.Effect.Name);
 					string desc = DuelLocalized("CombatSkill/Desc/" + change.Effect.Key, change.Effect.Description).Replace("\n", " ").Trim();
 					// 说明一般以名字开头（「封印：无法使用绝招。」），获得时只写说明
-					text = change.Remove ? string.Format(F("{0}失去「{1}」"), who, name)
-						: string.Format(F("{0}获得：{1}"), who, desc.Length > 0 ? desc : name);
+					text = change.Remove ? Join(who, F("失去")) + "「" + name + "」"
+						: Join(who, F("获得")) + (Join("a", "b").Length == 2 ? "：" : ": ") + (desc.Length > 0 ? desc : name);
 				}
 				else
 				{
@@ -353,6 +353,15 @@ public sealed partial class Gallery
 
 	private static string F(string text) => TextConverter.ForDisplay(text);
 
+	// 拼句子：不用「{0}{1} {2}」这种没有固定文字的格式串（翻译表把带占位符的行当整句模板，会套到别的句子上），
+	// 而是一个词一个词翻好再拼；中文词之间不空格，其他语言空一格
+	private static string Join(params string[] words)
+	{
+		string gap = TextConverter.DisplayLanguage == UiText.Korean || TextConverter.DisplayLanguage == UiText.Japanese
+			|| TextConverter.DisplayLanguage == UiText.English ? " " : "";
+		return string.Join(gap, words.Where(w => !string.IsNullOrEmpty(w)).ToArray());
+	}
+
 	private static string DuelCondition(string trigger)
 	{
 		if (string.IsNullOrEmpty(trigger))
@@ -390,20 +399,20 @@ public sealed partial class Gallery
 		if ((m = System.Text.RegularExpressions.Regex.Match(c, "^回合数_" + DuelOp + @"_(\d+)$")).Success)
 		{
 			return m.Groups[1].Value == "EQ" ? string.Format(F("第 {0} 回合"), m.Groups[2].Value)
-				: string.Format(F("回合数 {0} {1}"), DuelOps[m.Groups[1].Value], m.Groups[2].Value);
+				: F("回合数") + " " + DuelOps[m.Groups[1].Value] + " " + m.Groups[2].Value;
 		}
 		if ((m = System.Text.RegularExpressions.Regex.Match(c, @"^(我方|敌方|敌人)_(\w+?)_" + DuelOp + @"_(PCT_)?(-?\d+)$")).Success)
 		{
-			return string.Format(F("{0}{1} {2} {3}"), F(m.Groups[1].Value), F(m.Groups[2].Value), DuelOps[m.Groups[3].Value],
-				m.Groups[5].Value + (m.Groups[4].Success ? "%" : ""));
+			return Join(F(m.Groups[1].Value), F(m.Groups[2].Value)) + " " + DuelOps[m.Groups[3].Value] + " "
+				+ m.Groups[5].Value + (m.Groups[4].Success ? "%" : "");
 		}
 		if ((m = System.Text.RegularExpressions.Regex.Match(c, @"^数值_(\w+?)_" + DuelOp + @"_(-?\d+)$")).Success)
 		{
-			return string.Format(F("主角{0} {1} {2}"), F(m.Groups[1].Value), DuelOps[m.Groups[2].Value], m.Groups[3].Value);
+			return Join(F("主角"), F(m.Groups[1].Value)) + " " + DuelOps[m.Groups[2].Value] + " " + m.Groups[3].Value;
 		}
 		if ((m = System.Text.RegularExpressions.Regex.Match(c, @"^旗标_(\w+?)_" + DuelOp + @"_(-?\d+)(（.*）)?$")).Success)
 		{
-			return string.Format(F("计数 {0} {1} {2}"), m.Groups[1].Value + DuelText(m.Groups[4].Value), DuelOps[m.Groups[2].Value], m.Groups[3].Value);
+			return F("计数") + " " + m.Groups[1].Value + DuelText(m.Groups[4].Value) + " " + DuelOps[m.Groups[2].Value] + " " + m.Groups[3].Value;
 		}
 		if (c.StartsWith("旗标回合_", StringComparison.Ordinal))
 		{
@@ -420,8 +429,9 @@ public sealed partial class Gallery
 		{
 			return DuelText(a.Replace('_', ' '));
 		}
-		string text = string.Format(F(m.Groups[3].Value == "加" ? "{0}{1}增加 {2}" : "{0}{1}减少 {2}"),
-			F(m.Groups[1].Value), F(m.Groups[2].Value), int.Parse(m.Groups[4].Value) + (m.Groups[5].Success ? "%" : ""));
+		// 「我方血量 −20%」：加减号不用翻译
+		string text = Join(F(m.Groups[1].Value), F(m.Groups[2].Value)) + " " + (m.Groups[3].Value == "加" ? "+" : "−")
+			+ int.Parse(m.Groups[4].Value) + (m.Groups[5].Success ? "%" : "");
 		return m.Groups[6].Success ? text + "（" + F(m.Groups[6].Value) + "）" : text;
 	}
 }
