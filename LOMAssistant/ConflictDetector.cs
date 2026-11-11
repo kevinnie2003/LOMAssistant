@@ -165,7 +165,6 @@ public static class ConflictDetector
 	private static (ConfigElement<KeyCode> Key, string Name)[] Hotkeys => new[]
 	{
 		(ConfigManager.DebugPanelKey, "数值页"),
-		(ConfigManager.DuelDialogueHistoryKey, "决斗回想"),
 		(ConfigManager.PanelKey, "设置页"),
 		(ConfigManager.SaveNoteKey, "存档备注"),
 		(ConfigManager.HideUIKey, "隐藏界面看 CG"),

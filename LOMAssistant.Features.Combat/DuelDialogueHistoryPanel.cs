@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace LOMAssistant.Features.Combat;
 
-/// <summary>决斗回想：记录显示入口，不预读随机台词；打开时暂停并隔离输入。</summary>
+/// <summary>决斗回想：记录显示入口，不预读随机台词；按 L 打开（和游戏别处打开回想的键一样），打开时暂停并隔离输入。</summary>
 internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 {
 	private static DuelDialogueHistoryPanel _instance;
@@ -26,7 +26,9 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 	private float _scale = -1f;
 	private bool _dark;
 	private int _font = -1;
-	private GUIStyle _frame, _title, _body, _muted, _button, _launcher;
+	private GUIStyle _frame, _title, _name, _body, _narration, _round, _muted, _button;
+	private float _nameWidth;
+	private int _nameWidthCount = -1;
 	private bool _scrollToEnd;
 
 	internal static bool IsOpen => _instance != null && _instance._visible;
@@ -55,20 +57,28 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 		{
 			return;
 		}
-		int round = CombatManager.Instance.CurrentRounds;
-		if (History.Add(round, speaker, text))
+		// 不往游戏自己的回想里写：那边最多 300 条，一场决斗的嘴攻会把前面的剧情挤掉
+		History.Add(CombatManager.Instance.CurrentRounds, speaker, text);
+	}
+
+	/// <summary>快进按钮上方的「回想」按钮点了：开着就关，关着就开。</summary>
+	internal static void Toggle()
+	{
+		if (_instance == null)
 		{
-			// 决斗结束后，也能在游戏自己的回想中找到这些台词（和普通文字记录一样，不写入存档）。
-			try
-			{
-				StoryLogCompat.AddDialogue(speaker, text);
-			}
-			catch (Exception e)
-			{
-				FileLogger.LogWarning("[决斗回想] 写入游戏回想失败，决斗窗口仍可查看：" + e.Message);
-			}
+			return;
+		}
+		if (_instance._visible)
+		{
+			_instance.Close();
+		}
+		else
+		{
+			_instance.Open();
 		}
 	}
+
+	private void LateUpdate() => DuelBacklogButton.Follow(Enabled && InDuel && !UiHider.Active);
 
 	private void Update()
 	{
@@ -77,7 +87,7 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 			Close();
 			return;
 		}
-		bool key = GUIUtility.keyboardControl == 0 && InputGuard.HotkeyDown(ConfigManager.DuelDialogueHistoryKey.Value);
+		bool key = GUIUtility.keyboardControl == 0 && InputGuard.HotkeyDown(KeyCode.L);
 		if (_visible)
 		{
 			bool back = (Keyboard.current?.escapeKey.wasPressedThisFrame ?? false)
@@ -116,6 +126,7 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 		}
 		_visible = false;
 		_closedFrame = Time.frameCount;
+		DuelBacklogButton.Reset();
 		ClearPendingInput();
 		GUIUtility.keyboardControl = 0;
 		GameSpeed.Tick();
@@ -153,15 +164,14 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 		Styles(scale);
 		if (!_visible)
 		{
-			string key = ConfigManager.DuelDialogueHistoryKey.Value == KeyCode.None ? ""
-				: " [" + TextConverter.ForDisplay(InputGuard.KeyName(ConfigManager.DuelDialogueHistoryKey.Value)) + "]";
-			string label = TextConverter.ForDisplay("决斗回想") + key;
-			float width = Mathf.Max(140f * scale, _launcher.CalcSize(new GUIContent(label)).x + 16f * scale);
-			Rect button = new Rect((Screen.width - width) * 0.5f, Screen.height - 44f * scale, width, 32f * scale);
-			InputGuard.Report("DuelDialogueHistoryButton", button);
-			if (GUI.Button(button, label, _launcher))
+			// 这次启动还没进过养成地图、没有游戏的回想按钮可复制时，在同一位置画个简单按钮
+			if (DuelBacklogButton.FallbackRect() is Rect r)
 			{
-				Open();
+				InputGuard.Report("DuelDialogueHistoryButton", r);
+				if (GUI.Button(r, TextConverter.ForDisplay("决斗回想"), _button))
+				{
+					Open();
+				}
 			}
 			return;
 		}
@@ -176,22 +186,22 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 		{
 			_screenWidth = Screen.width;
 			_screenHeight = Screen.height;
-			float width = Mathf.Min(1000f * scale, Screen.width * 0.92f);
-			float height = Mathf.Min(760f * scale, Screen.height * 0.85f);
+			float width = Mathf.Min(820f * scale, Screen.width * 0.9f);
+			float height = Mathf.Min(720f * scale, Screen.height * 0.8f);
 			_window = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
 		}
 		GUI.Box(_window, GUIContent.none, _frame);
-		GUILayout.BeginArea(new Rect(_window.x + 20f * scale, _window.y + 16f * scale, _window.width - 40f * scale, _window.height - 32f * scale));
+		GUILayout.BeginArea(new Rect(_window.x + 24f * scale, _window.y + 14f * scale, _window.width - 48f * scale, _window.height - 28f * scale));
 		GUILayout.BeginHorizontal();
 		GUILayout.Label(TextConverter.ForDisplay("决斗回想"), _title);
 		GUILayout.FlexibleSpace();
-		GUILayout.Label(TextConverter.ForDisplay(string.Format("最近 {0} 条", History.Entries.Count)), _muted);
-		if (GUILayout.Button("×", _button, GUILayout.Width(40f * scale)))
+		if (GUILayout.Button("×", _button, GUILayout.Width(36f * scale), GUILayout.Height(30f * scale)))
 		{
 			Close();
 		}
 		GUILayout.EndHorizontal();
-		GUILayout.Space(8f * scale);
+		Line(GUILayoutUtility.GetRect(1f, 1f, GUILayout.ExpandWidth(true)), PanelTheme.InkLine);
+		GUILayout.Space(6f * scale);
 		if (_scrollToEnd)
 		{
 			_scroll.y = float.MaxValue;
@@ -199,7 +209,19 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 		_scroll = GUILayout.BeginScrollView(_scroll);
 		if (History.Entries.Count == 0)
 		{
+			GUILayout.Space(12f * scale);
 			GUILayout.Label(TextConverter.ForDisplay("本场决斗还没有对白记录。"), _muted);
+		}
+		// 名字一栏按最长的名字定宽，台词左边对齐
+		if (_nameWidthCount != History.Entries.Count)
+		{
+			_nameWidthCount = History.Entries.Count;
+			_nameWidth = 0f;
+			foreach (DuelDialogueHistory.Entry entry in History.Entries)
+			{
+				_nameWidth = Mathf.Max(_nameWidth, _name.CalcSize(new GUIContent(entry.Speaker)).x);
+			}
+			_nameWidth = Mathf.Clamp(_nameWidth, 60f * scale, 200f * scale);
 		}
 		int round = -1;
 		foreach (DuelDialogueHistory.Entry entry in History.Entries)
@@ -207,29 +229,48 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 			if (round != entry.Round)
 			{
 				round = entry.Round;
-				GUILayout.Space(10f * scale);
-				GUILayout.Label(TextConverter.ForDisplay(string.Format("第 {0} 回合", round)), _muted);
+				GUILayout.Space(8f * scale);
+				Divider(TextConverter.ForDisplay(string.Format("第 {0} 回合", round)), scale);
 			}
-			GUILayout.Space(8f * scale);
-			GUILayout.Label(string.IsNullOrEmpty(entry.Speaker) ? TextConverter.ForDisplay("旁白") : TextConverter.Verbatim + entry.Speaker, _title);
-			GUILayout.Label(TextConverter.Verbatim + entry.Text, _body);
+			GUILayout.Space(6f * scale);
+			GUILayout.BeginHorizontal();
+			GUILayout.Label(TextConverter.Verbatim + entry.Speaker, _name, GUILayout.Width(_nameWidth));
+			GUILayout.Space(14f * scale);
+			GUILayout.Label(TextConverter.Verbatim + entry.Text, entry.Speaker.Length == 0 ? _narration : _body);
+			GUILayout.EndHorizontal();
 		}
+		GUILayout.Space(8f * scale);
 		GUILayout.EndScrollView();
 		if (Event.current.type == EventType.Repaint)
 		{
 			_scrollToEnd = false;
 		}
-		GUILayout.Space(10f * scale);
-		GUILayout.BeginHorizontal();
-		GUILayout.Label(TextConverter.ForDisplay("回看时暂停决斗，关闭后继续。"), _muted);
-		GUILayout.FlexibleSpace();
-		if (GUILayout.Button(TextConverter.ForDisplay("回到最新"), _button))
-		{
-			_scrollToEnd = true;
-		}
-		GUILayout.EndHorizontal();
 		GUILayout.EndArea();
 		GUI.depth = depth;
+	}
+
+	/// <summary>回合分隔：两边细线，中间回合数。</summary>
+	private void Divider(string text, float scale)
+	{
+		Rect r = GUILayoutUtility.GetRect(1f, 24f * scale, GUILayout.ExpandWidth(true));
+		float w = _round.CalcSize(new GUIContent(text)).x;
+		float mid = r.y + r.height * 0.5f;
+		float gap = 10f * scale;
+		Line(new Rect(r.x, mid, (r.width - w) * 0.5f - gap, 1f), PanelTheme.InkLine);
+		Line(new Rect(r.x + (r.width + w) * 0.5f + gap, mid, (r.width - w) * 0.5f - gap, 1f), PanelTheme.InkLine);
+		GUI.Label(new Rect(r.x + (r.width - w) * 0.5f, r.y, w, r.height), text, _round);
+	}
+
+	private static void Line(Rect r, Color c)
+	{
+		if (Event.current.type != EventType.Repaint || r.width <= 0f)
+		{
+			return;
+		}
+		Color old = GUI.color;
+		GUI.color = c;
+		GUI.DrawTexture(r, Texture2D.whiteTexture);
+		GUI.color = old;
 	}
 
 	private void Styles(float scale)
@@ -242,14 +283,18 @@ internal sealed class DuelDialogueHistoryPanel : MonoBehaviour
 		_dark = PanelTheme.Dark;
 		_font = ConfigManager.PanelFont.Value;
 		_screenWidth = 0;
+		_nameWidthCount = -1;
 		_frame = PanelTheme.Window(scale);
-		_title = PanelTheme.Label(scale, 20, PanelTheme.Ink);
+		_title = PanelTheme.Label(scale, 22, PanelTheme.Ink);
 		_title.fontStyle = FontStyle.Bold;
-		_body = PanelTheme.Label(scale, 22, PanelTheme.Ink);
-		_muted = PanelTheme.Label(scale, 16, PanelTheme.InkMuted);
+		_name = PanelTheme.Label(scale, 19, PanelTheme.Cinnabar, wrap: false);
+		_name.alignment = TextAnchor.UpperRight;
+		_body = PanelTheme.Label(scale, 19, PanelTheme.Ink);
+		_narration = PanelTheme.Label(scale, 19, PanelTheme.InkMuted);
+		_round = PanelTheme.Label(scale, 15, PanelTheme.InkMuted, wrap: false);
+		_round.alignment = TextAnchor.MiddleCenter;
+		_muted = PanelTheme.Label(scale, 17, PanelTheme.InkMuted);
 		_button = PanelTheme.Button(scale, 18);
-		_launcher = PanelTheme.ToastButton(scale, 17);
-		_launcher.normal.background = PanelTheme.ToastBackground;
 	}
 }
 
@@ -272,6 +317,34 @@ internal static class DuelDialogueHistoryPatch
 		catch (Exception e)
 		{
 			FileLogger.LogWarning("[决斗回想] 记录对白失败（已忽略）：" + e.Message);
+		}
+	}
+
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(Mortal.Free.FreeManager), "Awake")]
+	private static void FreeAwake_Postfix()
+	{
+		try
+		{
+			DuelBacklogButton.SaveIcons();
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("[决斗回想] 存回想图标失败（决斗里改画简单按钮）：" + e.Message);
+		}
+	}
+
+	[HarmonyPostfix]
+	[HarmonyPatch(typeof(CombatUIManager), "Start")]
+	private static void CombatUiStart_Postfix(CombatUIManager __instance)
+	{
+		try
+		{
+			DuelBacklogButton.Create(__instance);
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("[决斗回想] 放回想按钮失败（仍可按 L）：" + e.Message);
 		}
 	}
 

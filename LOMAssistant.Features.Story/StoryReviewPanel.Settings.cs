@@ -137,7 +137,7 @@ public partial class StoryReviewPanel
 			{
 				Row(ConfigManager.DuelEnemyGrowth, "决斗敌人增强"),
 				Row(ConfigManager.EnableDuelActionForecast, "决斗敌方行动预测"),
-				Row(ConfigManager.EnableDuelDialogueHistory, "决斗对白记录"),
+				Row(ConfigManager.EnableDuelDialogueHistory, "决斗回想"),
 				Row(ConfigManager.FightDeathHint, "战斗失败死亡提示"),
 				Row(ConfigManager.FightRoundHint, "战斗回合事件提示"),
 				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
@@ -203,7 +203,6 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.AnytimeLoadKey, "随时存档：读取最新存档"),
 				Row(ConfigManager.AnytimeRollbackKey, "回退到判定前"),
 				Row(ConfigManager.MemoKey, "备忘录"),
-				Row(ConfigManager.DuelDialogueHistoryKey, "决斗回想"),
 			}),
 		};
 	}

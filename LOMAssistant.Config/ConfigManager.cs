@@ -132,7 +132,6 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> EnableDuelActionForecast;
 	public static ConfigElement<bool> EnableDuelDialogueHistory;
-	public static ConfigElement<KeyCode> DuelDialogueHistoryKey;
 
 	public static ConfigElement<bool> DuelEnemyGrowth;
 
@@ -527,8 +526,7 @@ public static class ConfigManager
 		BranchChangeValues = new ConfigElement<bool>("BranchChangeValues", "选分支时自动调整数值：分支判定手动选择、剧情跳转按选的分支走时，先把属性、好感、旗标改到正好走这一支（改了会一直留着），改不动的再直接走。关掉时不改数值，只是这一次直接走过去。true=开，false=关", defaultValue: false);
 		ForceUnmetOptions = new ConfigElement<bool>("ForceUnmetOptions", "条件不满足就不出现的选项也列出来（红字标「条件没满足」，悬停看条件），点了直接选；锁住的选项条件改不到时给「强行解锁」（都不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
 		EnableDuelActionForecast = new ConfigElement<bool>("EnableDuelActionForecast", "决斗中显示敌方本回合预选的行动；敌方意图较高时可能根据你的出招临场应变。默认关。true=开，false=关", defaultValue: false);
-		EnableDuelDialogueHistory = new ConfigElement<bool>("EnableDuelDialogueHistory", "记录本场决斗实际显示的嘴攻、角色对白和旁白；按 L 或点击「决斗回想」查看。回看时暂停决斗，本场记录在离开决斗时清空；台词也会补进游戏回想，但不写入存档。true=开（默认），false=关", defaultValue: true);
-		DuelDialogueHistoryKey = new ConfigElement<KeyCode>("DuelDialogueHistoryKey", "打开/关闭决斗回想的热键（只在决斗中生效，默认 L）。", KeyCode.L);
+		EnableDuelDialogueHistory = new ConfigElement<bool>("EnableDuelDialogueHistory", "决斗回想：记下本场决斗显示过的嘴攻、角色对白和旁白，按 L 或点快进按钮上方的回想按钮翻看，翻看时决斗暂停；离开决斗时清空。true=开，false=关", defaultValue: true);
 		DuelEnemyGrowth = new ConfigElement<bool>("DuelEnemyGrowth", "决斗敌人增强：开战时按主角六项属性总和提高敌人的血量和属性，强敌仍明显强于普通敌人；敌人还会根据双方的气、血量和主角连续出的招调整出招。true=开，false=关", defaultValue: false);
 		FightDeathHint = new ConfigElement<bool>("FightDeathHint", "战斗失败死亡提示：这场决斗或战役输了会触发死亡时，在战斗中一直显示死亡名称和生死簿收录情况；输了之后还要看其他条件的写「可能会死」。选项触发的死亡不提示。提示会透露剧情。true=开，false=关", defaultValue: true);
 		FightRoundHint = new ConfigElement<bool>("FightRoundHint", "战斗回合事件提示：决斗里拖到某个回合会结束战斗或改旗标时，在屏幕上方写出下一个这样的回合。会剧透", defaultValue: true);
