@@ -321,6 +321,8 @@ public static class StoryAtlas
 					parsed.Add(script);
 				}
 			}
+			// 后台线程存缓存，先在这里把暂存的去处接好，存下的就是接好的
+			StoryScripts.ResolveTemps();
 			StoryScriptCache.Save(parsed);
 		}
 		yield return null;

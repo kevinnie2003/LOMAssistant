@@ -35,6 +35,8 @@ public sealed class StoryExit
 	public string EventPool = "";
 	/// <summary>此去处之前明确设置的旅行续接剧本，仅用于静态流程追踪。</summary>
 	public string TravelTarget = "";
+	/// <summary>去处是前面剧本暂存的（SetTempScript 第几格，GetTempScript 取回）；全部剧本读完后由 StoryScripts.ResolveTemps 填进 Target。</summary>
+	public int TempSlot;
 }
 
 /// <summary>一个剧本读出来的大概：有没有选项、掷骰、战斗，有哪些去处，用了哪些对白。只读剧本文字，不执行。</summary>
@@ -45,6 +47,8 @@ public sealed class StoryScript
 	/// <summary>没有剧情或条件，仅转到 GetCurrentTravelScript 的中转脚本。</summary>
 	public bool TravelForward;
 	public List<StoryExit> Exits = new List<StoryExit>();
+	/// <summary>暂存给后面剧本取回的去处（SetTempScript）：第几格、剧本名。</summary>
+	public List<(int Slot, string Target)> TempSets = new List<(int, string)>();
 	/// <summary>对白 key（GetStoryText），已读标记按它算。</summary>
 	public List<string> Lines = new List<string>();
 	/// <summary>说出来的对白（say），按剧本顺序：在哪条分岔路上、谁说的（角色编号，旁白为空）、对白 key。给 AI 按分岔读剧情用。</summary>
@@ -103,6 +107,8 @@ public static class StoryScripts
 	private static readonly Regex Assignment = new Regex(@"^(?:local )?(\w+) = (.*)$");
 	private static readonly Regex Position = new Regex(@"^checkpointmanager\.Position\(""([^""]+)""\)");
 	private static readonly Regex TravelSet = new Regex(@"luamanager\.SetCurrentTravelScript\(""([^""]+)""\)");
+	private static readonly Regex TempSet = new Regex(@"luamanager\.SetTempScript\((\d+), *""([^""]+)""\)");
+	private static readonly Regex TempGet = new Regex(@"^luamanager\.GetTempScript\((\d+)\)$");
 	private static readonly Regex VariableNext = new Regex(@"luamanager\.(SetNextScript|SetCurrentStoryScript)\((\w+)\)");
 	private static readonly Regex Literal = new Regex(@"^""([^""]+)""$");
 	private static readonly Regex Scene = new Regex(@"luamanager\.ChangeScene\(""(\w+)""(?:, *""(\w*)"")?");
@@ -146,6 +152,78 @@ public static class StoryScripts
 		StoryScript script = text == null ? null : Parse(name, text);
 		Outlines[name] = script;
 		return script;
+	}
+
+	/// <summary>
+	/// 「取回暂存的剧本」的去处：往前找接到这里的剧本，最近一个暂存了这一格的，它存的就是去处（几处来源存的不同就各接一条）。
+	/// 赌坊、下棋这类由游戏代码暂存的找不到，照旧留空。全部剧本读完后调用一次。
+	/// </summary>
+	public static void ResolveTemps()
+	{
+		var incoming = new Dictionary<string, List<StoryScript>>(StringComparer.OrdinalIgnoreCase);
+		foreach (StoryScript s in All)
+		{
+			foreach (StoryExit e in s.Exits)
+			{
+				if (e.Target.Length > 0)
+				{
+					if (!incoming.TryGetValue(e.Target, out var list))
+					{
+						incoming[e.Target] = list = new List<StoryScript>();
+					}
+					list.Add(s);
+				}
+			}
+		}
+		int resolved = 0;
+		foreach (StoryScript s in All)
+		{
+			foreach (StoryExit exit in s.Exits.Where(e => e.TempSlot > 0 && e.Target.Length == 0).ToList())
+			{
+				var found = new List<string>();
+				var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { s.Name };
+				var todo = new Queue<(string Name, int Depth)>();
+				todo.Enqueue((s.Name, 0));
+				while (todo.Count > 0)
+				{
+					var (name, depth) = todo.Dequeue();
+					if (depth >= 8 || !incoming.TryGetValue(name, out var froms))
+					{
+						continue;
+					}
+					foreach (StoryScript from in froms)
+					{
+						if (!seen.Add(from.Name))
+						{
+							continue;
+						}
+						var sets = from.TempSets.Where(t => t.Slot == exit.TempSlot).Select(t => t.Target).ToList();
+						if (sets.Count > 0)
+						{
+							found.AddRange(sets.Where(t => !found.Contains(t, StringComparer.OrdinalIgnoreCase)));
+						}
+						else
+						{
+							todo.Enqueue((from.Name, depth + 1));
+						}
+					}
+				}
+				for (int i = 0; i < found.Count; i++)
+				{
+					StoryExit e = i == 0 ? exit : new StoryExit { Path = exit.Path, AfterScene = exit.AfterScene, TempSlot = exit.TempSlot };
+					e.Target = found[i];
+					if (i > 0)
+					{
+						s.Exits.Add(e);
+					}
+					resolved++;
+				}
+			}
+		}
+		if (resolved > 0)
+		{
+			FileLogger.Log($"[剧情回顾] 接上暂存的去处 {resolved} 处");
+		}
 	}
 
 	/// <summary>生成时间线时一口气读了全部剧本，读出来的大概先存着。</summary>
@@ -211,7 +289,11 @@ public static class StoryScripts
 			Match m;
 			if (line.StartsWith("luamanager.SetCurrentTravelScript(", StringComparison.Ordinal))
 				targets.Add(("#travel", TravelSet.Match(line).Groups[1].Value, "", false, blocks.Select(b => (b, b.Branch)).ToList()));
-			if ((m = Assignment.Match(line)).Success)
+			if ((m = TempSet.Match(line)).Success)
+				script.TempSets.Add((int.Parse(m.Groups[1].Value), m.Groups[2].Value));
+			if ((m = Assignment.Match(line)).Success && TempGet.Match(m.Groups[2].Value) is Match temp && temp.Success)
+				targets.Add((m.Groups[1].Value, "#temp:" + temp.Groups[1].Value, "", false, blocks.Select(b => (b, b.Branch)).ToList()));
+			else if ((m = Assignment.Match(line)).Success)
 			{
 				string variable = m.Groups[1].Value, value = m.Groups[2].Value;
 				Match pool = Position.Match(value), literal = Literal.Match(value);
@@ -309,7 +391,9 @@ public static class StoryScripts
 			{
 				var target = targets.LastOrDefault(t => t.Var == m.Groups[2].Value && InScope(t.Scope));
 				if (target.Travel && blocks.Count == 0) script.TravelForward = true;
-				if (!string.IsNullOrEmpty(target.Target) || !string.IsNullOrEmpty(target.Pool))
+				if (target.Target != null && target.Target.StartsWith("#temp:", StringComparison.Ordinal))
+					AddExit(script, blocks, choices, switches, e => { e.TempSlot = int.Parse(target.Target.Substring(6)); e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
+				else if (!string.IsNullOrEmpty(target.Target) || !string.IsNullOrEmpty(target.Pool))
 					AddExit(script, blocks, choices, switches, e => { e.Target = target.Target; e.TravelTarget = TravelTarget(); e.EventPool = target.Pool; e.AfterScene = m.Groups[1].Value == "SetCurrentStoryScript"; });
 			}
 			if ((m = SetCharacter.Match(line)).Success)
