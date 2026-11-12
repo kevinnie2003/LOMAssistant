@@ -2,6 +2,15 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.2 (2026-11-12)
+
+- **Gamepad wheel** (new, on by default): in story scenes and on the training map, hold LB to bring up a wheel; push the right stick toward an item and let go to run it (open Now, Story map, Stats or Settings, skip read dialogue, roll back, load or make a save-anywhere save). Let go of LB to close it.
+- **Dialogue text speed** (new): how fast dialogue appears letter by letter: 0.5x, Normal, 2x, 4x or Instant.
+- **Auto-play interval** (new): with the game's Auto on, how many seconds to wait after a line is fully shown before the next (4 / 2 / 1 / 0 s).
+- **Stats tab**: values can be changed with a gamepad: the D-pad moves between values, and the right stick changes the selected one, up/down by 1 and left/right by 5.
+- **Duels gallery page**: **Stats & skills** now shows the four traits (temperament, conduct, morality, cultivation) with their ratings.
+- **Game text size**: the move cards at the bottom of duels no longer grow; text that shrinks to fit its box, such as shop item names, now grows too.
+
 ## 3.7.1 (2026-11-11)
 
 - **Duels gallery page** (new): every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. **Stats & skills** shows each encounter's six stats, skills, and the state changes at battle start or when conditions are met.
