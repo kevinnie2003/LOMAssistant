@@ -47,7 +47,11 @@ internal static class GamepadCursor
 		float dt = Time.unscaledDeltaTime;
 		Vector2 stick = pad.leftStick.ReadValue();
 		Vector2 move = stick.magnitude > DeadZone ? stick.normalized * (stick.magnitude * stick.magnitude) * Screen.height * 1.1f : Vector2.zero;
-		move += pad.dpad.ReadValue() * Screen.height * 0.35f;
+		// 数值页上用十字键选格子时，十字键不动指针
+		if (!LOMAssistant.Features.Story.StoryReviewPanel.StatsPadActive)
+		{
+			move += pad.dpad.ReadValue() * Screen.height * 0.35f;
+		}
 		if (move != Vector2.zero)
 		{
 			if (!_moving)
@@ -86,7 +90,8 @@ internal static class GamepadCursor
 	public static Vector2 ScrollDelta()
 	{
 		Gamepad pad = Gamepad.current;
-		if (!_active || pad == null)
+		// 数值页上选着格子时，右摇杆拿来加减数值，不滚动
+		if (!_active || pad == null || LOMAssistant.Features.Story.StoryReviewPanel.StatsPadActive)
 		{
 			return Vector2.zero;
 		}

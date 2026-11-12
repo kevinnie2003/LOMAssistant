@@ -262,6 +262,7 @@ The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
 - **Interface**: window colours can be light, dark or follow the system; Source Han Serif or Microsoft YaHei font; separate opacity for the main window, small windows and hint boxes; larger game text and dialogue text.
 - **Gamepad**: the whole window works with a gamepad (L3 opens it, the left stick moves the pointer, A clicks, LB / RB switch tabs); dice, skip turn and the event picker too.
   - **Gamepad wheel**: in story scenes and on the training map, hold LB to bring up a wheel; push the right stick toward an item and let go to run it (open Now, Story map, Stats or Settings, skip read dialogue, roll back, load or make a save-anywhere save). Let go of LB to close it.
+  - Stats tab: the D-pad moves between values; the right stick changes the selected one, up/down by 1 and left/right by 5.
 - **Languages**: Simplified Chinese, Traditional Chinese and Korean following the game language, Japanese with the [Japanese patch](https://dlaqe2334.github.io/LOM-JPMOD/), English with an English patch; can also be chosen in settings.
 - **Lecture Hall**: hover over an ending or death entry to see how to reach it; everything can also be shown as unlocked.
 - **Export legend**: export this playthrough's legend as a txt at any time from Status → Legend.

@@ -192,6 +192,8 @@ public partial class StoryReviewPanel
 			gx += width + S(6);
 		}
 		var area = new Rect(r.x, r.y + S(86), r.width, r.height - S(86));
+		StatsPadInput(area);
+		StatsPadScroll(area.height);
 		DragScroll("stats", area, ref _statsScroll);
 		GUILayout.BeginArea(area);
 		_statsScroll = GUILayout.BeginScrollView(_statsScroll);
@@ -263,6 +265,7 @@ public partial class StoryReviewPanel
 		}
 		GUILayout.EndScrollView();
 		GUILayout.EndArea();
+		StatsPadEnd(columns);
 	}
 
 	private void DrawStatRow(StatRow row, float width)
@@ -318,6 +321,7 @@ public partial class StoryReviewPanel
 			// 只读：只显示数值，右边空着
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
+			StatsPadRow(row);
 			return;
 		}
 		// 加减按钮靠右：一行多出来的宽度留在数值和按钮之间，不堆在「设定」后面
@@ -374,6 +378,7 @@ public partial class StoryReviewPanel
 		}
 		GUI.enabled = wasEnabled;
 		GUILayout.EndHorizontal();
+		StatsPadRow(row);
 	}
 
 	private static void SetManual(StatRow row, int value, bool record = true)
