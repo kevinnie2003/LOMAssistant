@@ -23,7 +23,10 @@ public static class FontScale
 {
 	private static int _appliedDialogue = 100, _appliedGame = 100;
 	private static readonly Dictionary<int, bool> Dialogue = new Dictionary<int, bool>();
+	private static readonly Dictionary<int, bool> Fixed = new Dictionary<int, bool>();
 	private static readonly Dictionary<int, (float Size, float Min, float Max, TextOverflowModes Overflow)> TmpBase = new Dictionary<int, (float, float, float, TextOverflowModes)>();
+
+	private static readonly System.Text.RegularExpressions.Regex RichTags = new System.Text.RegularExpressions.Regex(@"</?(?:b|i|size|color|material|quad)(?:=[^<>]*)?>");
 
 	private static float DialogueFactor => Mathf.Clamp(ConfigManager.FontScale.Value, 50, 200) / 100f;
 	private static float GameFactor => Mathf.Clamp(ConfigManager.GameFontScale.Value, 50, 200) / 100f;
@@ -85,7 +88,7 @@ public static class FontScale
 	[HarmonyPatch(typeof(Text), nameof(Text.GetGenerationSettings))]
 	public static void GetGenerationSettings_Postfix(Text __instance, ref TextGenerationSettings __result)
 	{
-		float factor = GameFactor * (IsDialogue(__instance) ? DialogueFactor : 1f);
+		float factor = IsFixed(__instance) ? 1f : GameFactor * (IsDialogue(__instance) ? DialogueFactor : 1f);
 		if (IsNumber(__instance.text))
 		{
 			__result.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -98,6 +101,26 @@ public static class FontScale
 		__result.fontSize = Mathf.Max(1, Mathf.RoundToInt(__result.fontSize * factor));
 		__result.resizeTextMinSize = Mathf.Max(1, Mathf.RoundToInt(__result.resizeTextMinSize * factor));
 		__result.resizeTextMaxSize = Mathf.Max(1, Mathf.RoundToInt(__result.resizeTextMaxSize * factor));
+		if (factor > 1f && __result.resizeTextForBestFit)
+		{
+			// 「自动缩到框内」的文字（商店物品名这类）：原版已经用到框能放下的最大字号，光放大上限没用。
+			// 放大时关掉自动缩放，字号取原上限乘比例；一行字时再按框宽封顶，长名字不挤到旁边的价格上
+			__result.resizeTextForBestFit = false;
+			int size = __result.resizeTextMaxSize;
+			// 数字数前去掉富文本标签（「看过」这类标记是用 <color> 拼进去的），标签不占宽度
+			string shown = __instance.supportRichText ? RichTags.Replace(__instance.text ?? "", "") : __instance.text ?? "";
+			if (shown.Length > 0 && shown.IndexOf('\n') < 0)
+			{
+				float width = 0f;
+				foreach (char c in shown)
+				{
+					width += c < 0x2E80 ? 0.55f : 1f;
+				}
+				// 下限用原版的最小字号（没放大的），长名字最多缩回原版的大小
+				size = Mathf.Min(size, Mathf.Max(__instance.resizeTextMinSize, Mathf.FloorToInt(__instance.rectTransform.rect.width / width)));
+			}
+			__result.fontSize = size;
+		}
 		if (factor > 1f)
 		{
 			// 放大后装不下时不截掉（截掉的是整行，数字就没了）；数字、单个词不折行
@@ -107,6 +130,19 @@ public static class FontScale
 				__result.horizontalOverflow = HorizontalWrapMode.Overflow;
 			}
 		}
+	}
+
+	/// <summary>
+	/// 不放大的文字：决斗下方的招式卡（招名、消耗都是竖排，一个字一行，本来就大；放大后一行装不下一个字，就横过来了）。
+	/// </summary>
+	private static bool IsFixed(Text text)
+	{
+		int id = text.GetInstanceID();
+		if (!Fixed.TryGetValue(id, out bool yes))
+		{
+			Fixed[id] = yes = text.GetComponentInParent<Mortal.Combat.CombatActionButton>(true) != null;
+		}
+		return yes;
 	}
 
 	// 纯数字：数字和 + - / % . , 这几个符号，至少一个数字
