@@ -196,6 +196,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(OneClickUnlockPatch));
 			TryPatchAll(typeof(HiddenOptions));
 			TryPatchAll(typeof(LOMAssistant.Features.Extras.GameSpeedSayPatch));
+			TryPatchAll(typeof(LOMAssistant.Features.Extras.TextSpeed));
 			try
 			{
 				LOMAssistant.Features.Extras.GameSpeedWriters.Patch(_harmony);
