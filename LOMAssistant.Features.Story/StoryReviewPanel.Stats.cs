@@ -115,6 +115,27 @@ public partial class StoryReviewPanel
 
 	private const int StatsTab = 6;
 
+	/// <summary>打开窗口并切到某一页（手柄转轮用）；和平时打开窗口一样，内容重新整理。</summary>
+	public static void OpenTab(int tab)
+	{
+		StoryReviewPanel panel = Instance;
+		if (panel == null || tab < 0 || tab >= Tabs.Length)
+		{
+			return;
+		}
+		panel._visible = true;
+		panel._confirming = null;
+		panel._reading.Clear();
+		panel._texts.Clear();
+		panel._tab = tab;
+		panel._showChangelog = false;
+		panel._now = null;
+		panel._statSections = null;
+		panel._statInputs.Clear();
+		StoryAtlas.ForgetConditions();
+		StoryAtlas.RefreshProgress();
+	}
+
 	private void DrawStats(Rect r)
 	{
 		PlayerStatManagerData player = PlayerStatManagerData.Instance;

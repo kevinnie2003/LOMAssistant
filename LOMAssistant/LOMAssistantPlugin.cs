@@ -208,6 +208,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(BranchOverride));
 			EventPicker.Ensure(base.gameObject);
 			UiHider.Ensure(base.gameObject);
+			GamepadWheel.Ensure(base.gameObject);
 			SkipReadToggle.Ensure(base.gameObject);
 			MapEventHints.Ensure(base.gameObject);
 			LOMAssistant.Features.Story.DeadlineReminder.Ensure(base.gameObject);

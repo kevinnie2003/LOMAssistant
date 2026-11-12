@@ -89,6 +89,7 @@ public static class ConfigManager
 	public static ConfigElement<KeyCode> StoryReviewKey;
 
 	public static ConfigElement<int> GamepadPanelButton;
+	public static ConfigElement<bool> EnableGamepadWheel;
 
 	public static ConfigElement<bool> EnableRightClickHideUI;
 
@@ -594,6 +595,7 @@ public static class ConfigManager
 		HideUIKey = new ConfigElement<KeyCode>("HideUIKey", "隐藏界面看 CG 的按键，默认鼠标右键（Mouse1）；习惯右键做别的事可以改成键盘上的键，如 H", KeyCode.Mouse1);
 		EnableStoryReview = new ConfigElement<bool>("EnableStoryReview", "剧情回顾：游戏在剧情存档点、每旬开头自动存档时，在存档文件夹里收录这一刻的进度（LOMStory_ 开头，跟着 Steam 云同步），以后可以从这里重玩。true=开，false=关", defaultValue: true);
 		GamepadPanelButton = new ConfigElement<int>("GamepadPanelButton", "手柄开关咖啡伴侣窗口的按键：0=按下左摇杆（L3），1=按下右摇杆（R3），2=LB 和 RB 一起按", 0);
+		EnableGamepadWheel = new ConfigElement<bool>("EnableGamepadWheel", "手柄转轮：在剧情和养成地图上按住 LB 弹出转轮，右摇杆推向一格再松开就执行（打开此刻、剧情图、数值、设置，一键快进，回退到判定前，读、存随时存档）；松开 LB 就收起。战役和游戏菜单里不弹。true=开，false=关", true);
 		StoryReviewKey = new ConfigElement<KeyCode>("StoryReviewKey", "咖啡伴侣窗口（此刻、路线图、剧情图、节点存档、随时存档、收集进度、数值、设置）的热键", KeyCode.Tab);
 		ShowBranchChecks = new ConfigElement<int>("ShowBranchChecks", "剧情走到分支判断时显示各分支条件（满足为绿、不满足为红，可能剧透）：0=不显示，1=小窗，2=屏幕上方提示", 0);
 		BranchPanelX = new ConfigElement<float>("BranchPanelX", "剧情分支小窗的位置（占屏幕宽度的比例，-1=默认左侧）。拖动小窗会自动保存", -1f);

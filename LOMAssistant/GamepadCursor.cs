@@ -26,7 +26,8 @@ internal static class GamepadCursor
 	{
 		Gamepad pad = Gamepad.current;
 		Mouse mouse = Mouse.current;
-		if (pad == null || mouse == null)
+		// 转轮开着时右摇杆拿来选格子，不滚动窗口
+		if (pad == null || mouse == null || GamepadWheel.IsOpen)
 		{
 			return;
 		}
@@ -153,10 +154,13 @@ internal static class GamepadCursor
 		return pressed;
 	}
 
-	/// <summary>LB / RB 切页：松开时算（-1 / 1）；LB + RB 一起按开关窗口那次不算。</summary>
+	/// <summary>转轮里按着 LB 打开了窗口：这次松开 LB 不算切页（GamepadWheel 在松开后的下一帧清掉）。</summary>
+	public static bool IgnoreLbRelease;
+
+	/// <summary>LB / RB 切页：松开时算（-1 / 1）；LB + RB 一起按开关窗口那次、转轮里按着 LB 开窗口那次不算。</summary>
 	public static int ShoulderStep(Gamepad pad)
 	{
-		if (_chordUsed)
+		if (_chordUsed || (IgnoreLbRelease && pad.leftShoulder.wasReleasedThisFrame))
 		{
 			return 0;
 		}

@@ -23,6 +23,11 @@ public class SkipReadToggle : MonoBehaviour
 	private float _scale = -1f;
 	private int _fontMode = -1;
 
+	private static bool _requested;
+
+	/// <summary>和按一下快进键一样（手柄转轮用）：下一帧开始或停止快进。</summary>
+	public static void Toggle() => _requested = true;
+
 	public static void Ensure(GameObject host)
 	{
 		if (host.GetComponent<SkipReadToggle>() == null)
@@ -37,6 +42,7 @@ public class SkipReadToggle : MonoBehaviour
 		if (story == null)
 		{
 			_ours = false;
+			_requested = false;
 			return;
 		}
 		bool skipping = SkipDialog(story);
@@ -45,7 +51,9 @@ public class SkipReadToggle : MonoBehaviour
 			// 游戏自己停了（没读过的对话、松开 Ctrl、选项）：本 Mod 的快进也算结束
 			_ours = false;
 		}
-		if (GUIUtility.keyboardControl != 0 || !InputGuard.HotkeyDown(ConfigManager.SkipReadKey.Value))
+		bool requested = _requested;
+		_requested = false;
+		if (!requested && (GUIUtility.keyboardControl != 0 || !InputGuard.HotkeyDown(ConfigManager.SkipReadKey.Value)))
 		{
 			return;
 		}

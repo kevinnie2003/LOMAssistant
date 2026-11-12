@@ -170,7 +170,8 @@ public class InputGuard : MonoBehaviour
 	public static bool Suppress(InputAction.CallbackContext context)
 	{
 		// 隐藏界面期间、恢复用的那一下，以及拿来隐藏界面的右键，都不交给游戏
-		if (UiHider.Swallowing || UiHider.ClaimsRightClick(context.control) || LOMAssistant.Features.Combat.DuelDialogueHistoryPanel.BlocksInput)
+		if (UiHider.Swallowing || UiHider.ClaimsRightClick(context.control) || LOMAssistant.Features.Combat.DuelDialogueHistoryPanel.BlocksInput
+			|| GamepadWheel.IsOpen)
 		{
 			return true;
 		}

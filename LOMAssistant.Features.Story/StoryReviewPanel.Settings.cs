@@ -192,6 +192,7 @@ public partial class StoryReviewPanel
 			("热键", new List<SettingRow>
 			{
 				Row(ConfigManager.StoryReviewKey, "本窗口"),
+				Row(ConfigManager.EnableGamepadWheel, "手柄转轮"),
 				new SettingRow { Element = ConfigManager.GamepadPanelButton, Name = "手柄开关本窗口", Choices = new[] { "L3", "R3", "LB+RB" } },
 				Row(ConfigManager.DebugPanelKey, "数值页"),
 				Row(ConfigManager.PanelKey, "设置页"),
