@@ -240,7 +240,7 @@ Changing values or flags at random can break the story; save first.
 - **Game speed**: 1x / 2x / 3x / 5x. Battles and lines that advance by themselves stay at normal speed; turn on **Speed up battles too** to speed up battles as well.
 - **Dialogue text speed**: how fast dialogue appears letter by letter: 0.5x, Normal, 2x, 4x or Instant.
 - **Auto-play interval**: with the game's Auto on, how many seconds to wait after a line is fully shown before the next (4 / 2 / 1 / 0 s). **Original** moves on every 8 seconds whether or not the line has finished.
-- **Mouse wheel advances dialogue**: when on, scrolling down one notch in story scenes advances one line, and scrolling up opens the backlog. In the backlog, scroll down once more at the bottom to close it.
+- **Mouse wheel for dialogue**: when on, scrolling down one notch in story scenes advances one line, and scrolling up opens the backlog. In the backlog, scroll down once more at the bottom to close it.
 - **Skip read dialogue** (F2): press once in a story scene to keep skipping dialogue you have read, and press again to stop; it stops by itself at unread dialogue.
 - **Faster flow**: faster scene changes, loading and skipping, shorter pauses after stat changes, no idle wait between duel rounds.
 - **Faster startup**: the title animation is sped up, and the installer can skip the opening logos.
