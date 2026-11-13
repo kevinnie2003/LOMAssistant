@@ -103,6 +103,7 @@ public static class ConfigManager
 	public static ConfigElement<int> GameFontScale;
 	public static ConfigElement<int> TextSpeed;
 	public static ConfigElement<int> AutoPlayInterval;
+	public static ConfigElement<bool> EnableMouseWheelDialogue;
 	public static ConfigElement<int> AiProvider;
 	public static ConfigElement<KeyCode> AiPanelKey;
 	public static ConfigElement<string> AiBaseUrl;
@@ -554,6 +555,7 @@ public static class ConfigManager
 		GameFontScale = new ConfigElement<int>("GameFontScale", "游戏里全部文字的大小（百分比，菜单、按钮、数值、对白都放大，适合 Steam Deck 等小屏幕；放得太大有的字会挤出框）。100=原样，120=大两成", 100);
 		TextSpeed = new ConfigElement<int>("TextSpeed", "对白显示速度：剧情对白逐字出现的速度，标点后的停顿按同样比例变。0=0.5 倍，1=原速，2=2 倍，3=4 倍，4=立即显示", 1);
 		AutoPlayInterval = new ConfigElement<int>("AutoPlayInterval", "自动播放间隔：开着游戏的「自动」时，一句对白显示完后等多久翻下一句。0=原版（不管有没有显示完，固定每 8 秒点一下），1=4 秒，2=2 秒，3=1 秒，4=0 秒（显示完马上翻）", 0);
+		EnableMouseWheelDialogue = new ConfigElement<bool>("EnableMouseWheelDialogue", "鼠标滚轮推进对白：剧情里滚轮往下滚一格推进一句对白，往上滚打开回想；回想翻到最底下再往下滚就关上回想。true=开，false=关", false);
 		AiPanelKey = new ConfigElement<KeyCode>("AiPanelKey", "打开咖啡伴侣窗口的 AI 页并把光标放进输入框的热键（已经在 AI 页时再按一次关上）", KeyCode.F3);
 		AiProvider = new ConfigElement<int>("AiProvider", "AI 攻略用哪家服务商（序号，在咖啡伴侣窗口「AI」页里选）", 0);
 		AiBaseUrl = new ConfigElement<string>("AiBaseUrl", "AI 服务商的 API 地址（选服务商时自动填）", "https://api.deepseek.com/v1");

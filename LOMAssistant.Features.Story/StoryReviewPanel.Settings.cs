@@ -112,6 +112,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.FontScale, "对白文字大小（%）", 50f, 200f),
 				new SettingRow { Element = ConfigManager.TextSpeed, Name = "对白显示速度", Choices = LOMAssistant.Features.Extras.TextSpeed.SpeedNames, Dropdown = true },
 				new SettingRow { Element = ConfigManager.AutoPlayInterval, Name = "自动播放间隔", Choices = LOMAssistant.Features.Extras.TextSpeed.IntervalNames, Dropdown = true },
+				Row(ConfigManager.EnableMouseWheelDialogue, "鼠标滚轮推进对白"),
 				Row(ConfigManager.FlagNoticeSeconds, "上方提示停留（秒）", 0f, 30f),
 				Row(ConfigManager.TopNoticeScale, "上方提示文字大小（%）", 50f, 150f),
 				Row(ConfigManager.BranchPanelAutoHide, "分支小窗自动收起（秒）", 0f, 600f),

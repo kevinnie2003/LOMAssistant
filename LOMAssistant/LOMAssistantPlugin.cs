@@ -209,6 +209,7 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			EventPicker.Ensure(base.gameObject);
 			UiHider.Ensure(base.gameObject);
 			GamepadWheel.Ensure(base.gameObject);
+			LOMAssistant.Features.Extras.MouseWheelDialogue.Ensure(base.gameObject);
 			SkipReadToggle.Ensure(base.gameObject);
 			MapEventHints.Ensure(base.gameObject);
 			LOMAssistant.Features.Story.DeadlineReminder.Ensure(base.gameObject);
