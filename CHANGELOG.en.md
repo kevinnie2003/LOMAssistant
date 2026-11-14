@@ -2,6 +2,14 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.3 (2026-11-14)
+
+- **Mouse wheel for dialogue** (new, off by default): in story scenes, scrolling down one notch advances one line and scrolling up opens the backlog; at the bottom of the backlog, scroll down once more to close it.
+- **Portraits gallery page**: the current view can be exported as a PNG.
+- **Duels gallery page**: **Stats & skills** lets you tick buffs from skills or the story to preview the six stats with them applied, and lists their trigger conditions. The buttons moved below the portrait.
+- **AI settings**: the settings page no longer goes blank after switching providers.
+- **AI settings**: when the API key contains invalid characters, **Test connection** now says so right away instead of staying on "Testing…".
+
 ## 3.7.2 (2026-11-12)
 
 - **Gamepad wheel** (new, on by default): in story scenes and on the training map, hold LB to bring up a wheel; push the right stick toward an item and let go to run it (open Now, Story map, Stats or Settings, skip read dialogue, roll back, load or make a save-anywhere save). Let go of LB to close it.
