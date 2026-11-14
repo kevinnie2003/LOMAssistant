@@ -263,7 +263,9 @@ public partial class AnytimeSave : MonoBehaviour
 			bool mutate = !modScript && trimmed.StartsWith("statmodifymanager.") && !trimmed.StartsWith("statmodifymanager.Get");
 			mutate |= trimmed.StartsWith("runwait(statmodifymanager.");
 			mutate |= !modScript && Mutators.Any(n => trimmed.StartsWith(n + "("));
-			bool panelCall = Regex.IsMatch(trimmed, @"^runwait\((?:\w*panel|intropanel)\.Open\(");
+			// 介绍的模式 1 只展示面板；默认模式还会激活角色关系。
+			bool panelCall = Regex.IsMatch(trimmed, @"^runwait\((?:\w*panel|intropanel)\.Open\(")
+				|| Regex.IsMatch(trimmed, @"^runwait\s*\(\s*intropanel\.Show\s*\(\s*(?:""\w+""|'\w+')\s*,\s*1\s*\)\s*\)");
 			string transformed = Token.Replace(line, delegate (Match m)
 			{
 				if (!m.Groups["name"].Success) return m.Value;
