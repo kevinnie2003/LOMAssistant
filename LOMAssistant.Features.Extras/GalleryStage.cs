@@ -58,7 +58,7 @@ public sealed partial class Gallery
 	private readonly Dictionary<string, AsyncOperationHandle<Sprite>> _stageLoads = new Dictionary<string, AsyncOperationHandle<Sprite>>();
 	private Placed _selected;
 	private Figure _figure;
-	private bool _hideUi, _dragging, _backIsCg, _pickingBack, _panelLeft;
+	private bool _hideUi, _dragging, _backIsCg, _pickingBack, _panelLeft, _stageExporting;
 	private int _backIndex, _pickPage;
 	private Vector2 _grab, _figureScroll, _moodScroll;
 	private string _figureSearch = "";
@@ -198,7 +198,7 @@ public sealed partial class Gallery
 	{
 		_placed.Clear();
 		_selected = null;
-		_hideUi = _dragging = _pickingBack = false;
+		_hideUi = _dragging = _pickingBack = _stageExporting = false;
 		foreach (AsyncOperationHandle<Sprite> handle in _stageLoads.Values)
 		{
 			Addressables.Release(handle);
@@ -341,7 +341,7 @@ public sealed partial class Gallery
 		}
 		if (_hideUi)
 		{
-			if (Time.unscaledTime < _hintUntil)
+			if (!_stageExporting && Time.unscaledTime < _hintUntil)
 			{
 				var hint = new Rect(0f, Screen.height - S(48f), Screen.width, S(40f));
 				Fill(hint, new Color(0f, 0f, 0f, 0.6f));
@@ -362,6 +362,12 @@ public sealed partial class Gallery
 		Fill(panel, new Color(paper.r, paper.g, paper.b, 0.9f));
 		DrawHeader();
 		DrawStagePanel(panel);
+		if (Time.unscaledTime < _frameNoticeUntil)
+		{
+			var notice = new Rect(0f, screen.height - S(48f), screen.width, S(40f));
+			Fill(notice, new Color(0f, 0f, 0f, 0.62f));
+			GUI.Label(notice, _frameNotice, _hint);
+		}
 	}
 
 	private static void Outline(Rect rect, Color color)
@@ -446,7 +452,7 @@ public sealed partial class Gallery
 		y += S(42f);
 		string query = TextConverter.ToSimplified(_figureSearch.Trim());
 		List<Figure> figures = query.Length == 0 ? _figures : _figures.Where(f => TextConverter.ToSimplified(f.Name).Contains(query) || f.Folder.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
-		float listHeight = (panel.yMax - y - S(170f)) / 2f;
+		float listHeight = (panel.yMax - y - S(216f)) / 2f;
 		var figureBox = new Rect(x, y, width, listHeight);
 		if (figureBox.Contains(Event.current.mousePosition))
 		{
@@ -485,7 +491,7 @@ public sealed partial class Gallery
 		}
 		GUI.EndScrollView();
 
-		float bottom = panel.yMax - S(144f);
+		float bottom = panel.yMax - S(190f);
 		GUI.enabled = _selected != null;
 		if (GUI.Button(new Rect(x, bottom, third, S(40f)), TextConverter.ForDisplay("放大"), _track))
 		{
@@ -524,6 +530,80 @@ public sealed partial class Gallery
 		if (GUI.Button(new Rect(x + half + S(8f), bottom, half, S(40f)), TextConverter.ForDisplay("面板换边"), _track))
 		{
 			_panelLeft = !_panelLeft;
+		}
+		bottom += S(46f);
+		bool wasEnabled = GUI.enabled;
+		GUI.enabled = wasEnabled && !_stageExporting;
+		if (GUI.Button(new Rect(x, bottom, half, S(40f)), TextConverter.ForDisplay(_stageExporting ? "导出中…" : "导出 PNG"), _button))
+		{
+			ExportStagePng();
+		}
+		GUI.enabled = wasEnabled;
+		if (GUI.Button(new Rect(x + half + S(8f), bottom, half, S(40f)), TextConverter.ForDisplay("打开文件夹"), _button))
+		{
+			OpenExportFolder();
+		}
+	}
+
+	/// <summary>导出当前整张立绘画布，不含界面。截图期间临时藏起面板，完成后恢复原状态。</summary>
+	private void ExportStagePng()
+	{
+		if (_stageExporting)
+		{
+			return;
+		}
+		string name = "立绘_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".png";
+		string path;
+		try
+		{
+			string dir = ExportDirectory();
+			System.IO.Directory.CreateDirectory(dir);
+			path = System.IO.Path.Combine(dir, name);
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("[鉴赏] 立绘导出目录不可用: " + e.Message);
+			FrameNotice(TextConverter.ForDisplay("这个导出目录用不了，换一个"), 6f);
+			return;
+		}
+		_stageExporting = true;
+		_dragging = false;
+		bool restoreUi = !_hideUi;
+		_hideUi = true;
+		StartCoroutine(CaptureStagePng(path, name, restoreUi));
+	}
+
+	private System.Collections.IEnumerator CaptureStagePng(string path, string name, bool restoreUi)
+	{
+		yield return new WaitForEndOfFrame();
+		Texture2D image = null;
+		try
+		{
+			// 同一帧里关掉鉴赏或切页时，不把别的画面写成立绘导出。
+			if (!_open || _tab != StageTab)
+			{
+				yield break;
+			}
+			image = ScreenCapture.CaptureScreenshotAsTexture();
+			System.IO.File.WriteAllBytes(path, ImageConversion.EncodeToPNG(image));
+			FrameNotice(string.Format(TextConverter.ForDisplay("已导出：{0}"), name), 6f);
+		}
+		catch (Exception e)
+		{
+			FileLogger.LogWarning("[鉴赏] 导出立绘 PNG 失败: " + e);
+			FrameNotice(TextConverter.ForDisplay("导出失败，换个目录试试"), 6f);
+		}
+		finally
+		{
+			if (image != null)
+			{
+				Destroy(image);
+			}
+			if (_open && _tab == StageTab && restoreUi)
+			{
+				_hideUi = false;
+			}
+			_stageExporting = false;
 		}
 	}
 
