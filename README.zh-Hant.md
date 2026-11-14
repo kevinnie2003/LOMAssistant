@@ -328,10 +328,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io/), certifi
 
 ## 致謝
 
-本專案不是從零開發的，功能思路和部分程式碼來自以下作者：
-
-- **[活俠傳助手](https://mod.3dmgame.com/mod/256420)**：愛死（3DM：wowowo4567）。本專案的基礎，源碼由其發佈的插件反編譯而來後再修改。它又整合自 [骰子大師](https://mod.3dmgame.com/mod/210536)（Gmhaxx）、[多功能 Mod](https://mod.3dmgame.com/mod/210629)（Jim97）、[任意位置存檔](https://mod.3dmgame.com/mod/210679)（NothingNullNull）。
+- **[活俠傳助手](https://mod.3dmgame.com/mod/256420)**：愛死。本專案早期以它為起點，它又整合自 [骰子大師](https://mod.3dmgame.com/mod/210536)（Gmhaxx）、[多功能 Mod](https://mod.3dmgame.com/mod/210629)（Jim97）、[任意位置存檔](https://mod.3dmgame.com/mod/210679)（NothingNullNull）。
 - **部分功能思路**：參考 [趙活系統](https://github.com/Toufff/zhaohuo-system)（Toufff，MIT 許可）。
 - **AI 陪玩**：思路參考 [江湖夜話](https://github.com/Cpjjason/jianghu-yehua)（Cpjjason），它也是《活俠傳》的 AI Mod，能和遊戲裡的人物私下閒談，人物會送東西、指點武功、記得聊過的事（[B 站介紹影片](https://www.bilibili.com/video/BV1s2nC6pE83/)）；部分性格和小習慣參考了類腦社群夏呆呆的同人角色卡《活俠傳》。
-- 感謝 [lxsb222-spec](https://github.com/lxsb222-spec)（愛死）、[blakceyes](https://github.com/blakceyes)、[NEXTAltair](https://github.com/NEXTAltair)、[pluvivanto](https://github.com/pluvivanto)、[lockpick](https://github.com/lockpick)、[F1-ZX](https://github.com/F1-ZX) 提交的 PR，以及 [mahosalieri85-a11y](https://github.com/mahosalieri85-a11y)、[iampigcheng](https://github.com/iampigcheng) 提交的 issue。
+- 感謝 [lxsb222-spec](https://github.com/lxsb222-spec)、[blakceyes](https://github.com/blakceyes)、[NEXTAltair](https://github.com/NEXTAltair)、[pluvivanto](https://github.com/pluvivanto)、[lockpick](https://github.com/lockpick)、[F1-ZX](https://github.com/F1-ZX)、[mahosalieri85-a11y](https://github.com/mahosalieri85-a11y)、[iampigcheng](https://github.com/iampigcheng)、[bupt-lxc](https://github.com/bupt-lxc) 對本專案的貢獻。
 - 下載包附帶的 [BepInEx](https://github.com/BepInEx/BepInEx)、[UnityDoorstop](https://github.com/NeighTools/UnityDoorstop)、[Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) 按各自的許可證分發。
