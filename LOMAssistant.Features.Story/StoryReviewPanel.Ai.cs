@@ -147,10 +147,19 @@ public partial class StoryReviewPanel
 		AiStyles();
 		if (_aiPickedProvider >= 0 && Event.current.type == EventType.Layout)
 		{
-			// 每家各记各的 Key、改过的地址和模型名：换过去是那家上次填的，没填过就是默认值、Key 空着
-			AiProviderStore.Switch(_aiPickedProvider);
-			_aiTestStatus = "";
+			// 每家各记各的 Key、改过的地址和模型名：换过去是那家上次填的，没填过就是默认值、Key 空着。
+			// 先清掉再换：换的时候出了错只这一次没换成，不会每帧重试、把设置页一直卡成空白
+			int picked = _aiPickedProvider;
 			_aiPickedProvider = -1;
+			try
+			{
+				AiProviderStore.Switch(picked);
+			}
+			catch (System.Exception ex)
+			{
+				FileLogger.LogWarning("[AI] 换服务商失败: " + ex);
+			}
+			_aiTestStatus = "";
 			// 输入框的控件编号可能跟着变了，别让焦点落到另一个框里
 			GUIUtility.keyboardControl = 0;
 		}
