@@ -107,6 +107,7 @@ def extract(game):
                    Folders=folders, Note=d["_note"],
                    Six=[d[k] for k in ["Strength", "Stamina", "Dexterity", "Fist", "Sword", "MartialWeapon"]],
                    Four=[d[k] for k in ["Disposition", "Behaviour", "Karma", "Training"]],
+                   Mastery=[d[k] for k in ["StrategyLevel", "Buddhism", "Taoism", "Confucianism", "Xingyi"]],
                    Health=d["DefaultHealth"], MaxHealth=d["MaxHealth"], Energy=d["DefaultStamina"],
                    MaxEnergy=d["MaxStamina"], Talking=d["Talking"], Skills=sorted(talents,key=lambda t:t["Priority"]))
         stats.append(row)
@@ -166,6 +167,89 @@ def extract(game):
         levels.append(dict(Id=d["m_Name"], StatId=stat_id, Title=d["_desc"],
                            Difficulty=int(difficulty[1]) if difficulty else 0, Events=events))
 
+    # Extract numerical rules, rather than interpreting translated descriptions.
+    # Only read known unit layouts: unrelated VFX/action units can contain Unity
+    # managed-reference trees which are not needed for a read-only stat preview.
+    buffs = {}
+    mastery_units = {"B_Stat_005": 0, "B_Stat_014": 1, "B_Stat_015": 2,
+                     "B_Stat_016": 3, "B_Stat_017": 4}
+    mastery_rates = {"B_Stat_006": 0, "B_Stat_018": 1, "B_Stat_019": 2,
+                     "B_Stat_020": 3, "B_Stat_021": 4}
+    stat_units = {"B_Stat_001", "B_Stat_003", "B_Stat_004", "B_Stat_009",
+                  "B_Stat_012", "B_Stat_023", "B_Stat_025"}
+    link_units = {"C_Effect_002", "C_Effect_009", "C_Effect_013", "S_035", "S_040"}
+    special_units = {"S_013", "S_014", "S_043"}
+    for obj in types["CombatStateEffectScriptable"]:
+        d = read(obj)[1]
+        modifiers, unlocks = [], []
+        trigger_condition = {}
+        for ptr in d["_units"]:
+            unit = deref(obj, ptr)
+            base = unit.read(check_read=False)
+            cls = base.m_Script.deref().read().m_ClassName
+            if cls not in stat_units | mastery_units.keys() | mastery_rates.keys() | link_units | special_units:
+                continue
+            ud = read(unit)[1]
+            if cls in link_units:
+                if cls == "S_035":
+                    items = [ud["_applyItem"]]
+                    trigger_condition = dict(Condition="NoDebuff")
+                elif cls == "S_040":
+                    items = [ud["_applyStateItem"]]
+                    trigger_condition = dict(Condition="ComboRange", MinCombo=ud["_combo_1"], MaxCombo=ud["_combo_2"])
+                else:
+                    items = ud["_item"] if cls == "C_Effect_013" else [ud]
+                for item in items:
+                    if item.get("_castType", 1) == 1 and item.get("_castRate", 1) > 0:
+                        unlocks.append(effect(deref(unit, item["_effect"]))["Key"])
+                continue
+            if cls in special_units:
+                # These native scripts modify the source during BeforeAction.
+                # S_013 repeats the same modifier key on the source, so the native
+                # CombatStatItem keeps only the first (positive) dexterity bonus.
+                if cls == "S_013": targets, rate = [3], ud["_dex"]
+                elif cls == "S_014": targets, rate = [6], ud["_sword"]
+                else:
+                    targets, rate = list(range(1, 7)), ud["_rate"]
+                    trigger_condition = dict(Condition="HigherEnergy")
+                modifiers.append(dict(Kind="Percent", Targets=targets, Rate=rate, BeforeAction=True))
+                continue
+            if cls in mastery_units:
+                modifiers.append(dict(Kind="SetMastery", Source=mastery_units[cls], Value=ud["_level"]))
+                continue
+            if ud.get("_character", ud.get("_target", 1)) != 1:
+                continue  # A buff on the opponent never raises the portrait's panel.
+            targets = ud.get("_relationStat", ud.get("_statType", []))
+            if not isinstance(targets, list):
+                raise ValueError("Invalid stat targets: " + ud["m_Name"])
+            targets = [t for t in targets if 1 <= t <= 6]
+            if not targets:
+                continue
+            row = dict(Targets=targets, Rate=ud.get("_rate", 0))
+            if cls == "B_Stat_001": row.update(Kind="Stat", Sources=[ud["_statType"]])
+            elif cls == "B_Stat_012": row.update(Kind="Stats", Sources=ud["_statTypes"])
+            elif cls == "B_Stat_003": row.update(Kind="Percent")
+            elif cls == "B_Stat_009": row.update(Kind="Flat", Value=ud["_addValue"])
+            elif cls == "B_Stat_004":
+                row.update(Kind="Schools", Sources=[i for i,k in [(3,"_confucianism"),
+                    (1,"_buddhism"),(2,"_taoism"),(4,"_xingyi")] if ud[k]])
+            elif cls in mastery_rates: row.update(Kind="Mastery", Source=mastery_rates[cls])
+            elif cls == "B_Stat_023": row.update(Kind="Support", BeforeAction=True)
+            elif cls == "B_Stat_025": row.update(Kind="Health", BeforeAction=True)
+            else: raise ValueError("Unhandled stat unit: " + cls)
+            modifiers.append(row)
+        buffs[d["_key"]] = dict(Effect=effect(obj), Modifiers=modifiers,
+                                 Unlocks=list(dict.fromkeys(unlocks)), **trigger_condition)
+    # Keep rule setters and paths leading to a six-stat modifier. No game artwork
+    # or executable objects are embedded in the catalog.
+    keep = {k for k,v in buffs.items() if v["Modifiers"]}
+    while True:
+        more = {k for k,v in buffs.items() if any(child in keep for child in v["Unlocks"])}
+        if more <= keep: break
+        keep |= more
+    buffs = {k: dict(v, Unlocks=[child for child in v["Unlocks"] if child in keep])
+             for k,v in buffs.items() if k in keep}
+
     modes = {}
     for obj in types["CombatStateEffectScriptable"]:
         d = read(obj)[1]
@@ -197,7 +281,7 @@ def extract(game):
                         for prefix, suffix in [("PlayerStat/", "")] + [("StatLevel/", f"{n:02}") for n in range(1, 6)]]
     personality_labels = {key: locale[key] for key in personality_keys}
     result = dict(Schema=1, Sources=sources, Stats=sorted(stats,key=lambda r:r["Id"]),
-                  Levels=sorted(levels,key=lambda r:r["Id"]), Modes=modes, Radar=radar,
+                  Levels=sorted(levels,key=lambda r:r["Id"]), Modes=modes, Radar=radar, Buffs=buffs,
                   PersonalityBar=texture_resource("icon_back_bar_1"),
                   PersonalityPointer=texture_resource("icon_pointer_1"), PersonalityLabels=personality_labels)
     raw = json.dumps(result,ensure_ascii=False,separators=(",", ":")).encode("utf-8")

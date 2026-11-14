@@ -24,6 +24,8 @@ public sealed partial class Gallery
 	private void SelectFoeStats()
 	{
 		_foeEncounterScroll = _foeStatsScroll = Vector2.zero;
+		_foeBuffEncounter = null;
+		_foeEnabledBuffs.Clear();
 		_foePickEncounter = false;
 		_foeEncounterSearch = "";
 		_foeEncounters.Clear();
@@ -86,6 +88,7 @@ public sealed partial class Gallery
 		_foeStatsSkin.verticalScrollbarThumb = thumb;
 		_foeStatsSkin.verticalScrollbarUpButton = new GUIStyle { fixedWidth = S(10f), fixedHeight = 0f };
 		_foeStatsSkin.verticalScrollbarDownButton = new GUIStyle { fixedWidth = S(10f), fixedHeight = 0f };
+		FoeBuffStyles();
 	}
 
 	private static string DuelText(string value) => TextConverter.ForDisplay(TextConverter.ToSimplified(value ?? ""));
@@ -252,16 +255,21 @@ public sealed partial class Gallery
 		else
 		{
 			DuelProfile profile = GalleryDuelCatalog.Instance.Profile(_foeEncounter.StatId);
+			SelectFoeBuffs(profile);
 			bool sideBySide = content.width >= S(620f);
-			float chartWidth = sideBySide ? Mathf.Min(S(370f), content.width * 0.52f) : Mathf.Min(S(400f), content.width - S(24f));
+			float columnGap = S(24f);
+			float chartWidth = sideBySide ? Mathf.Min(S(370f), (content.width - columnGap) * 0.52f) : Mathf.Min(S(400f), content.width - S(24f));
 			float chartHeight = chartWidth * 500f / 440f;
 			if (sideBySide) GUILayout.BeginHorizontal();
 			GUILayout.BeginVertical(GUILayout.Width(chartWidth));
-			DrawFoeRadar(profile.Six, chartWidth, chartHeight);
+			GUILayout.Label(F(_foeEnabledBuffs.Count > 0 ? "增益后面板" : "基础面板"), _foeStatsSubheading);
+			DrawFoeRadar(GalleryDuelBuffPreview.Calculate(profile, _foeBuffOptions, _foeEnabledBuffs, _foeBuffHealth, _foeBuffSupport), chartWidth, chartHeight);
 			DrawFoePersonality(profile, chartWidth);
 			GUILayout.EndVertical();
+			GUILayout.Space(sideBySide ? columnGap : S(16f));
 			GUILayout.BeginVertical();
 			GUILayout.Label(TextConverter.ForDisplay("角色技能"), _foeStatsHeading);
+			DrawFoeBuffControls(profile);
 			if (profile.Skills.Count == 0) GUILayout.Label(TextConverter.ForDisplay("无固有技能"), _foeWrapped);
 			foreach (DuelSkill skill in profile.Skills)
 			{
@@ -270,7 +278,13 @@ public sealed partial class Gallery
 				if (skill.Level <= 0) title += " · " + TextConverter.ForDisplay("未启用");
 				GUILayout.Label(title, _foeStatsSubheading);
 				GUILayout.Label(DuelLocalized("PlayerTalent/Desc/" + skill.Id, skill.Description), _foeWrapped);
+				DrawFoeBuffOptions(skill);
 				GUILayout.Space(S(6f));
+			}
+			if (_foeBuffOptions.Any(o => o.Skill == null))
+			{
+				GUILayout.Label(F("剧情增益"), _foeStatsSubheading);
+				DrawFoeBuffOptions(null);
 			}
 			GUILayout.EndVertical();
 			if (sideBySide) GUILayout.EndHorizontal();

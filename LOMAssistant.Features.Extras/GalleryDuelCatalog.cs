@@ -17,6 +17,7 @@ internal sealed class GalleryDuelCatalog
 	public DuelRadarResource Radar;
 	public DuelRadarResource PersonalityBar, PersonalityPointer;
 	public Dictionary<string, string> PersonalityLabels;
+	public Dictionary<string, DuelBuff> Buffs;
 	private Dictionary<string, DuelProfile> _byId;
 	private static GalleryDuelCatalog _instance;
 	internal static GalleryDuelCatalog Instance => _instance ??= Load();
@@ -28,12 +29,15 @@ internal sealed class GalleryDuelCatalog
 		using var gzip = new GZipStream(resource, CompressionMode.Decompress);
 		using var reader = new StreamReader(gzip);
 		var catalog = JsonConvert.DeserializeObject<GalleryDuelCatalog>(reader.ReadToEnd());
-		if (catalog?.Schema != 1 || catalog.Stats == null || catalog.Levels == null)
+		if (catalog?.Schema != 1 || catalog.Stats == null || catalog.Levels == null || catalog.Buffs == null)
 			throw new InvalidDataException("Invalid duel catalog");
 		catalog._byId = catalog.Stats.ToDictionary(s => s.Id, StringComparer.Ordinal);
-		if (catalog.Stats.Any(s => s.Six == null || s.Six.Length != 6 || s.Four == null || s.Four.Length != 4 || s.Folders == null || s.Skills == null)
+		if (catalog.Stats.Any(s => s.Six == null || s.Six.Length != 6 || s.Four == null || s.Four.Length != 4 || s.Folders == null || s.Skills == null || s.Mastery == null || s.Mastery.Length != 5)
 			|| catalog.Levels.Any(l => !catalog._byId.ContainsKey(l.StatId)))
 			throw new InvalidDataException("Invalid duel profile reference");
+		if (catalog.Buffs.Any(pair => pair.Value?.Effect?.Key != pair.Key || pair.Value.Modifiers == null
+			|| pair.Value.Unlocks == null || pair.Value.Unlocks.Any(key => !catalog.Buffs.ContainsKey(key))))
+			throw new InvalidDataException("Invalid duel buff reference");
 		return catalog;
 	}
 
@@ -66,6 +70,8 @@ internal sealed class DuelProfile
 	public int[] Six;
 	// 性情、处世、道德、修养：每份敌方配置独立取值，与主角存档无关。
 	public int[] Four;
+	// 战术、释学、道学、儒学、形意；天赋可能在开场覆盖它们。
+	public int[] Mastery = new int[5];
 	public int Health, MaxHealth, Energy, MaxEnergy, Talking;
 	public List<DuelSkill> Skills;
 }
@@ -96,4 +102,23 @@ internal sealed class DuelEvent
 	public int Target;
 	public bool Remove;
 	public DuelEffect Effect;
+}
+
+/// <summary>游戏增益的数值规则与自身触发状态，不运行战斗事件。</summary>
+internal sealed class DuelBuff
+{
+	public DuelEffect Effect;
+	public List<DuelBuffModifier> Modifiers;
+	public List<string> Unlocks;
+	public string Condition;
+	public int MinCombo, MaxCombo;
+}
+
+internal sealed class DuelBuffModifier
+{
+	public string Kind;
+	public int[] Targets = Array.Empty<int>(), Sources = Array.Empty<int>();
+	public int Source, Value;
+	public float Rate;
+	public bool BeforeAction;
 }

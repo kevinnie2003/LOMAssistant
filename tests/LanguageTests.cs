@@ -13,6 +13,21 @@ namespace LOMAssistant.Tests;
 /// </summary>
 public static partial class Tests
 {
+	public static void TestGalleryBuffPreviewLanguages()
+	{
+		string[] keys = { "启用增益", "触发后：{0}", "勾选增益，预览生效后的六维。", "预览血量 {0}%",
+			"有同伴支援", "恢复基础面板", "增益后面板", "基础面板", "剧情增益", "生效条件：气力高于对手",
+			"触发条件：无负面状态", "触发条件：连击数大于 {0} 且不超过 {1}", "剧情条件：{0}", "需满足本场剧情的触发条件" };
+		foreach (string language in new[] { UiText.Korean, UiText.Japanese, UiText.English })
+			foreach (string key in keys)
+			{
+				string translated = UiText.Translate(key, language);
+				Assert(translated != key && !string.IsNullOrWhiteSpace(translated), "Missing buff UI translation: " + language + "/" + key);
+				Assert(Regex.Matches(key, @"\{\d+\}").Cast<Match>().Select(m => m.Value).OrderBy(v => v)
+					.SequenceEqual(Regex.Matches(translated, @"\{\d+\}").Cast<Match>().Select(m => m.Value).OrderBy(v => v)), "Buff UI format placeholder lost");
+			}
+	}
+
 	public static void TestGalleryPersonalityTranslations()
 	{
 		foreach (string language in new[] { LOMAssistant.UiText.Korean, LOMAssistant.UiText.Japanese, LOMAssistant.UiText.English })
