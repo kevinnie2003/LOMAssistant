@@ -105,7 +105,7 @@ internal static class AiProviderStore
 			}
 			Directory.CreateDirectory(AiSessions.Folder);
 			string tmp = StorePath + ".tmp";
-			File.WriteAllText(tmp, all.ToString(Formatting.Indented), new UTF8Encoding(false));
+			File.WriteAllText(tmp, all.ToString(Formatting.Indented, Array.Empty<JsonConverter>()), new UTF8Encoding(false));
 			if (File.Exists(StorePath))
 			{
 				File.Delete(StorePath);
