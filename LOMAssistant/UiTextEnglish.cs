@@ -437,6 +437,7 @@ public static class UiTextEnglish
 		["（AI 没有说话）"] = "(The AI said nothing)",
 		["没有填 API 地址"] = "No API URL",
 		["没有填模型名"] = "No model name",
+		["API Key 含有无效字符或为空，请重新复制服务商提供的 Key"] = "The API key is empty or contains invalid characters. Copy it again from your provider.",
 		["连不上服务商，检查网络和 API 地址"] = "Can't reach the provider; check your network and the API URL",
 		["看不懂服务商的回复"] = "Couldn't read the provider's reply",
 		["服务商没有返回内容"] = "The provider returned nothing",
