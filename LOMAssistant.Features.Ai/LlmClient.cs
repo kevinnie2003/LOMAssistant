@@ -164,20 +164,28 @@ public static class LlmClient
 				// 流式不设总时长（思考久的模型、长回答几分钟很正常），改成下面「多久没收到数据」；整段接收给 5 分钟
 				timeout = stream != null ? 0 : 300
 			};
-			request.SetRequestHeader("Content-Type", "application/json");
-			if (provider.Claude)
-			{
-				request.SetRequestHeader("x-api-key", key ?? "");
-				request.SetRequestHeader("anthropic-version", "2023-06-01");
-			}
-			else if (!string.IsNullOrEmpty(key))
-			{
-				request.SetRequestHeader("Authorization", "Bearer " + key.Trim());
-			}
-			_current = request;
-			bool stalled = false;
 			using (request)
 			{
+				request.SetRequestHeader("Content-Type", "application/json");
+				try
+				{
+					if (provider.Claude)
+					{
+						request.SetRequestHeader("x-api-key", key ?? "");
+						request.SetRequestHeader("anthropic-version", "2023-06-01");
+					}
+					else if (!string.IsNullOrEmpty(key))
+					{
+						request.SetRequestHeader("Authorization", "Bearer " + key.Trim());
+					}
+				}
+				catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+				{
+					done(new LlmReply { Error = "API Key 含有无效字符或为空，请重新复制服务商提供的 Key" });
+					yield break;
+				}
+				_current = request;
+				bool stalled = false;
 				UnityWebRequestAsyncOperation op = request.SendWebRequest();
 				float last = UnityEngine.Time.realtimeSinceStartup;
 				long got = 0;
