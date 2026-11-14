@@ -552,7 +552,7 @@ public sealed partial class Gallery
 		{
 			return;
 		}
-		string name = "立绘_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".png";
+		string name = "Portrait_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".png";
 		string path;
 		try
 		{
