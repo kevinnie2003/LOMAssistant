@@ -126,14 +126,15 @@ public static class TextConverter
 			int at = list.FindIndex(k => k.Length < key.Length);
 			list.Insert(at < 0 ? list.Count : at, key);
 			_hantCache.Clear();
+			UiText.ClearTraditionalCache();
 		}
 	}
 
 	/// <summary>
-	/// 转成繁体。逐段看连续的汉字：
+	/// 转成繁体（不查界面表；界面文字走 ForDisplay → UiText.TranslateTraditional）。逐段看连续的汉字：
 	/// 游戏原文记过的段（含截短加「…」的对白开头）直接用原文；本来就是繁体的段（游戏直接给的繁体）原样留着；
-	/// 剩下的是 Mod 自己的简体字，逐字转换以后再按 UiTraditional 换成繁中习惯（設定、介面、視窗……）。
-	/// 用语表只管 Mod 自己的字：游戏原文里的「支持」「回復」「保存」不会被换掉。
+	/// 剩下的逐字转换以后再按 UiTraditional 换成繁中习惯（設定、介面、視窗……）。
+	/// 用语表只管剩下的字：游戏原文里的「支持」「回復」「保存」不会被换掉。
 	/// </summary>
 	public static string ToTraditional(string text)
 	{
@@ -149,14 +150,35 @@ public static class TextConverter
 		{
 			_hantCache.Clear();
 		}
-		var output = new System.Text.StringBuilder(text.Length);
-		var own = new System.Text.StringBuilder();
+		return _hantCache[text] = ToTraditional(text, null);
+	}
+
+	/// <summary>留出来的文字先换成一个私用区字符占位（逐字转换和词表都不碰它），最后再放回去。</summary>
+	private const char KeepBase = '';
+
+	/// <summary>
+	/// 转成繁体，words 是界面词的繁中译文（UiText 的繁中表，可为 null）：
+	/// 游戏原文记过的段、本来就是繁体的段原样留出来；再把界面词换成表里人工翻的繁中；最后剩下的才逐字转换。
+	/// </summary>
+	internal static string ToTraditional(string text, IEnumerable<(System.Text.RegularExpressions.Regex Pattern, System.Text.RegularExpressions.MatchEvaluator Replace)> words)
+	{
+		if (string.IsNullOrEmpty(text))
+		{
+			return text;
+		}
+		var kept = new List<string>();
+		string Keep(string value)
+		{
+			kept.Add(value);
+			return ((char)(KeepBase + kept.Count - 1)).ToString();
+		}
+		var rest = new System.Text.StringBuilder(text.Length);
 		int i = 0;
 		while (i < text.Length)
 		{
 			if (!IsHan(text[i]))
 			{
-				own.Append(text[i++]);
+				rest.Append(text[i++]);
 				continue;
 			}
 			int start = i;
@@ -168,19 +190,30 @@ public static class TextConverter
 			string original = OriginalOf(run, i == text.Length || text[i] == '…' || text[i] == '.');
 			if (original == null && run != Cached(_cache, run, "zh-CN", LCMAP_SIMPLIFIED_CHINESE))
 			{
-				original = run; // 已经是繁体（游戏直接给的），不再转
+				original = run; // 已经是繁体（游戏直接给的，或表里的繁中译文），不再转
 			}
-			if (original == null)
-			{
-				own.Append(run);
-				continue;
-			}
-			output.Append(ConvertOwn(own.ToString()));
-			own.Clear();
-			output.Append(original);
+			rest.Append(original == null ? run : Keep(original));
 		}
-		output.Append(ConvertOwn(own.ToString()));
-		return _hantCache[text] = output.ToString();
+		string own = rest.ToString();
+		if (words != null)
+		{
+			foreach (var (pattern, replace) in words)
+			{
+				own = pattern.Replace(own, m => Keep(replace(m)));
+			}
+		}
+		own = ConvertOwn(own);
+		if (kept.Count == 0)
+		{
+			return own;
+		}
+		var output = new System.Text.StringBuilder(own.Length);
+		foreach (char c in own)
+		{
+			int k = c - KeepBase;
+			output.Append(k >= 0 && k < kept.Count ? kept[k] : c.ToString());
+		}
+		return output.ToString();
 	}
 
 	/// <summary>这段汉字的游戏原文：整段记过的；或者这段在截断处（后面是「…」或到头了），是记过的某段的开头。都不是时为 null。</summary>
@@ -326,7 +359,7 @@ public static class TextConverter
 		string language = DisplayLanguage;
 		if (language == "ChineseTraditional")
 		{
-			return ToTraditional(text);
+			return UiText.TranslateTraditional(text);
 		}
 		return language is UiText.Korean or UiText.Japanese or UiText.English ? UiText.Translate(text, language) : text;
 	}

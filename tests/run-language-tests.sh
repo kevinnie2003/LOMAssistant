@@ -13,7 +13,7 @@ mkdir -p bin/language-tests
 "$DOTNET" "$CSC" -nologo -noconfig -nostdlib+ -target:exe -platform:x64 -langversion:12 -optimize+ -nowarn:CS0649,CS0414 \
 	-out:bin/language-tests/LOMAssistant.LanguageTests.exe \
 	-r:"$FW/mscorlib.dll" -r:"$FW/System.dll" -r:"$FW/System.Core.dll" \
-	LOMAssistant/UiText.cs LOMAssistant/UiTextEnglish.cs LOMAssistant/UiDescriptions.cs LOMAssistant/UiTraditional.cs \
+	LOMAssistant/UiText.cs LOMAssistant/UiTextEnglish.cs LOMAssistant/UiTextTraditional.cs LOMAssistant/UiDescriptions.cs LOMAssistant/UiTraditional.cs \
 	LOMAssistant/UiConditionNames.cs LOMAssistant/UiEventNames.cs LOMAssistant/UiFlagNames.cs LOMAssistant/UiQuestNames.cs \
 	LOMAssistant/TextConverter.cs tests/ci/GameStubs.cs tests/Program.cs tests/LanguageTests.cs
 ./bin/language-tests/LOMAssistant.LanguageTests.exe

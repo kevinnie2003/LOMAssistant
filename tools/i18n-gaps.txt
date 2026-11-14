@@ -70,7 +70,6 @@ English	回梦仙香
 English	国
 English	国国
 English	地图标题：
-English	处世
 English	夏灵犀
 English	大师兄涂鸦
 English	大焦热神功
@@ -142,7 +141,6 @@ English	掌门人
 English	接骨草
 English	掷石问天
 English	数值_
-English	旁白
 English	旗标_
 English	无色广场
 English	日本語
@@ -358,7 +356,6 @@ Japanese	挑战花中仙
 Japanese	掌门人
 Japanese	接骨草
 Japanese	数值_
-Japanese	旁白
 Japanese	旗标_
 Japanese	日本語
 Japanese	时间_
@@ -463,7 +460,6 @@ Korean	常数_
 Korean	感情：
 Korean	战斗中
 Korean	数值_
-Korean	旁白
 Korean	旗标_
 Korean	日本語
 Korean	最近的剧本：
@@ -503,3 +499,75 @@ Korean	，改后重启游戏生效
 Korean	：现在 
 Korean	；存档文件本身能读
 Korean	；存档文件读不出来（{0}），标成无法读取
+Traditional	 就会触发）
+Traditional	<color=#A3302A><b>正常游玩不建议这样做。</b></color>中间的剧情没有真的演过，只按剧本把一路上会设的旗标、剧情记录、任务进度、物品、好感和数值补上，
+Traditional	>剩 
+Traditional	>已过期 
+Traditional	>当前版本</color>
+Traditional	>条件没满足</color>
+Traditional	{0} 需{2}{3} → 当前{1}
+Traditional	{0}年{1}月{2}
+Traditional	{0}月{1}
+Traditional	」不是数字）
+Traditional	」的新值「
+Traditional	」相关的设置项。
+Traditional	」看不懂）
+Traditional	」触发）
+Traditional	【攻略提示】
+Traditional	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
+Traditional	上中下
+Traditional	不明
+Traditional	傳奇_001
+Traditional	养成地图上
+Traditional	去处
+Traditional	咖啡伴侣已于 {0} 导入 LOM_SaveSlotMemo 的备注（Save_NNN.memo.txt）：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
+Traditional	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
+Traditional	国
+Traditional	国国
+Traditional	地图标题：
+Traditional	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+Traditional	存档备注：已从 LOM_SaveSlotMemo 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+Traditional	对白：
+Traditional	常数_
+Traditional	感情：
+Traditional	战斗中
+Traditional	数值_
+Traditional	旗标_
+Traditional	日本語
+Traditional	最近的剧本：
+Traditional	有些状态补不全，之后可能出现对话对不上、分支判断出错，甚至卡住。跳之前会先存一份随时存档，跳过去以后可以回到跳转前。
+Traditional	标记_
+Traditional	正在掷骰
+Traditional	正在选的选项：
+Traditional	没有「
+Traditional	活侠传传奇_
+Traditional	游戏日期：
+Traditional	玩家在标题画面，还没读档进游戏。
+Traditional	玩家还没读档进游戏
+Traditional	现在在：
+Traditional	空过（剧情 {0}）：{1}年{2}月{3} 消耗 {4} 次行动，剩余 {5}。
+Traditional	第{0}年{1}月{2}
+Traditional	简体中文
+Traditional	繁體中文
+Traditional	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
+Traditional	这张地图上的场所：
+Traditional	这段剧情的剧本：
+Traditional	进行中的支线：\n
+Traditional	锁住选项
+Traditional	间距 {0} -> {1}，controlHeight={2}，
+Traditional	（从场所判断玩家在唐门还是崆峒等地，不要只凭身份猜；任务触发的场所不在这里面，就是不在这张地图上，要先回到那里）\n
+Traditional	（任务 
+Traditional	（可以触发）
+Traditional	（可选：
+Traditional	（在「
+Traditional	（开 / 关）
+Traditional	（数值页和设置页里都没有这一项）
+Traditional	（新值「
+Traditional	（条件已满足，去 
+Traditional	（用 script 查它，按选项文字对上分岔）\n
+Traditional	（设置项「
+Traditional	，各档：
+Traditional	，改后重启游戏生效
+Traditional	：现在 
+Traditional	；存档文件本身能读
+Traditional	；存档文件读不出来（{0}），标成无法读取

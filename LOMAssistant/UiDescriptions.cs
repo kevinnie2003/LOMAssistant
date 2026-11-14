@@ -11,7 +11,8 @@ public static class UiDescriptions
 		{
 			return null;
 		}
-		return language == UiText.Korean ? row[0] : language == UiText.Japanese ? row[1] : language == UiText.English && UiTextEnglish.Descriptions.TryGetValue(key, out string english) ? english : null;
+		return language == UiText.Korean ? row[0] : language == UiText.Japanese ? row[1] : language == UiText.English && UiTextEnglish.Descriptions.TryGetValue(key, out string english) ? english
+			: language == "ChineseTraditional" && UiTextTraditional.Descriptions.TryGetValue(key, out string traditional) ? traditional : null;
 	}
 
 	// 配置项名字：韩语、日语

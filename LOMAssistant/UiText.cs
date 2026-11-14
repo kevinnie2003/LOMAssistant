@@ -24,10 +24,20 @@ public static class UiText
 			return text;
 		}
 		Lang lang = language == Korean ? KoreanLang : language == Japanese ? JapaneseLang : language == English ? EnglishLang : null;
-		if (lang == null)
-		{
-			return text;
-		}
+		return lang == null ? text : Run(text, lang);
+	}
+
+	/// <summary>
+	/// 繁體中文：和韩语、日语、英语一样按表换成人工翻的繁中（UiTextTraditional），不靠一键简转繁；
+	/// 表里没有的（游戏的名字、对白拼进来的），游戏的字用游戏原文，剩下的才逐字转换（TextConverter.ToTraditional）。
+	/// </summary>
+	internal static string TranslateTraditional(string text) => string.IsNullOrEmpty(text) ? text : Run(text, TraditionalLang);
+
+	/// <summary>记下新的游戏原文后，繁中已换好的结果可能过时（之前没原文、逐字转换的），清掉重来。</summary>
+	internal static void ClearTraditionalCache() => _traditional?.Cache.Clear();
+
+	private static string Run(string text, Lang lang)
+	{
 		if (lang.Cache.TryGetValue(text, out string done))
 		{
 			return done;
@@ -91,6 +101,11 @@ public static class UiText
 		if (!Han.IsMatch(text))
 		{
 			return text;
+		}
+		if (lang.Traditional)
+		{
+			// 繁中：游戏原文先留出来，界面词换成表里的繁中，剩下的才逐字转换
+			return TextConverter.ToTraditional(text, lang.Names.Concat(lang.Words));
 		}
 		foreach (var (pattern, replace) in lang.Names.Concat(lang.Words))
 		{
@@ -206,17 +221,17 @@ public static class UiText
 	// 选项结果（LuaParser）拼出来的动作说明里的词：「设置X=1」「X好感 +3」「天赋X lv1」「丢弃X」「X向心力 +1」「后续: …」「对决」「混战」，
 	// 和条件里的当前值「→ 当前1」（按「 → 」切开后单独剩下「当前1」，表里的「→ 当前」对不上）。
 	// 只在这种格式里换（「设置页」不换）。对应语言为 null 的照旧显示中文
-	private static readonly (string Pattern, string Korean, string Japanese, string English)[] ActionWords =
+	private static readonly (string Pattern, string Korean, string Japanese, string English, string Traditional)[] ActionWords =
 	{
-		("设置(?=[^、；]*?(?:=| )-?\\d)", "설정 ", "セット ", "Set "),
-		("丢弃", "버림 ", "破棄 ", "Discard "),
-		("好感 (?=[+-]?\\d)", " 호감 ", " 好感度 ", " affection "),
-		("天赋(?=[^、；]+ lv\\d)", "천부 ", "天賦 ", "Talent "),
-		("向心力 (?=[+-]?\\d)", " 단합 ", " 団結 ", " cohesion "),
-		("后续: ", "이어서: ", "分岐先で: ", "then: "),
-		("对决", "결투", "決闘", "Duel"),
-		("混战", "난전", "乱戦", "Melee"),
-		("当前(?=-?\\d)", "현재 ", "現在 ", "now "),
+		("设置(?=[^、；]*?(?:=| )-?\\d)", "설정 ", "セット ", "Set ", "設定"),
+		("丢弃", "버림 ", "破棄 ", "Discard ", "丟棄"),
+		("好感 (?=[+-]?\\d)", " 호감 ", " 好感度 ", " affection ", "好感 "),
+		("天赋(?=[^、；]+ lv\\d)", "천부 ", "天賦 ", "Talent ", "天賦"),
+		("向心力 (?=[+-]?\\d)", " 단합 ", " 団結 ", " cohesion ", "向心力 "),
+		("后续: ", "이어서: ", "分岐先で: ", "then: ", "後續: "),
+		("对决", "결투", "決闘", "Duel", "對決"),
+		("混战", "난전", "乱戦", "Melee", "混戰"),
+		("当前(?=-?\\d)", "현재 ", "現在 ", "now ", "當前"),
 	};
 
 	private class Lang
@@ -228,9 +243,12 @@ public static class UiText
 		public readonly Dictionary<string, string> Cache = new Dictionary<string, string>();
 		// 英语：英文补丁（velvetcakes）的翻译文件，查来自游戏的文字；本 Mod 自己的表优先
 		public readonly Dictionary<string, string> Game;
+		// 繁中（第 4 列，译文在 UiTextTraditional）：查不到的部分不留简体，交给 TextConverter 用游戏原文或逐字转换
+		public readonly bool Traditional;
 
 		public Lang(int column)
 		{
+			Traditional = column == 4;
 			Game = column == 3 ? XUnityTranslations.Load() : new Dictionary<string, string>();
 			string[][] conditions = NameColumn(UiConditionNames.Table, column);
 			if (conditions.Length > 0)
@@ -242,19 +260,23 @@ public static class UiText
 			{
 				Names.Add(FlagNames(flags));
 			}
-			Words.Add(ChineseNumeralDates);
-			foreach (var (pattern, korean, japanese, english) in ActionWords)
+			// 繁中的日期写法和简体一样，不换
+			if (!Traditional)
 			{
-				string text = column == 1 ? korean : column == 2 ? japanese : english;
+				Words.Add(ChineseNumeralDates);
+			}
+			foreach (var (pattern, korean, japanese, english, traditional) in ActionWords)
+			{
+				string text = column == 1 ? korean : column == 2 ? japanese : column == 3 ? english : traditional;
 				if (text != null)
 				{
 					Words.Add((new Regex(pattern), _ => text));
 				}
 			}
-			Words.AddRange(column == 1 ? KoreanDates : column == 2 ? JapaneseDates : EnglishDates);
-			foreach (string[] row in (column == 3 ? UiTextEnglish.Terms.Keys.Select(k => new[] { k }) : Terms).OrderByDescending(r => r[0].Length))
+			Words.AddRange(column == 1 ? KoreanDates : column == 2 ? JapaneseDates : column == 3 ? EnglishDates : new (Regex, MatchEvaluator)[0]);
+			foreach (string[] row in (column >= 3 ? Dictionary(column, UiTextEnglish.Terms, UiTextTraditional.Terms).Keys.Select(k => new[] { k }) : Terms).OrderByDescending(r => r[0].Length))
 			{
-				string text = Column(row, column, UiTextEnglish.Terms);
+				string text = Column(row, column, Dictionary(column, UiTextEnglish.Terms, UiTextTraditional.Terms));
 				if (text == null)
 				{
 					continue;
@@ -284,9 +306,9 @@ public static class UiText
 					}
 				}
 			}
-			foreach (string[] row in (column == 3 ? UiTextEnglish.Table.Keys.Select(k => new[] { k }) : Table).OrderByDescending(r => r[0].Length))
+			foreach (string[] row in (column >= 3 ? Dictionary(column, UiTextEnglish.Table, UiTextTraditional.Table).Keys.Select(k => new[] { k }) : Table).OrderByDescending(r => r[0].Length))
 			{
-				string zh = row[0], text = Column(row, column, UiTextEnglish.Table);
+				string zh = row[0], text = Column(row, column, Dictionary(column, UiTextEnglish.Table, UiTextTraditional.Table));
 				if (text == null)
 				{
 					continue;
@@ -323,16 +345,20 @@ public static class UiText
 
 	private static string[][] NameColumn(string[][] table, int column) => table.Where(row => Column(row, column) != null).Select(row => new[] { row[0], row[column] }).ToArray();
 
-	// 通用界面表的英语仍从 UiTextEnglish 按中文查，保留现有词典和优先级。
-	private static string Column(string[] row, int column, Dictionary<string, string> english)
+	// 通用界面表的英语从 UiTextEnglish、繁中从 UiTextTraditional 按中文查，保留现有词典和优先级。
+	private static string Column(string[] row, int column, Dictionary<string, string> table)
 	{
-		return column < 3 ? Column(row, column) : english.TryGetValue(row[0], out string text) ? text : null;
+		return column < 3 ? Column(row, column) : table.TryGetValue(row[0], out string text) ? text : null;
 	}
 
-	private static Lang _korean, _japanese, _english;
+	private static Dictionary<string, string> Dictionary(int column, Dictionary<string, string> english, Dictionary<string, string> traditional) =>
+		column == 4 ? traditional : english;
+
+	private static Lang _korean, _japanese, _english, _traditional;
 	private static Lang KoreanLang => _korean ??= new Lang(1);
 	private static Lang JapaneseLang => _japanese ??= new Lang(2);
 	private static Lang EnglishLang => _english ??= new Lang(3);
+	private static Lang TraditionalLang => _traditional ??= new Lang(4);
 
 	// 窗口里截短任务名用的长度（Short(title, n)）
 	private static readonly int[] ShortLengths = { 9, 10, 14, 16, 18 };

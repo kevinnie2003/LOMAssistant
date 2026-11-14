@@ -4,8 +4,8 @@
     python tools/check-i18n.py            exit 1 if anything is missing
     python tools/check-i18n.py --update   rewrite tools/i18n-gaps.txt with today's known gaps
 
-Covers: every setting name has Korean, Japanese and English; every config option has a description in all
-three; table rows have matching placeholders; every table row has every language, and every Chinese string
+Covers: every setting name has Korean, Japanese, English and Traditional Chinese; every config option has a
+description in all four; table rows have matching placeholders; every table row has every language, and every Chinese string
 in the code has a translation, interpolated ones included; the READMEs list the same features; CHANGELOGs list
 the same versions; version numbers agree.
 
@@ -30,7 +30,7 @@ DESCRIPTION = re.compile(r'\{\s*"(\w+)",\s*new\[\]\s*\{\s*' + STRING + r'\s*,\s*
 HOLE = re.compile(r'\{\d+\}')
 GAPS = os.path.join('tools', 'i18n-gaps.txt')
 # 不显示给玩家：日志、自测、诊断；文字表本身；AI 提示词（自带四语言，由 AiTests 查）
-SKIP_FILES = re.compile(r'^(?:Ui(?:Text|TextEnglish|Descriptions|Traditional|ConditionNames|EventNames|FlagNames|QuestNames)\.cs'
+SKIP_FILES = re.compile(r'^(?:Ui(?:Text|TextEnglish|TextTraditional|Descriptions|Traditional|ConditionNames|EventNames|FlagNames|QuestNames)\.cs'
                         r'|GalleryMusic\.cs|GalleryMoods\.cs|GalleryFoeNames\.cs|Pinyin.*|SelfTest.*|Diagnostics.*|FileLogger\.cs|BattleLogPatch\.cs|StoryWorkbenchCompat\.cs'
                         r'|Ai(?:Personas|Prompts|Knowledge|Items|Analysis|Eval|Debug|Chat).*)$')
 NOT_SHOWN = re.compile(r'FileLogger\.|LogInfo\(|LogWarning\(|LogError\(|Debug\.Log|\bthrow\b|ConfigElement<|new Regex\(|Console\.Write')
@@ -70,6 +70,11 @@ def english():
     return {name: ENTRY.findall(section(text, name)) for name in ('Terms', 'Table', 'Descriptions')}
 
 
+def traditional():
+    text = read('LOMAssistant', 'UiTextTraditional.cs')
+    return {name: ENTRY.findall(section(text, name)) for name in ('Terms', 'Table', 'Descriptions')}
+
+
 def check_tables(problems):
     rows = tables()
     for name, table in rows.items():
@@ -90,6 +95,15 @@ def check_tables(problems):
             seen.add(key)
             if holes(value) != holes(key):
                 problems.append(f'UiTextEnglish.{name}: placeholders differ: {key} -> {value}')
+    hant = traditional()
+    for name in ('Terms', 'Table'):
+        seen = set()
+        for key, value in hant[name]:
+            if key in seen:
+                problems.append(f'UiTextTraditional.{name}: duplicate key {key}')
+            seen.add(key)
+            if holes(value) != holes(key):
+                problems.append(f'UiTextTraditional.{name}: placeholders differ: {key} -> {value}')
 
 
 def name_rows():
@@ -116,6 +130,12 @@ def known_english():
     return {key for name in ('Terms', 'Table') for key, _ in en[name]} | {row[0] for row in name_rows() if row[3]}
 
 
+def known_traditional():
+    # 名称表（旗标、条件、任务、事件）是游戏里的名字：繁中界面用游戏原文，不用另译
+    hant = traditional()
+    return {key for name in ('Terms', 'Table') for key, _ in hant[name]} | {row[0] for row in name_rows()}
+
+
 def check_settings(problems):
     keys = known_keys()
     en = known_english()
@@ -131,9 +151,12 @@ def check_settings(problems):
             problems.append(f'setting name has no Japanese: {name}')
         if name not in en:
             problems.append(f'setting name has no English: {name}')
+        if name not in known_traditional():
+            problems.append(f'setting name has no Traditional Chinese: {name}')
 
     shown = re.findall(r'\bRow\(ConfigManager\.(\w+),', code)
     en_descriptions = {key for key, _ in english()['Descriptions']}
+    hant_descriptions = {key for key, _ in traditional()['Descriptions']}
     descriptions = {key: (ko, ja) for key, ko, ja in DESCRIPTION.findall(read('LOMAssistant', 'UiDescriptions.cs'))}
     settings = set(SETTING.findall(read('LOMAssistant.Config', 'ConfigManager.cs')))
     for setting in shown:
@@ -141,6 +164,8 @@ def check_settings(problems):
             continue
         if setting not in en_descriptions:
             problems.append(f'setting has no English description: {setting}')
+        if setting not in hant_descriptions:
+            problems.append(f'setting has no Traditional Chinese description: {setting}')
         if setting not in descriptions:
             problems.append(f'setting has no Korean/Japanese description: {setting}')
 
@@ -265,6 +290,8 @@ def display_gaps():
     korean_ok = matcher([key for key, row in keys.items() if row[0]])
     japanese_ok = matcher([key for key, row in keys.items() if row[1]])
     english_ok = matcher(en)
+    hant = known_traditional()
+    traditional_ok = matcher(hant)
     gaps = set()
     for path in glob.glob(os.path.join(ROOT, 'LOMAssistant*', '**', '*.cs'), recursive=True):
         if SKIP_FILES.match(os.path.basename(path)):
@@ -282,6 +309,8 @@ def display_gaps():
                         gaps.add('Japanese\t' + text)
                     if not english_ok(text):
                         gaps.add('English\t' + text)
+                    if not traditional_ok(text):
+                        gaps.add('Traditional\t' + text)
     for key, _, _ in tables()['Table']:
         korean, japanese = keys.get(key, ('', ''))
         if not korean:
@@ -290,6 +319,8 @@ def display_gaps():
             gaps.add('Japanese\t' + key)
         if key not in en:
             gaps.add('English\t' + key)
+        if key not in hant:
+            gaps.add('Traditional\t' + key)
     return gaps
 
 
