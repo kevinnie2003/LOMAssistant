@@ -64,33 +64,35 @@ public sealed partial class Gallery
 				if (next) _foeEnabledBuffs.Add(option.Key);
 				else _foeEnabledBuffs.Remove(option.Key);
 			}
+			// 剧情增益先写它本身的说明，再写条件
+			if (skill == null)
+				GUILayout.Label(DuelLocalized("CombatSkill/Desc/" + option.Key, buff.Effect.Description), _foeDetail);
 			DuelBuff condition = option.Condition;
 			string hint = condition?.Condition == "HigherEnergy" ? F("生效条件：气力高于对手")
 				: condition?.Condition == "NoDebuff" ? F("触发条件：无负面状态")
 				: condition?.Condition == "ComboRange" ? string.Format(F("触发条件：连击数大于 {0} 且不超过 {1}"), condition.MinCombo, condition.MaxCombo) : "";
-			if (hint.Length > 0) GUILayout.Label(hint, _foeWrapped);
+			if (hint.Length > 0) GUILayout.Label(hint, _foeCondition);
 			if (!string.IsNullOrEmpty(option.StoryEvent?.Trigger))
 			{
 				string storyCondition = DuelCondition(option.StoryEvent.Trigger);
 				if (storyCondition.Length > 0)
-					GUILayout.Label(string.Format(F("剧情条件：{0}"), storyCondition), _foeWrapped);
+					GUILayout.Label(string.Format(F("剧情条件：{0}"), storyCondition), _foeCondition);
 				// 决斗临时旗标没有可读名称；提示额外剧情条件，避免误认为只需达到回合数。
 				if (System.Text.RegularExpressions.Regex.IsMatch(option.StoryEvent.Trigger, @"旗[標标]_(TC|A)\d+_"))
-					GUILayout.Label(F("需满足本场剧情的触发条件"), _foeWrapped);
+					GUILayout.Label(F("需满足本场剧情的触发条件"), _foeCondition);
 			}
-			if (skill == null)
-				GUILayout.Label(DuelLocalized("CombatSkill/Desc/" + option.Key, buff.Effect.Description), _foeWrapped);
+			if (skill == null) GUILayout.Space(S(6f));
 		}
 	}
 
 	private void DrawFoeBuffControls(DuelProfile profile)
 	{
 		if (_foeBuffOptions.Count == 0) return;
-		GUILayout.Label(F("勾选增益，预览生效后的六维。"), _foeWrapped);
+		GUILayout.Label(F("勾选增益，预览生效后的六维。"), _foeDetail);
 		if (_foeBuffOptions.Any(o => _foeEnabledBuffs.Contains(o.Key)
 			&& GalleryDuelCatalog.Instance.Buffs[o.Key].Modifiers.Any(m => m.Kind == "Health")))
 		{
-			GUILayout.Label(string.Format(F("预览血量 {0}%"), Mathf.RoundToInt(_foeBuffHealth)), _foeWrapped);
+			GUILayout.Label(string.Format(F("预览血量 {0}%"), Mathf.RoundToInt(_foeBuffHealth)), _foeDetail);
 			// 面板支持按住拖动滚动；滑条按下时让出拖动，避免横拖血量变成滚页面。
 			Rect slider = GUILayoutUtility.GetRect(1f, S(24f), GUILayout.ExpandWidth(true));
 			if (Event.current.type == EventType.MouseDown && slider.Contains(Event.current.mousePosition))

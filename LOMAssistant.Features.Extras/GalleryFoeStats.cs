@@ -16,7 +16,7 @@ public sealed partial class Gallery
 	private DuelEncounter _foeEncounter;
 	private Vector2 _foeEncounterScroll, _foeStatsScroll;
 	private GUISkin _foeStatsSkin;
-	private GUIStyle _foeWrapped, _foeStatsHeading, _foeStatsSubheading, _foeSubtitle;
+	private GUIStyle _foeWrapped, _foeStatsHeading, _foeStatsSubheading, _foeSubtitle, _foeDetail, _foeCondition;
 	private float _foeStatsScale;
 	private bool _foeStatsDark;
 	private static readonly string[] SixNames = { "体力", "内力", "轻功", "拳掌", "刀剑", "暗器" };
@@ -62,6 +62,14 @@ public sealed partial class Gallery
 		_foeStatsSubheading = PanelTheme.Label(_scale, 18, PanelTheme.Ink, wrap: true);
 		_foeStatsSubheading.fontStyle = FontStyle.Bold;
 		_foeStatsSubheading.margin = new RectOffset(0, 0, _foeStatsSubheading.margin.top, _foeStatsSubheading.margin.bottom);
+		// 技能、效果的说明：颜色比名字淡，一眼分开名字和说明
+		_foeDetail = PanelTheme.Label(_scale, 17, PanelTheme.InkMuted, wrap: true);
+		_foeDetail.richText = false;
+		_foeDetail.margin = new RectOffset(0, 0, _foeDetail.margin.top, _foeDetail.margin.bottom);
+		// 增益的触发条件、剧情条件：小一号、换个颜色，和说明分开
+		_foeCondition = PanelTheme.Label(_scale, 16, PanelTheme.Jade, wrap: true);
+		_foeCondition.richText = false;
+		_foeCondition.margin = new RectOffset(0, 0, _foeCondition.margin.top, _foeCondition.margin.bottom);
 		_foeSubtitle = PanelTheme.Label(_scale, 16, PanelTheme.InkMuted, wrap: false);
 		_foeSubtitle.clipping = TextClipping.Clip;
 		_foeSubtitle.margin = new RectOffset();
@@ -277,9 +285,9 @@ public sealed partial class Gallery
 				if (skill.DisplayLevel) title += "  Lv." + skill.Level;
 				if (skill.Level <= 0) title += " · " + TextConverter.ForDisplay("未启用");
 				GUILayout.Label(title, _foeStatsSubheading);
-				GUILayout.Label(DuelLocalized("PlayerTalent/Desc/" + skill.Id, skill.Description), _foeWrapped);
+				GUILayout.Label(DuelLocalized("PlayerTalent/Desc/" + skill.Id, skill.Description), _foeDetail);
 				DrawFoeBuffOptions(skill);
-				GUILayout.Space(S(6f));
+				GUILayout.Space(S(10f));
 			}
 			if (_foeBuffOptions.Any(o => o.Skill == null))
 			{
@@ -327,7 +335,7 @@ public sealed partial class Gallery
 					GUILayout.Space(S(6f));
 					GUILayout.Label(head, _foeStatsSubheading);
 				}
-				GUILayout.Label(text, _foeWrapped);
+				GUILayout.Label(text, _foeDetail);
 			}
 		}
 		GUILayout.EndScrollView();
