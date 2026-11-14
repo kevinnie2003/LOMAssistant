@@ -81,9 +81,6 @@ public static class TextConverter
 	/// <summary>截断的对白至少剩这么多字，才按原文开头还原（太短的容易撞上 Mod 自己的词）。</summary>
 	private const int TruncatedMin = 4;
 
-	/// <summary>游戏原文里的错字（任务名「夏侯蘭鍛鏈唐門弟子」），显示时改正。</summary>
-	private static readonly (string Typo, string Correct)[] GameTypos = { ("鍛鏈", "鍛鍊") };
-
 	private static bool IsHan(char c) => c >= '㐀' && c <= '鿿' || c >= '豈' && c <= '﫿';
 
 	/// <summary>
@@ -121,7 +118,7 @@ public static class TextConverter
 			{
 				continue;
 			}
-			foreach (var (typo, correct) in GameTypos)
+			foreach (var (typo, correct) in UiTraditional.GameTypos)
 			{
 				value = value.Replace(typo, correct);
 			}

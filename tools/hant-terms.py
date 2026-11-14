@@ -48,6 +48,11 @@ TERMS = [
     ("唐升", "唐陞"),
 ]
 
+# 遊戲原文裡的錯字：繁中介面顯示遊戲原文時改正（TextConverter 用；上面的 TERMS 只管 Mod 自己的字）
+GAME_TYPOS = [
+    ("鍛鏈", "鍛鍊"),
+]
+
 
 def fix(text):
     for a, b in TERMS:
@@ -57,6 +62,7 @@ def fix(text):
 
 def gen_cs(path):
     rows = "\n".join(f'\t\t("{a}", "{b}"),' for a, b in TERMS)
+    typos = "\n".join(f'\t\t("{a}", "{b}"),' for a, b in GAME_TYPOS)
     cs = f'''namespace LOMAssistant;
 
 /// <summary>
@@ -69,6 +75,12 @@ public static class UiTraditional
 	private static readonly (string From, string To)[] Terms =
 	{{
 {rows}
+	}};
+
+	/// <summary>遊戲原文裡的錯字，繁中介面顯示遊戲原文時改正（TextConverter 用）。</summary>
+	public static readonly (string Typo, string Correct)[] GameTypos =
+	{{
+{typos}
 	}};
 
 	public static string Fix(string text)
