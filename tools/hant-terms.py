@@ -42,15 +42,10 @@ TERMS = [
     ("丑陋", "醜陋"), ("伙伴", "夥伴"), ("家伙", "傢伙"), ("稻谷", "稻穀"), ("精致", "精緻"), ("尸體", "屍體"), ("尸首", "屍首"),
     ("胡子", "鬍子"), ("胡須", "鬍鬚"), ("喂飯", "餵飯"), ("熏香", "薰香"), ("老板", "老闆"), ("舍不得", "捨不得"), ("秋千", "鞦韆"),
     ("杰出", "傑出"), ("筑基", "築基"), ("惡心", "噁心"), ("咸魚", "鹹魚"), ("合并", "合併"),
-    # 「鍛鍊」台灣寫「鍊」；遊戲任務名把「煉」寫成「鏈」，一併改
+    # 「鍛鍊」台灣寫「鍊」；Windows 把遊戲原文的「鍊」轉成簡體「链」，再轉回來成了「鏈」，一併改
     ("鍛煉", "鍛鍊"), ("鍛鏈", "鍛鍊"),
     # 人名：遊戲繁中版的寫法
     ("唐升", "唐陞"),
-]
-
-# 遊戲原文裡的錯字：繁中介面顯示遊戲原文時改正（TextConverter 用；上面的 TERMS 只管 Mod 自己的字）
-GAME_TYPOS = [
-    ("鍛鏈", "鍛鍊"),
 ]
 
 
@@ -62,7 +57,6 @@ def fix(text):
 
 def gen_cs(path):
     rows = "\n".join(f'\t\t("{a}", "{b}"),' for a, b in TERMS)
-    typos = "\n".join(f'\t\t("{a}", "{b}"),' for a, b in GAME_TYPOS)
     cs = f'''namespace LOMAssistant;
 
 /// <summary>
@@ -75,12 +69,6 @@ public static class UiTraditional
 	private static readonly (string From, string To)[] Terms =
 	{{
 {rows}
-	}};
-
-	/// <summary>遊戲原文裡的錯字，繁中介面顯示遊戲原文時改正（TextConverter 用）。</summary>
-	public static readonly (string Typo, string Correct)[] GameTypos =
-	{{
-{typos}
 	}};
 
 	public static string Fix(string text)

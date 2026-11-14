@@ -212,12 +212,6 @@ public static class UiTraditional
 		("唐升", "唐陞"),
 	};
 
-	/// <summary>遊戲原文裡的錯字，繁中介面顯示遊戲原文時改正（TextConverter 用）。</summary>
-	public static readonly (string Typo, string Correct)[] GameTypos =
-	{
-		("鍛鏈", "鍛鍊"),
-	};
-
 	public static string Fix(string text)
 	{
 		if (string.IsNullOrEmpty(text))

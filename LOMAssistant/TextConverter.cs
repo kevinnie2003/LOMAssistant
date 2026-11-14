@@ -118,10 +118,6 @@ public static class TextConverter
 			{
 				continue;
 			}
-			foreach (var (typo, correct) in UiTraditional.GameTypos)
-			{
-				value = value.Replace(typo, correct);
-			}
 			_originals[key] = value;
 			if (!_originalsByFirst.TryGetValue(key[0], out List<string> list))
 			{
