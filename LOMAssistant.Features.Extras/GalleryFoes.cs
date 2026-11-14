@@ -512,23 +512,9 @@ public sealed partial class Gallery
 
 	private void DrawFoeDetail(Rect area)
 	{
-		// 面板与技能属于当前立绘详情；展开后立绘、姿势列表及导出操作始终可见。
-		Fill(area, PanelTheme.PaperDeep);
-		// 标题栏（到下面立绘、面板开始处，高 52）：按钮贴在右端、上下占满，宽度跟着文字
-		float bar = S(52f);
-		string toggle = TextConverter.ForDisplay("面板与技能");
-		float toggleWidth = Mathf.Min(_track.CalcSize(new GUIContent(toggle)).x + S(48f), area.width * 0.4f);
-		GUI.Label(new Rect(area.x + S(16f), area.y, area.width - toggleWidth - S(32f), bar), FoeDisplay(_foe), _body);
-		if (GUI.Button(new Rect(area.xMax - toggleWidth, area.y, toggleWidth, bar),
-			TextConverter.ForDisplay("面板与技能"), _foeShowStats ? _trackOn : _track))
-		{
-			_foeShowStats = !_foeShowStats;
-			EndFoeResize();
-			_foeDragging = false;
-			_foeZoom = 0f;
-			_foePan = Vector2.zero;
-		}
-		var content = new Rect(area.x, area.y + bar, area.width, area.height - bar);
+		// 和动图页一样：上面是立绘（展开「面板与技能」时右边是资料），下面一排按钮直接放在底色上
+		float bar = S(44f);
+		var content = new Rect(area.x, area.y, area.width, Mathf.Max(S(120f), area.height - bar - S(10f)));
 		if (_foeShowStats)
 		{
 			float gap = S(14f);
@@ -545,6 +531,36 @@ public sealed partial class Gallery
 			Fill(new Rect(divider.center.x - line / 2f, divider.y, line, divider.height), active ? PanelTheme.Ink : PanelTheme.Edge);
 		}
 		else DrawFoePortrait(content);
+		DrawFoeToolbar(new Rect(area.x, area.yMax - bar, area.width, bar));
+	}
+
+	/// <summary>底部一排：重置视图、面板与技能（开关），导出 PNG 靠右。</summary>
+	private void DrawFoeToolbar(Rect bar)
+	{
+		float Width(string text) => Mathf.Max(S(120f), _track.CalcSize(new GUIContent(text)).x + S(40f));
+		string reset = TextConverter.ForDisplay("重置视图"), stats = TextConverter.ForDisplay("面板与技能"), export = TextConverter.ForDisplay("导出 PNG");
+		var resetRect = new Rect(bar.x, bar.y, Width(reset), bar.height);
+		if (GUI.Button(resetRect, reset, _track))
+		{
+			_foeZoom = 0f;
+			_foePan = Vector2.zero;
+		}
+		if (GUI.Button(new Rect(resetRect.xMax + S(8f), bar.y, Width(stats), bar.height), stats, _foeShowStats ? _trackOn : _track))
+		{
+			_foeShowStats = !_foeShowStats;
+			EndFoeResize();
+			_foeDragging = false;
+			_foeZoom = 0f;
+			_foePan = Vector2.zero;
+		}
+		bool wasEnabled = GUI.enabled;
+		GUI.enabled = wasEnabled && _foePose?.Sprite != null;
+		float exportWidth = Mathf.Max(S(180f), _button.CalcSize(new GUIContent(export)).x + S(40f));
+		if (GUI.Button(new Rect(bar.xMax - exportWidth, bar.y, exportWidth, bar.height), export, _button))
+		{
+			ExportFoeImage();
+		}
+		GUI.enabled = wasEnabled;
 	}
 
 	private float ClampFoeStatsWidth(float width, float available)
@@ -590,9 +606,7 @@ public sealed partial class Gallery
 
 	private void DrawFoePortrait(Rect area)
 	{
-		// 和动图页一样：上面是图，控制条放在底部
-		float bar = S(44f);
-		var view = new Rect(area.x, area.y, area.width, Mathf.Max(S(120f), area.height - bar - S(10f)));
+		var view = area;
 		DrawChecker(view);
 		HandleFoeViewMouse(view);
 		GUI.BeginGroup(view);
@@ -622,25 +636,6 @@ public sealed partial class Gallery
 				+ "　" + TextConverter.ForDisplay("滚轮缩放，按住拖动"), _foeSmall);
 		}
 		GUI.EndGroup();
-
-		// 底部控制条：重置视图、导出 PNG（按钮高度和动图页底部那排一样）
-		var toolbar = new Rect(area.x, area.yMax - bar, area.width, bar);
-		float buttonWidth = Mathf.Min(S(150f), (area.width - S(10f)) / 2f);
-		if (GUI.Button(new Rect(toolbar.x, toolbar.y, buttonWidth, bar),
-			TextConverter.ForDisplay("重置视图"), _track))
-		{
-			_foeZoom = 0f;
-			_foePan = Vector2.zero;
-		}
-		bool canExport = _foePose?.Sprite != null;
-		bool wasEnabled = GUI.enabled;
-		GUI.enabled = wasEnabled && canExport;
-		if (GUI.Button(new Rect(toolbar.xMax - buttonWidth, toolbar.y, buttonWidth, bar),
-			TextConverter.ForDisplay("导出 PNG"), _button))
-		{
-			ExportFoeImage();
-		}
-		GUI.enabled = wasEnabled;
 	}
 
 	/// <summary>立绘的滚轮缩放与拖动。只在立绘区域内响应，浮层和按钮各自吃掉自己的事件。</summary>
