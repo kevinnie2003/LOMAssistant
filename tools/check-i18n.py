@@ -190,7 +190,7 @@ def check_docs(problems):
             problems.append(f'{name}: feature section has headings/images/bullets {now}, README.md has {base}')
 
     versions = {}
-    for name in ('CHANGELOG.md', 'CHANGELOG.en.md', 'CHANGELOG.ja.md', 'CHANGELOG.ko.md'):
+    for name in ('CHANGELOG.md', 'CHANGELOG.zh-Hant.md', 'CHANGELOG.en.md', 'CHANGELOG.ja.md', 'CHANGELOG.ko.md'):
         versions[name] = re.findall(r'(?m)^## (\d+\.\d+\.\d+)', read(name))
     base = versions['CHANGELOG.md']
     for name, found in versions.items():

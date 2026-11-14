@@ -47,7 +47,7 @@ print('installer sha256', hashlib.sha256(open(frozen, 'rb').read()).hexdigest())
 
 # 更新内容随 Mod 放进包里：安装器没联网时从这里读（安装器自己不带，见 Installer.cs 的 PayloadChangelog）
 plugin = os.path.join(root, 'BepInEx', 'plugins', 'LOMAssistant')
-for name in ['CHANGELOG.md', 'CHANGELOG.en.md', 'CHANGELOG.ja.md', 'CHANGELOG.ko.md']:
+for name in ['CHANGELOG.md', 'CHANGELOG.zh-Hant.md', 'CHANGELOG.en.md', 'CHANGELOG.ja.md', 'CHANGELOG.ko.md']:
     shutil.copyfile(os.path.join(repo, name), os.path.join(plugin, name))
 for readme, manual in MANUALS:
     subprocess.run([sys.executable, '-I', '-X', 'utf8', os.path.join(repo, 'tools', 'readme-to-txt.py'),
