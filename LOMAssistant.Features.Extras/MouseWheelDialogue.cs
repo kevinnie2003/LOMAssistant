@@ -9,13 +9,15 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using MenuDialog = Fungus.MenuDialog;
 
 namespace LOMAssistant.Features.Extras;
 
 /// <summary>
 /// 鼠标滚轮推进对白：剧情里滚轮往下一格推进一句（和按空格一样），往上打开回想（和按 L 一样）；
 /// 回想开着、已经在最底下时再往下滚就关上回想（剧情和养成地图的回想都算）。
-/// 走游戏自己的按键回调，游戏的菜单、状态页这些开着时照原样不响应；鼠标在咖啡伴侣的窗口上时滚轮归窗口。
+/// 走游戏自己的按键回调，游戏的菜单、状态页这些开着时照原样不响应；鼠标在咖啡伴侣的窗口上时滚轮归窗口；
+/// 剧情选项显示着时滚轮归选项列表（选项多时要滚着选）。
 /// 回想面板（StoryLogPanel）是 1.0.6001 才有的，这里全用反射找它，旧版游戏只是没有关回想这一项。
 /// </summary>
 internal sealed class MouseWheelDialogue : MonoBehaviour
@@ -31,6 +33,7 @@ internal sealed class MouseWheelDialogue : MonoBehaviour
 	private static readonly PropertyInfo LogIsOpen = LogPanelType != null ? AccessTools.Property(LogPanelType, "IsOpen") : null;
 	private static readonly MethodInfo LogClose = LogPanelType != null ? AccessTools.Method(LogPanelType, "Close") : null;
 	private static readonly object[] NoContext = { default(InputAction.CallbackContext) };
+	private static readonly FieldInfo MenuButtons = AccessTools.Field(typeof(MenuDialog), "cachedButtons");
 
 	private static MouseWheelDialogue _instance;
 
@@ -88,7 +91,7 @@ internal sealed class MouseWheelDialogue : MonoBehaviour
 			}
 			return;
 		}
-		if (SceneManager.GetActiveScene().name != "Story" || now < _nextStep)
+		if (SceneManager.GetActiveScene().name != "Story" || now < _nextStep || MenuShown())
 		{
 			return;
 		}
@@ -158,6 +161,26 @@ internal sealed class MouseWheelDialogue : MonoBehaviour
 		{
 			_lastAboveBottom = Time.unscaledTime;
 		}
+	}
+
+	/// <summary>剧情选项（含掷骰选项）正显示着：选项多时要用滚轮翻选项列表，滚轮不推进对白、不开回想。</summary>
+	private static bool MenuShown()
+	{
+		foreach (MenuDialog menu in FindObjectsOfType<MenuDialog>())
+		{
+			if (menu == null || !menu.isActiveAndEnabled || !(MenuButtons.GetValue(menu) is Button[] buttons))
+			{
+				continue;
+			}
+			foreach (Button button in buttons)
+			{
+				if (button != null && button.isActiveAndEnabled)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private static bool AtBottom(MonoBehaviour panel)
