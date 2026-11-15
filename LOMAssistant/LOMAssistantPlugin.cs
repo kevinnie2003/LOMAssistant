@@ -238,6 +238,8 @@ public class LOMAssistantPlugin : BaseUnityPlugin
 			TryPatchAll(typeof(TitlePartnerPatch));
 			LOMAssistant.Features.Extras.Gallery.Ensure(base.gameObject);
 			TryPatchAll(typeof(LOMAssistant.Features.Extras.GalleryPatch));
+			TryPatchAll(typeof(GalleryDuelPractice));
+			TryPatchAll(typeof(GalleryDuelPractice.SaveBarrier));
 			TryPatchAll(typeof(SettingsDiagnosticsButton));
 			TryPatchAll(typeof(FateBonusRepeat));
 			TryPatchAll(typeof(InputGuardActionGate));
