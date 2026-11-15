@@ -187,6 +187,8 @@ public static class ConfigManager
 
 	public static ConfigElement<bool> TitleTower;
 
+	public static ConfigElement<bool> FateBonusRepeat;
+
 	public static ConfigElement<bool> GalleryShowLocked;
 	public static ConfigElement<int> LegendSlotPages;
 
@@ -611,6 +613,7 @@ public static class ConfigManager
 		TitlePartnerChoice = new ConfigElement<int>("TitlePartnerChoice", "标题画面显示的人物：9=全部显示，0=跟随结局（默认），1=不显示，2=小师妹，3=龙湘，4=叶云裳，5=小兰，6=小梅，7=小竹，8=大师兄。回到标题画面时生效", 0);
 		TitleGallery = new ConfigElement<bool>("TitleGallery", "标题画面鉴赏按钮：标题画面多一个「鉴赏」按钮，能看解锁的 CG、听解锁的音乐。没解锁的内容不显示。回到标题画面后生效", defaultValue: true);
 		TitleTower = new ConfigElement<bool>("TitleTower", "标题画面练功塔按钮：标题画面多一个「练功塔」按钮，游玩试玩版的练功塔模式。存档、自动存档和生死簿都和正常游玩一样。回到标题画面后生效", defaultValue: true);
+		FateBonusRepeat = new ConfigElement<bool>("FateBonusRepeat", "继承页沿用上次分配：开新档的「继承」页多一个「沿用上次」按钮，照上次点「开始」时的分配逐格加点。命运点数照扣，不够时点到用完为止，点完还能自己调", defaultValue: true);
 		GalleryShowLocked = new ConfigElement<bool>("GalleryShowLocked", "鉴赏页的「显示未解锁内容」按钮：打开后没解锁的 CG 和音乐也能看、能听，会剧透", defaultValue: false);
 		GalleryFrameFps = new ConfigElement<int>("GalleryFrameFps", "鉴赏「动图」页的播放帧率（每秒几帧，1～50；再快 GIF 存不下，导出会按 50 算）", 12);
 		GalleryFrameBg = new ConfigElement<int>("GalleryFrameBg", "鉴赏「动图」页播放区的底色：0=深色棋盘格（默认），1=白色，2=黑色。透明底的图在深色底上看不清时换白色", 0);

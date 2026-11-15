@@ -176,6 +176,7 @@ public partial class StoryReviewPanel
 				new SettingRow { Element = ConfigManager.TitlePartnerChoice, Name = "标题画面人物", Choices = LOMAssistant.Features.Extras.TitlePartnerPatch.Names, Dropdown = true },
 				Row(ConfigManager.TitleGallery, "标题画面鉴赏按钮"),
 				Row(ConfigManager.TitleTower, "标题画面练功塔按钮"),
+				Row(ConfigManager.FateBonusRepeat, "继承页沿用上次分配"),
 			}),
 			// Mod 自己的设置：窗口的样子、日志、更新检查（界面语言在搜索框右边）
 			("咖啡伴侣", new List<SettingRow>
