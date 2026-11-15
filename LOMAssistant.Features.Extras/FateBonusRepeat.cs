@@ -10,7 +10,6 @@ using LOMAssistant.Config;
 using Mortal.Core;
 using Newtonsoft.Json;
 using TMPro;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;

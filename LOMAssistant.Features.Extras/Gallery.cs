@@ -514,6 +514,15 @@ public sealed partial class Gallery : MonoBehaviour
 		{
 			TickFrames();
 		}
+		// 输入数字、搜索时右键留给输入框；Esc 先离开输入框
+		if (_tab == FoesTab && _practiceVisible && GUIUtility.keyboardControl != 0)
+		{
+			if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+			{
+				GUIUtility.keyboardControl = 0;
+			}
+			return;
+		}
 		Gamepad pad = Gamepad.current;
 		bool back = (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame) || (Mouse.current != null && Mouse.current.rightButton.wasPressedThisFrame)
 			|| (pad != null && pad.buttonEast.wasPressedThisFrame);
@@ -687,6 +696,7 @@ public sealed partial class Gallery : MonoBehaviour
 
 	private void OnGUI()
 	{
+		DrawDuelPracticeReturn();
 		if (!_open || PanelTheme.UiScale <= 0f)
 		{
 			return;

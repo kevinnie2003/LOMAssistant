@@ -222,6 +222,7 @@ public sealed partial class Gallery
 		{
 			SelectFoe(_foes[0]);
 		}
+		RestoreDuelPracticeSelection();
 	}
 
 
@@ -413,12 +414,20 @@ public sealed partial class Gallery
 		{
 			_frameExportDirEdit = ConfigManager.GalleryFrameExportDir.Value ?? "";
 		}
-		GUI.Label(new Rect(left, top, S(80f), S(44f)), TextConverter.ForDisplay("导出到"), _muted);
-		var dirField = new Rect(left + S(84f), top, width - S(280f), S(44f));
-		_frameExportDirEdit = GUI.TextField(dirField, _frameExportDirEdit ?? "", _field);
-		if (GUI.Button(new Rect(dirField.xMax + S(10f), top, S(150f), S(44f)), TextConverter.ForDisplay("打开文件夹"), _button))
+		if (_practiceVisible)
 		{
-			OpenExportFolder();
+			PracticeStyles();
+			GUI.Label(new Rect(left, top, width, S(44f)), TextConverter.ForDisplay("选择对手与原生剧情，自定义主角后开始练习。"), _practiceMuted);
+		}
+		else
+		{
+			GUI.Label(new Rect(left, top, S(80f), S(44f)), TextConverter.ForDisplay("导出到"), _muted);
+			var dirField = new Rect(left + S(84f), top, width - S(280f), S(44f));
+			_frameExportDirEdit = GUI.TextField(dirField, _frameExportDirEdit ?? "", _field);
+			if (GUI.Button(new Rect(dirField.xMax + S(10f), top, S(150f), S(44f)), TextConverter.ForDisplay("打开文件夹"), _button))
+			{
+				OpenExportFolder();
+			}
 		}
 
 		var body = new Rect(left, top + S(58f), width, screen.height - top - S(58f) - S(40f));
@@ -427,7 +436,15 @@ public sealed partial class Gallery
 		var poses = new Rect(list.xMax + S(12f), body.y, Mathf.Min(S(FoePoseWidth), body.width * 0.115f), body.height);
 		var right = new Rect(poses.xMax + S(12f), body.y, body.width - list.width - poses.width - S(24f), body.height);
 		DrawFoeList(list);
-		DrawFoePoses(poses);
+		if (_practiceVisible)
+		{
+			// 练习时不显示姿势栏，右边占满
+			right = new Rect(list.xMax + S(12f), body.y, body.xMax - list.xMax - S(12f), body.height);
+		}
+		else
+		{
+			DrawFoePoses(poses);
+		}
 		DrawFoeDetail(right);
 
 		if (Time.unscaledTime < _frameNoticeUntil)
@@ -513,9 +530,13 @@ public sealed partial class Gallery
 	private void DrawFoeDetail(Rect area)
 	{
 		// 和动图页一样：上面是立绘（展开「面板与技能」时右边是资料），下面一排按钮直接放在底色上
-		float bar = S(44f);
-		var content = new Rect(area.x, area.y, area.width, Mathf.Max(S(120f), area.height - bar - S(10f)));
-		if (_foeShowStats)
+		float bar = FoeToolbarHeight(area.width);
+		var content = new Rect(area.x, area.y, area.width, Mathf.Max(1f, area.height - bar - S(10f)));
+		if (_practiceVisible)
+		{
+			DrawDuelPractice(content);
+		}
+		else if (_foeShowStats)
 		{
 			float gap = S(14f);
 			float available = Mathf.Max(1f, content.width - gap);
@@ -534,29 +555,55 @@ public sealed partial class Gallery
 		DrawFoeToolbar(new Rect(area.x, area.yMax - bar, area.width, bar));
 	}
 
-	/// <summary>底部一排：重置视图、面板与技能（开关），导出 PNG 靠右。</summary>
+	/// <summary>底部工具栏按文字宽度换行，练习时保留返回立绘/资料的入口。</summary>
+	private Rect[] FoeToolbarRects(Rect bar)
+	{
+		string[] labels = { "重置视图", "面板与技能", "自定义决斗", "导出 PNG" };
+		var rects = new Rect[labels.Length];
+		float x = bar.x, y = bar.y, gap = S(8f), height = S(40f);
+		for (int i = 0; i < labels.Length; i++)
+		{
+			float width = Mathf.Min(bar.width, Mathf.Max(S(112f), _track.CalcSize(new GUIContent(TextConverter.ForDisplay(labels[i]))).x + S(32f)));
+			if (x > bar.x && x + width > bar.xMax + 0.5f)
+			{
+				x = bar.x;
+				y += height + gap;
+			}
+			if (i == labels.Length - 1) x = Mathf.Max(x, bar.xMax - width);
+			rects[i] = new Rect(x, y, width, height);
+			x += width + gap;
+		}
+		return rects;
+	}
+
+	private float FoeToolbarHeight(float width) => FoeToolbarRects(new Rect(0f, 0f, width, 0f))[3].yMax;
+
 	private void DrawFoeToolbar(Rect bar)
 	{
-		float Width(string text) => Mathf.Max(S(120f), _track.CalcSize(new GUIContent(text)).x + S(40f));
-		string reset = TextConverter.ForDisplay("重置视图"), stats = TextConverter.ForDisplay("面板与技能"), export = TextConverter.ForDisplay("导出 PNG");
-		var resetRect = new Rect(bar.x, bar.y, Width(reset), bar.height);
-		if (GUI.Button(resetRect, reset, _track))
+		Rect[] buttons = FoeToolbarRects(bar);
+		bool wasEnabled = GUI.enabled;
+		GUI.enabled = wasEnabled && !_practiceVisible;
+		if (GUI.Button(buttons[0], TextConverter.ForDisplay("重置视图"), _track))
 		{
 			_foeZoom = 0f;
 			_foePan = Vector2.zero;
 		}
-		if (GUI.Button(new Rect(resetRect.xMax + S(8f), bar.y, Width(stats), bar.height), stats, _foeShowStats ? _trackOn : _track))
+		GUI.enabled = wasEnabled;
+		if (GUI.Button(buttons[1], TextConverter.ForDisplay("面板与技能"), _foeShowStats && !_practiceVisible ? _trackOn : _track))
 		{
-			_foeShowStats = !_foeShowStats;
+			_foeShowStats = _practiceVisible || !_foeShowStats;
+			_practiceVisible = false;
 			EndFoeResize();
 			_foeDragging = false;
 			_foeZoom = 0f;
 			_foePan = Vector2.zero;
 		}
-		bool wasEnabled = GUI.enabled;
-		GUI.enabled = wasEnabled && _foePose?.Sprite != null;
-		float exportWidth = Mathf.Max(S(180f), _button.CalcSize(new GUIContent(export)).x + S(40f));
-		if (GUI.Button(new Rect(bar.xMax - exportWidth, bar.y, exportWidth, bar.height), export, _button))
+		if (GUI.Button(buttons[2], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track))
+		{
+			ToggleDuelPractice();
+		}
+		GUI.enabled = wasEnabled && !_practiceVisible && _foePose?.Sprite != null;
+		if (GUI.Button(buttons[3], TextConverter.ForDisplay("导出 PNG"), _button))
 		{
 			ExportFoeImage();
 		}

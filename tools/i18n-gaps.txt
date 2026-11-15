@@ -289,25 +289,33 @@ Japanese	【攻略提示】
 Japanese	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
 Japanese	三师兄
 Japanese	上中下
+Japanese	上限 {0}
 Japanese	上风观
 Japanese	不明
+Japanese	不用存档
 Japanese	中殿
 Japanese	中药蜜饯
+Japanese	主角来源
 Japanese	乖乖水
 Japanese	乘凉
 Japanese	书房
 Japanese	事件：
 Japanese	二师兄
+Japanese	从存档读取
+Japanese	以存档「{0}」为底：没改的按存档算，改过的项（红框）替换存档里的值。
 Japanese	傳奇_001
 Japanese	全真体操
+Japanese	全部 {0}
 Japanese	养成地图上
 Japanese	出城冲锋
+Japanese	剧情事件照常触发：
 Japanese	医馆
 Japanese	千面人魔
 Japanese	南宫横
 Japanese	南蝥礜石散
 Japanese	去处
 Japanese	参观锦香宫
+Japanese	只读取存档文件，不会改动存档。选一个存档，主角的数值和天赋会填成存档里的值。
 Japanese	可能的结果：
 Japanese	叶云裳
 Japanese	后山
@@ -332,6 +340,7 @@ Japanese	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳�
 Japanese	存档备注：已从 LOM_SaveSlotMemo 导入 {0} 条备注，跳过 {1} 条（已有备注）。
 Japanese	孟仙谣
 Japanese	孟珙
+Japanese	学识和战术由存档里的天赋决定，可以在「天赋与技能」里调整。
 Japanese	守卫
 Japanese	宋悲
 Japanese	密密缝
@@ -346,12 +355,15 @@ Japanese	尹志平
 Japanese	峨嵋雪芽
 Japanese	崆峒四姝
 Japanese	工作
+Japanese	已启用 {0}
+Japanese	已按存档「{0}」填好天赋等级，改过的会替换存档里的。
 Japanese	常数_
 Japanese	庭院演武
 Japanese	形意拳
 Japanese	感情：
 Japanese	战斗中
 Japanese	房间
+Japanese	按存档计算
 Japanese	挑战花中仙
 Japanese	掌门人
 Japanese	接骨草
@@ -375,9 +387,11 @@ Japanese	正在选的选项：
 Japanese	毛二壮
 Japanese	江湖鬼域录
 Japanese	没有「
+Japanese	没有找到手动存档。
 Japanese	活侠传传奇_
 Japanese	游戏日期：
 Japanese	焚心火印
+Japanese	独立配置没有剧情事件。
 Japanese	玄功洞
 Japanese	玄玄如意指
 Japanese	玩家在标题画面，还没读档进游戏。
@@ -395,15 +409,21 @@ Japanese	繁體中文
 Japanese	羊羔酒
 Japanese	翻浪刀法
 Japanese	胡椒粉丸
+Japanese	自己填数值，或者先从存档读取主角，再在这个基础上改。
+Japanese	自己设定
 Japanese	自由
 Japanese	舞影殿
 Japanese	花音阁
 Japanese	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
 Japanese	蛇形拳
+Japanese	血量和气力在进入决斗时按存档计算。
 Japanese	观云客
+Japanese	读不到这个存档，请重新选择。
 Japanese	赵活
 Japanese	车轩辕
+Japanese	还没有启用的天赋。
 Japanese	这张地图上的场所：
+Japanese	这段剧情的决斗没有额外事件。
 Japanese	这段剧情的剧本：
 Japanese	进行中的支线：\n
 Japanese	锁住选项
@@ -444,10 +464,18 @@ Korean	」触发）
 Korean	【攻略提示】
 Korean	【眼前】（屏幕上正显示的，玩家问「这里」「这个选项」「这次掷骰」指的就是它）\n
 Korean	上中下
+Korean	上限 {0}
 Korean	不明
+Korean	不用存档
+Korean	主角来源
+Korean	从存档读取
+Korean	以存档「{0}」为底：没改的按存档算，改过的项（红框）替换存档里的值。
 Korean	傳奇_001
+Korean	全部 {0}
 Korean	养成地图上
+Korean	剧情事件照常触发：
 Korean	去处
+Korean	只读取存档文件，不会改动存档。选一个存档，主角的数值和天赋会填成存档里的值。
 Korean	咖啡伴侣已于 {0} 导入 LOM_SaveSlotMemo 的备注（Save_NNN.memo.txt）：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Korean	咖啡伴侣已于 {0} 导入本文件的备注：{1} 条，跳过 {2} 条（已有备注）。\r\n删除本文件会在下次启动时重新导入。\r\n
 Korean	国
@@ -455,10 +483,14 @@ Korean	国国
 Korean	地图标题：
 Korean	存档备注：已从 LOM_SaveSlotExpander 导入 {0} 条备注，跳过 {1} 条（已有备注）。
 Korean	存档备注：已从 LOM_SaveSlotMemo 导入 {0} 条备注，跳过 {1} 条（已有备注）。
+Korean	学识和战术由存档里的天赋决定，可以在「天赋与技能」里调整。
 Korean	对白：
+Korean	已启用 {0}
+Korean	已按存档「{0}」填好天赋等级，改过的会替换存档里的。
 Korean	常数_
 Korean	感情：
 Korean	战斗中
+Korean	按存档计算
 Korean	数值_
 Korean	旗标_
 Korean	日本語
@@ -468,8 +500,10 @@ Korean	标记_
 Korean	正在掷骰
 Korean	正在选的选项：
 Korean	没有「
+Korean	没有找到手动存档。
 Korean	活侠传传奇_
 Korean	游戏日期：
+Korean	独立配置没有剧情事件。
 Korean	玩家在标题画面，还没读档进游戏。
 Korean	玩家还没读档进游戏
 Korean	现在在：
@@ -477,8 +511,14 @@ Korean	空过（剧情 {0}）：{1}年{2}月{3} 消耗 {4} 次行动，剩余 {5
 Korean	第{0}年{1}月{2}
 Korean	简体中文
 Korean	繁體中文
+Korean	自己填数值，或者先从存档读取主角，再在这个基础上改。
+Korean	自己设定
 Korean	菜单按钮：{0} 按钮数 {1}，按钮高 {2}，
+Korean	血量和气力在进入决斗时按存档计算。
+Korean	读不到这个存档，请重新选择。
+Korean	还没有启用的天赋。
 Korean	这张地图上的场所：
+Korean	这段剧情的决斗没有额外事件。
 Korean	这段剧情的剧本：
 Korean	进行中的支线：\n
 Korean	锁住选项

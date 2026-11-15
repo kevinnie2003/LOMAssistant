@@ -676,7 +676,7 @@ public class SaveBrowser : MonoBehaviour
 		}
 	}
 
-	private static string GameDate(GameSave data)
+	internal static string GameDate(GameSave data)
 	{
 		try
 		{
@@ -690,7 +690,7 @@ public class SaveBrowser : MonoBehaviour
 		}
 	}
 
-	private static string SavedAt(GameSave data) => new DateTime(data.TimeTick).ToString("yyyy/MM/dd HH:mm");
+	internal static string SavedAt(GameSave data) => new DateTime(data.TimeTick).ToString("yyyy/MM/dd HH:mm");
 
 	private static int Lover(GameSave data) => data?.Stats?.FirstOrDefault(s => s.Key == "lover")?.Value ?? 0;
 
