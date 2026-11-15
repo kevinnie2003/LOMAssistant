@@ -437,8 +437,14 @@ public sealed partial class Gallery
 		var right = new Rect(poses.xMax + S(12f), body.y, body.width - list.width - poses.width - S(24f), body.height);
 		DrawFoeList(list);
 		if (_practiceVisible)
+		{
+			// 练习时不显示姿势栏，右边占满
 			right = new Rect(list.xMax + S(12f), body.y, body.xMax - list.xMax - S(12f), body.height);
-		else DrawFoePoses(poses);
+		}
+		else
+		{
+			DrawFoePoses(poses);
+		}
 		DrawFoeDetail(right);
 
 		if (Time.unscaledTime < _frameNoticeUntil)
@@ -526,7 +532,10 @@ public sealed partial class Gallery
 		// 和动图页一样：上面是立绘（展开「面板与技能」时右边是资料），下面一排按钮直接放在底色上
 		float bar = FoeToolbarHeight(area.width);
 		var content = new Rect(area.x, area.y, area.width, Mathf.Max(1f, area.height - bar - S(10f)));
-		if (_practiceVisible) DrawDuelPractice(content);
+		if (_practiceVisible)
+		{
+			DrawDuelPractice(content);
+		}
 		else if (_foeShowStats)
 		{
 			float gap = S(14f);
@@ -589,7 +598,10 @@ public sealed partial class Gallery
 			_foeZoom = 0f;
 			_foePan = Vector2.zero;
 		}
-		if (GUI.Button(buttons[2], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track)) ToggleDuelPractice();
+		if (GUI.Button(buttons[2], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track))
+		{
+			ToggleDuelPractice();
+		}
 		GUI.enabled = wasEnabled && !_practiceVisible && _foePose?.Sprite != null;
 		if (GUI.Button(buttons[3], TextConverter.ForDisplay("导出 PNG"), _button))
 		{
