@@ -312,7 +312,7 @@ DOTNET=/path/to/dotnet ./Installer/build-installer.sh
 
 [MIT](LICENSE)
 
-## 代码签名政策
+## 代码签名政策（Code signing policy）
 
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 

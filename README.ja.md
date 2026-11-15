@@ -291,7 +291,7 @@ ZIP には BepInEx が同梱されています。
 
 [MIT](LICENSE)
 
-## コード署名ポリシー
+## コード署名ポリシー（Code signing policy）
 
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 

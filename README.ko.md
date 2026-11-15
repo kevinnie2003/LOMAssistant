@@ -291,7 +291,7 @@
 
 [MIT](LICENSE)
 
-## 코드 서명 정책
+## 코드 서명 정책 (Code signing policy)
 
 Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
 
