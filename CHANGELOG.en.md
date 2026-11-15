@@ -2,6 +2,14 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.4 (2026-11-15)
+
+- **Duels gallery page**: new **Custom duel**. Pick an opponent and a story, then fight that original duel with a hero you set up; the story events at the start and during rounds still trigger. You can load the hero's stats and talents from a manual save first, then change any of them. Practice never writes to your saves and returns to the gallery when it ends.
+- **Reuse last inheritance** (new, on by default): the **Inheritance** page of a new game gets a **Use last** button that adds points one step at a time, following the allocation you had when you last pressed **Start**. Fate points are spent as usual; if they run out, it stops there.
+- **Traditional Chinese UI**: the interface text is now translated entry by entry by hand, and game text is shown as the game writes it.
+- **Mouse wheel for dialogue**: while story choices are shown, the wheel scrolls the choice list.
+- **Save anywhere**: replay after loading no longer gets stuck on the character introduction.
+
 ## 3.7.3 (2026-11-14)
 
 - **Mouse wheel for dialogue** (new, off by default): in story scenes, scrolling down one notch advances one line and scrolling up opens the backlog; at the bottom of the backlog, scroll down once more to close it.
