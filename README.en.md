@@ -200,6 +200,7 @@ Connect a large language model with your own API key to ask about the story and 
 - **Pinball score**: when you leave the pinball minigame, the total score is set to the value in this setting.
 - **4th Brother sells all**: the fourth senior brother's shop sells every book, sundry and special item (except 《证类本草》).
 - **Skip turn**: in the ESC menu on the training and study maps; uses one action without triggering events. A key can also be bound to it under **Hotkeys**.
+- **Reuse last inheritance**: the **Inheritance** page of a new game gets a **Use last** button that adds points one step at a time, following the allocation you had when you last pressed **Start**. Fate points are spent as usual; if they run out, it stops there, and you can still adjust by hand afterwards.
 
 ### Combat
 
@@ -254,7 +255,7 @@ The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
   - CG: CGs appear once you have seen them; all scene images are open, and a switch on the page shows locked content.
   - Portraits: pick a background, place characters and change variants, then export the current view as a PNG or hide the UI for screenshots.
   - Animations: plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs.
-  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. **Stats & skills** shows each encounter's six stats, skills, the four traits (temperament, conduct, morality, cultivation) with their ratings, and the state changes at battle start or when conditions are met. Tick a buff from a skill or the story to see the six stats with it applied, along with its trigger conditions.
+  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. **Stats & skills** shows each encounter's six stats, skills, the four traits (temperament, conduct, morality, cultivation) with their ratings, and the state changes at battle start or when conditions are met. Tick a buff from a skill or the story to see the six stats with it applied, along with its trigger conditions. **Custom duel** lets you fight the chosen story's original duel with a hero you set up, with the story events still triggering; the hero's stats and talents can be loaded from a manual save and then changed, and practice never writes to your saves.
   - Music: all 39 official soundtrack tracks, with pause and playback progress.
 - **Title screen partner**: choose which character appears on the title screen, or show everyone or nobody.
 
