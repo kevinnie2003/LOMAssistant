@@ -516,7 +516,8 @@ public class MapEventHints : MonoBehaviour
 				continue;
 			}
 			string nextText = StoryScripts.Text(next);
-			if (nextText == null || !nextText.Contains("checkpointmanager.Position"))
+			// 场所剧本自己不抽、只给一组选项再接别的剧本的（崆峒夺魄峰：下棋、跟师父修炼）也要看下一层
+			if (nextText == null || !(nextText.Contains("checkpointmanager.Position") || (nextText.Contains("setmenudialog(") && LeadsToPools(nextText))))
 			{
 				continue;
 			}
@@ -547,7 +548,7 @@ public class MapEventHints : MonoBehaviour
 				foreach (string more in NextScripts(sub))
 				{
 					string moreText = StoryScripts.Text(more);
-					if (moreText != null)
+					if (moreText != null && moreText.Contains("checkpointmanager.Position"))
 					{
 						pools.AddRange(PoolCalls(moreText).Where(x => !pools.Contains(x)));
 					}
@@ -562,6 +563,11 @@ public class MapEventHints : MonoBehaviour
 		}
 		return groups;
 	}
+
+	// 剧本里写着要接的剧本（SetNextScript、先存进变量的剧本名）有没有一个会抽事件：只看文字，不逐行分析
+	private static bool LeadsToPools(string text) => Regex.Matches(text, @"SetNextScript\(\s*""([A-Za-z0-9_]+)""\s*\)|=\s*""([A-Za-z0-9_]+)""\s*$", RegexOptions.Multiline)
+		.Cast<Match>().Select(m => m.Groups[1].Success ? m.Groups[1].Value : m.Groups[2].Value).Distinct()
+		.Any(name => StoryScripts.Text(name)?.Contains("checkpointmanager.Position") == true);
 
 	/// <summary>选项表里这一项现在会不会出现：写成「条件 and "选项" or "~x"」的按游戏的条件检查点算；算不了的当作会出现。</summary>
 	private static bool OptionShown(string text, string option)
