@@ -141,8 +141,16 @@ public partial class StoryReviewPanel
 			}
 			fx += w + S(8);
 		}
-		List<SaveSummary> shown = saves.Where(s => _anytimeFilter == 0 || (_anytimeFilter == 1 && s.scene == "Story")
-			|| (_anytimeFilter == 2 && s.scene == "Free") || (_anytimeFilter == 3 && !string.IsNullOrEmpty(s.note))).ToList();
+		// 筛选、分组只在存档、筛选、排法、有备注的个数变了时重算：存档上千个时每次刷新都重算会卡
+		int noted = saves.Count(s => !string.IsNullOrEmpty(s.note));
+		var signature = (saves, saves.Count, _anytimeFilter, sort, noted);
+		if (_anytimeGroups == null || !_anytimeGroupsFor.Equals(signature))
+		{
+			List<SaveSummary> shown = saves.Where(s => _anytimeFilter == 0 || (_anytimeFilter == 1 && s.scene == "Story")
+				|| (_anytimeFilter == 2 && s.scene == "Free") || (_anytimeFilter == 3 && !string.IsNullOrEmpty(s.note))).ToList();
+			_anytimeGroups = AnytimeGroups(shown, sort);
+			_anytimeGroupsFor = signature;
+		}
 
 		var area = new Rect(r.x, r.y + S(114), r.width, r.height - S(114));
 		DragScroll("anytime", area, ref _anytimeScroll);
@@ -152,24 +160,122 @@ public partial class StoryReviewPanel
 		{
 			GUILayout.Label("还没有随时存档。在剧情的台词、选项、掷骰时或养成界面按 " + InputGuard.KeyName(ConfigManager.AnytimeSaveKey.Value) + " 存一个。", _muted);
 		}
-		else if (shown.Count == 0)
+		else if (_anytimeGroups.Count == 0)
 		{
 			GUILayout.Label("没有符合筛选的随时存档。", _muted);
 		}
-		// 分组（存档列表本来按存的时间从新到旧），每组可以折起来、整组删除
-		foreach (var (key, label, items) in AnytimeGroups(shown, sort))
+		// 分组（存档列表本来按存的时间从新到旧），每组可以折起来、整组删除。
+		// 只画看得见的附近几屏：量过高度的、离得远的只留空；没量过的先按常见高度留空，滚到附近再画、再量
+		if (_anytimeHeights.Count > saves.Count + 500)
 		{
-			DrawAnytimeGroup(save, key, label, items);
-			if (!_anytimeFolded.Contains(key))
+			_anytimeHeights.Clear();
+		}
+		_anytimeRowStyle ??= new GUIStyle();
+		string baseKey = (int)area.width + "|" + _rich.fontSize + "|" + TextConverter.DisplayLanguage;
+		float top = _anytimeScroll.y, view = area.height, y = 0f;
+		if (_anytimeTypicalKey != baseKey)
+		{
+			_anytimeTypicalKey = baseKey;
+			_anytimeTypical = 0f;
+		}
+		float estimate = _anytimeTypical > 0f ? _anytimeTypical : S(96);
+		_anytimeMeasured.Clear();
+		foreach (var (key, label, items) in _anytimeGroups)
+		{
+			bool folded = _anytimeFolded.Contains(key);
+			AnytimeHeight head = AnytimeSlot("g|" + key, baseKey + "|" + label + "|" + items.Count + "|" + (_deleteGroup == key));
+			if (!AnytimeSkip(head, ref y, top, view, S(44)))
 			{
-				foreach (SaveSummary s in items)
+				GUILayout.BeginVertical(_anytimeRowStyle);
+				DrawAnytimeGroup(save, key, label, items);
+				GUILayout.EndVertical();
+				AnytimeMeasure(head, ref y, S(44), false);
+			}
+			if (folded)
+			{
+				continue;
+			}
+			foreach (SaveSummary s in items)
+			{
+				AnytimeHeight row = AnytimeSlot("r|" + s.file, baseKey + "|" + s.note + "|" + (_noteFile == s.file) + "|" + (s.error != null) + "|" + s.preview.Length);
+				if (AnytimeSkip(row, ref y, top, view, estimate))
 				{
-					DrawAnytimeRow(save, s);
+					continue;
+				}
+				GUILayout.BeginVertical(_anytimeRowStyle);
+				DrawAnytimeRow(save, s);
+				GUILayout.EndVertical();
+				AnytimeMeasure(row, ref y, estimate, true);
+			}
+		}
+		// 整轮画完再记高度，免得同一次刷新里前后两遍排得不一样
+		foreach (var (row, rowKey, height, isRow) in _anytimeMeasured)
+		{
+			if (row.Key == rowKey && height > 0f)
+			{
+				row.Height = height;
+				if (isRow && _anytimeTypical <= 0f)
+				{
+					_anytimeTypical = height;
 				}
 			}
 		}
+		_anytimeMeasured.Clear();
 		GUILayout.EndScrollView();
 		GUILayout.EndArea();
+	}
+
+	private sealed class AnytimeHeight
+	{
+		public string Key;
+		public float Height = -1f;
+	}
+
+	private readonly Dictionary<string, AnytimeHeight> _anytimeHeights = new Dictionary<string, AnytimeHeight>();
+	private readonly List<(AnytimeHeight Row, string Key, float Height, bool IsRow)> _anytimeMeasured = new List<(AnytimeHeight, string, float, bool)>();
+	private List<(string Key, string Label, List<SaveSummary> Items)> _anytimeGroups;
+	private (List<SaveSummary>, int, int, int, int) _anytimeGroupsFor;
+	private GUIStyle _anytimeRowStyle;
+	// 量到的存档行高度，没量过的行先按这个留空（窗口宽度、字号变了重量）
+	private float _anytimeTypical;
+	private string _anytimeTypicalKey;
+
+	// 一行（组标题或存档）的高度记录；画法变了（备注、正在写备注、窗口宽度）就作废重量
+	private AnytimeHeight AnytimeSlot(string id, string key)
+	{
+		if (!_anytimeHeights.TryGetValue(id, out AnytimeHeight row))
+		{
+			_anytimeHeights[id] = row = new AnytimeHeight();
+		}
+		if (row.Key != key)
+		{
+			row.Key = key;
+			row.Height = -1f;
+		}
+		return row;
+	}
+
+	// 离看得见的地方超过一屏：只留空，不画
+	private static bool AnytimeSkip(AnytimeHeight row, ref float y, float top, float view, float estimate)
+	{
+		float height = row.Height > 0f ? row.Height : estimate;
+		if (y + height < top - view || y > top + view * 2f)
+		{
+			GUILayout.Space(height);
+			y += height;
+			return true;
+		}
+		return false;
+	}
+
+	// 画完量一下高度（整轮画完再记）；没量过的行按估计的高度往下算
+	private void AnytimeMeasure(AnytimeHeight row, ref float y, float estimate, bool isRow)
+	{
+		if (Event.current.type == EventType.Repaint)
+		{
+			_anytimeMeasured.Add((row, row.Key, GUILayoutUtility.GetLastRect().height, isRow));
+		}
+		y += row.Height > 0f ? row.Height : estimate;
 	}
 
 	/// <summary>存档时的游戏月份（「第2年　3月」，中间全角空格让两半各自翻译），分组用；没记下日期的归到一组。</summary>
