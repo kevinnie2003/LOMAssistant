@@ -2,6 +2,11 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.5 (2026-11-16)
+
+- **Duels**: on game versions before 1.0.6001, entering a duel no longer hangs on the loading screen; **Custom duel** in the gallery is not available on those versions.
+- **Map building hints**: on the study map, **Move** options whose destination asks for one more choice now list their random events too.
+
 ## 3.7.4 (2026-11-15)
 
 - **Duels gallery page**: new **Custom duel**. Pick an opponent and a story, then fight that original duel with a hero you set up; the story events at the start and during rounds still trigger. You can load the hero's stats and talents from a manual save first, then change any of them. Practice never writes to your saves and returns to the gallery when it ends.
