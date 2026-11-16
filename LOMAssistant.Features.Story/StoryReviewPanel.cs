@@ -853,6 +853,39 @@ public partial class StoryReviewPanel : MonoBehaviour
 
 	private void OnApplicationQuit() => StoryNodes.Flush();
 
+	// 节点存档页要显示的行：月份标题（node 为 null，title 是月份）和节点（标题、选项）
+	private List<(StoryNode Node, string Title, string Options)> _nodesRows;
+	private (int, int, bool, string, string) _nodesFor;
+	private int _nodesDrawnFrame = -10;
+	private readonly LazyRows _nodesLazy = new LazyRows();
+
+	private List<(StoryNode Node, string Title, string Options)> NodeRows(string query)
+	{
+		var rows = new List<(StoryNode, string, string)>();
+		var visible = new HashSet<StoryNode>(StoryNodes.Visible);
+		var nodes = (_nodesAll ? StoryNodes.All : visible).OrderByDescending(n => n.Year).ThenByDescending(n => n.Month).ThenByDescending(n => n.Stage).ThenByDescending(n => n.Saved).ToList();
+		string month = "";
+		foreach (StoryNode node in nodes)
+		{
+			StoryScript script = StoryScripts.Get(node.Script);
+			string options = script == null ? "" : string.Join("　", script.Menus.SelectMany(menu => menu).Select(step =>
+				"「" + StoryScripts.OptionText(step.Key) + "」" + string.Concat(script.Exits.Where(e => e.Path.Count > 0 && e.Path[0].Key == step.Key).Select(ReadMark).Distinct().ToArray())).ToArray());
+			if (!Matches(query, node.Script, node.Mission, options))
+			{
+				continue;
+			}
+			string head = $"第{node.Year}年{node.Month}月";
+			if (head != month)
+			{
+				month = head;
+				rows.Add((null, head, ""));
+			}
+			string title = $"{StoryAtlas.StageText(node.Stage)}　{(node.Mission.Length > 0 ? node.Mission : node.Script)}" + (_nodesAll && !visible.Contains(node) ? "　<color=#73644F>（其他存档）</color>" : "");
+			rows.Add((node, title, options.Length > 0 ? options : node.Script));
+		}
+		return rows;
+	}
+
 	private void DrawNodes(Rect r)
 	{
 		string query = SearchBox(new Rect(r.x, r.y, Mathf.Min(S(520), r.width), S(36)), ref _nodesSearch);
@@ -868,33 +901,40 @@ public partial class StoryReviewPanel : MonoBehaviour
 		DragScroll("nodes", area, ref _nodesScroll);
 		GUILayout.BeginArea(area);
 		_nodesScroll = GUILayout.BeginScrollView(_nodesScroll);
-		var visible = new HashSet<StoryNode>(StoryNodes.Visible);
-		var nodes = (_nodesAll ? StoryNodes.All : visible).OrderByDescending(n => n.Year).ThenByDescending(n => n.Month).ThenByDescending(n => n.Stage).ThenByDescending(n => n.Saved).ToList();
-		if (nodes.Count == 0)
+		// 节点会随着游玩越积越多（每读一次档就分出一条新线）：要显示的行只在节点、搜索、范围变了，或这一页刚打开时重算，
+		// 而且只画看得见的附近几屏
+		var signature = (StoryNodes.Version, StoryAtlas.Version, _nodesAll, query, TextConverter.DisplayLanguage);
+		if (_nodesRows == null || (Event.current.type == EventType.Layout && (!_nodesFor.Equals(signature) || _nodesDrawnFrame < Time.frameCount - 1)))
+		{
+			_nodesRows = NodeRows(query);
+			_nodesFor = signature;
+		}
+		_nodesDrawnFrame = Time.frameCount;
+		if (_nodesRows.Count == 0)
 		{
 			GUILayout.Label("还没有收录", _muted);
 		}
-		string month = "";
-		foreach (StoryNode node in nodes)
+		_nodesLazy.Begin((int)area.width + "|" + _label.fontSize, _nodesScroll.y, area.height, _nodesRows.Count, S(90));
+		foreach (var (node, title, options) in _nodesRows)
 		{
-			StoryScript script = StoryScripts.Get(node.Script);
-			string options = script == null ? "" : string.Join("　", script.Menus.SelectMany(menu => menu).Select(step =>
-				"「" + StoryScripts.OptionText(step.Key) + "」" + string.Concat(script.Exits.Where(e => e.Path.Count > 0 && e.Path[0].Key == step.Key).Select(ReadMark).Distinct().ToArray())).ToArray());
-			if (!Matches(query, node.Script, node.Mission, options))
+			if (node == null)
+			{
+				if (_nodesLazy.Row("m|" + title, title, S(48)))
+				{
+					GUILayout.Space(S(8));
+					GUILayout.Label(title, _heading);
+					_nodesLazy.Measure(S(48), false);
+				}
+				continue;
+			}
+			if (!_nodesLazy.Row("n|" + node.Id + "|" + node.Line, title + "|" + options))
 			{
 				continue;
 			}
-			string head = $"第{node.Year}年{node.Month}月";
-			if (head != month)
-			{
-				month = head;
-				GUILayout.Space(S(8));
-				GUILayout.Label(head, _heading);
-			}
 			GUILayout.BeginHorizontal(_card);
 			GUILayout.BeginVertical();
-			GUILayout.Label($"{StoryAtlas.StageText(node.Stage)}　{(node.Mission.Length > 0 ? node.Mission : node.Script)}" + (_nodesAll && !visible.Contains(node) ? "　<color=#73644F>（其他存档）</color>" : ""), _label);
-			GUILayout.Label(options.Length > 0 ? options : node.Script, _muted);
+			GUILayout.Label(title, _label);
+			GUILayout.Label(options, _muted);
 			GUILayout.EndVertical();
 			ReplayButton(node, "从这里重玩", _primary, GUILayout.Width(S(170)), GUILayout.Height(S(40)));
 			if (GUILayout.Button("删除", _button, GUILayout.Width(S(70)), GUILayout.Height(S(40))))
@@ -903,7 +943,9 @@ public partial class StoryReviewPanel : MonoBehaviour
 				GUIUtility.ExitGUI();
 			}
 			GUILayout.EndHorizontal();
+			_nodesLazy.Measure();
 		}
+		_nodesLazy.End();
 		GUILayout.EndScrollView();
 		GUILayout.EndArea();
 	}
