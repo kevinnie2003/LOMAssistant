@@ -90,6 +90,18 @@ internal static class GalleryDuelPractice
 				critical.Add("field " + name);
 			}
 		}
+		// 1.0.6001 以前的游戏没有测试模式：练习会存档、输了会进死亡结局，不能开始；
+		// 必需部分缺了就一个补丁都不打，普通战斗完全不经过练习的代码
+		if (!LevelTestModeCompat.Available)
+		{
+			critical.Add("type LevelTestMode");
+		}
+		if (critical.Count > 0)
+		{
+			Unavailable = BlockedText;
+			FileLogger.LogWarning("[决斗练习] 必需部分缺失，不能开始练习，没有打补丁：" + string.Join(", ", critical));
+			return;
+		}
 		foreach (var method in typeof(GalleryDuelPractice).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.DeclaredOnly))
 		{
 			foreach (var attribute in method.GetCustomAttributes<HarmonyPatch>())
@@ -577,7 +589,7 @@ internal static class GalleryDuelPractice
 		}
 		if (!_session.Returning)
 		{
-			LevelTestMode.Begin();
+			LevelTestModeCompat.Begin();
 			return true;
 		}
 		__result = Empty();
@@ -800,7 +812,7 @@ internal static class GalleryDuelPractice
 			_originalMissions = MissionManagerData.Instance;
 			_random = UnityEngine.Random.state;
 			_timeScale = Time.timeScale;
-			_testMode = LevelTestMode.IsActive;
+			_testMode = LevelTestModeCompat.IsActive;
 		}
 
 		internal void Prepare()
@@ -818,7 +830,7 @@ internal static class GalleryDuelPractice
 				ApplySaveChanges();
 				_player.SetSceneKey(string.IsNullOrEmpty(LevelId) ? "GalleryPractice" : LevelId.Substring(3));
 				_player.SetNextScene("Title");
-				LevelTestMode.Begin();
+				LevelTestModeCompat.Begin();
 				return;
 			}
 			_player.ResetData();
@@ -846,7 +858,7 @@ internal static class GalleryDuelPractice
 			}
 			_player.SetSceneKey(string.IsNullOrEmpty(LevelId) ? "GalleryPractice" : LevelId.Substring(3));
 			_player.SetNextScene("Title");
-			LevelTestMode.Begin();
+			LevelTestModeCompat.Begin();
 		}
 
 		/// <summary>以存档为底时，只把和存档不同的项写进练习副本。</summary>
@@ -996,11 +1008,11 @@ internal static class GalleryDuelPractice
 			Time.timeScale = _timeScale;
 			if (_testMode)
 			{
-				LevelTestMode.Begin();
+				LevelTestModeCompat.Begin();
 			}
 			else
 			{
-				LevelTestMode.End();
+				LevelTestModeCompat.End();
 			}
 			Graph.Dispose();
 		}

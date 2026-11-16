@@ -41,7 +41,7 @@ internal sealed class FightDeathHint : MonoBehaviour
 		CombatManager duel = CombatManager.Instance;
 		GameLevelManager battle = duel == null ? GameLevelManager.Instance : null;
 		UnityEngine.Object fight = duel != null ? duel : battle;
-		if (fight == null || LevelTestMode.IsActive)
+		if (fight == null || LevelTestModeCompat.IsActive)
 		{
 			_fight = null;
 			_text = null;
