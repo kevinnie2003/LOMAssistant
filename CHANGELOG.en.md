@@ -2,6 +2,11 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.6 (2026-11-17)
+
+- **Save-anywhere and branch saves**: with many saves, scrolling these two pages and writing notes no longer lags.
+- **Hotkeys**: with a Chinese input method in Chinese mode, punctuation keys such as backquote, minus and brackets can now be bound as hotkeys and trigger normally.
+
 ## 3.7.5 (2026-11-16)
 
 - **Duels**: on game versions before 1.0.6001, entering a duel no longer hangs on the loading screen; **Custom duel** in the gallery is not available on those versions.

@@ -16,7 +16,7 @@ using UnityEngine;
 
 namespace LOMAssistant;
 
-[BepInPlugin("LOMAssistant", "咖啡伴侣", "3.7.5")]
+[BepInPlugin("LOMAssistant", "咖啡伴侣", "3.7.6")]
 public class LOMAssistantPlugin : BaseUnityPlugin
 {
 	private Harmony _harmony;
