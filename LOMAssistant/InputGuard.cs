@@ -66,8 +66,52 @@ public class InputGuard : MonoBehaviour
 			case KeyCode.Mouse2: return mouse != null && mouse.middleButton.wasPressedThisFrame;
 			case KeyCode.Mouse3: return mouse != null && mouse.backButton.wasPressedThisFrame;
 			case KeyCode.Mouse4: return mouse != null && mouse.forwardButton.wasPressedThisFrame;
-			default: return Input.GetKeyDown(key);
+			default: return Input.GetKeyDown(key) || PunctuationDown(key);
 		}
+	}
+
+	// 中文输入法在中文状态下会把标点键（` - = [ ] \ ; ' , . /）拿去打全角标点，旧式按键读法和界面按键事件都收不到；
+	// 新输入系统按物理键读，这几个键另外从那边读
+	private static readonly (KeyCode Code, Key Key)[] PunctuationKeys =
+	{
+		(KeyCode.BackQuote, Key.Backquote), (KeyCode.Minus, Key.Minus), (KeyCode.Equals, Key.Equals),
+		(KeyCode.LeftBracket, Key.LeftBracket), (KeyCode.RightBracket, Key.RightBracket), (KeyCode.Backslash, Key.Backslash),
+		(KeyCode.Semicolon, Key.Semicolon), (KeyCode.Quote, Key.Quote), (KeyCode.Comma, Key.Comma),
+		(KeyCode.Period, Key.Period), (KeyCode.Slash, Key.Slash),
+	};
+
+	private static bool PunctuationDown(KeyCode key)
+	{
+		Keyboard keyboard = Keyboard.current;
+		if (keyboard == null)
+		{
+			return false;
+		}
+		foreach (var (code, k) in PunctuationKeys)
+		{
+			if (code == key)
+			{
+				return keyboard[k].wasPressedThisFrame;
+			}
+		}
+		return false;
+	}
+
+	/// <summary>这一帧按下的标点键（从新输入系统读，中文输入法下也收得到）；没有就是 None。</summary>
+	internal static KeyCode PunctuationPressed()
+	{
+		Keyboard keyboard = Keyboard.current;
+		if (keyboard != null)
+		{
+			foreach (var (code, k) in PunctuationKeys)
+			{
+				if (keyboard[k].wasPressedThisFrame)
+				{
+					return code;
+				}
+			}
+		}
+		return KeyCode.None;
 	}
 
 	/// <summary>热键给玩家看的名字。</summary>

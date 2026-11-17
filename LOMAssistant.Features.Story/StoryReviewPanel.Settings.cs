@@ -241,19 +241,21 @@ public partial class StoryReviewPanel
 		return true;
 	}
 
-	// 等新热键时按了鼠标右键、中键、侧键：直接读鼠标（这几个键不一定会作为界面事件送到窗口里）
+	// 等新热键时按了鼠标右键、中键、侧键，或者标点键：直接读鼠标、键盘
+	// （鼠标这几个键不一定会作为界面事件送到窗口里；标点键在中文输入法的中文状态下界面事件收不到）
 	private void CaptureMouse()
 	{
-		Mouse mouse = Mouse.current;
-		if (_capturing == null || mouse == null)
+		if (_capturing == null)
 		{
 			return;
 		}
-		KeyCode key = mouse.rightButton.wasPressedThisFrame ? KeyCode.Mouse1
+		Mouse mouse = Mouse.current;
+		KeyCode key = mouse == null ? KeyCode.None
+			: mouse.rightButton.wasPressedThisFrame ? KeyCode.Mouse1
 			: mouse.middleButton.wasPressedThisFrame ? KeyCode.Mouse2
 			: mouse.backButton.wasPressedThisFrame ? KeyCode.Mouse3
 			: mouse.forwardButton.wasPressedThisFrame ? KeyCode.Mouse4
-			: KeyCode.None;
+			: InputGuard.PunctuationPressed();
 		if (key != KeyCode.None)
 		{
 			AssignKey(_capturing, key);
