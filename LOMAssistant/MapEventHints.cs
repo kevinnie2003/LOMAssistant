@@ -27,6 +27,15 @@ public class MapEventHints : MonoBehaviour
 	private static PositionController _hovered;
 	private static string _text;
 	private static string _displayLanguage;
+	private static bool _nowOnly;
+	private static PositionController _textFor;
+	private static float _textAt;
+	// 量好的框：字、界面缩放、屏幕大小不变就不再量（事件多的建筑每帧逐级缩字去量，字体贴图会反复重建，掉帧很明显）
+	private static string _laidOutText;
+	private static float _laidOutScale;
+	private static int _laidOutW, _laidOutH;
+	private static float _boxWidth, _boxHeight;
+	private static GUIStyle _drawStyle;
 	// 我们点亮光效的建筑：鼠标移开时游戏会把光效关掉，再点亮
 	private static readonly HashSet<PositionController> Glowing = new HashSet<PositionController>();
 	private static readonly Regex PoolCall = new Regex(@"checkpointmanager\.Position\(\s*""([A-Za-z0-9_]+)""\s*\)");
@@ -44,6 +53,7 @@ public class MapEventHints : MonoBehaviour
 			SceneManager.activeSceneChanged += (a, b) =>
 			{
 				_hovered = null;
+				_textFor = null;
 				Glowing.Clear();
 			};
 		}
@@ -53,8 +63,12 @@ public class MapEventHints : MonoBehaviour
 	[HarmonyPatch(typeof(PositionController), nameof(PositionController.OnPositionEnter))]
 	public static void Enter_Postfix(PositionController __instance)
 	{
+		// 一座建筑有好几块碰撞区，鼠标在里面挪动会反复进出：同一座、刚算过的不重算
+		if (__instance != _textFor || Time.unscaledTime - _textAt > 5f)
+		{
+			_text = null;
+		}
 		_hovered = __instance;
-		_text = null;
 		FreePositionData data = Traverse.Create(__instance).Field("_positionData").GetValue<FreePositionData>();
 		LastScript = data != null ? data.GetFieldValue<string>("_defaultScript") : LastScript;
 	}
@@ -136,7 +150,8 @@ public class MapEventHints : MonoBehaviour
 
 	private void OnGUI()
 	{
-		if (_hovered == null || !ConfigManager.EnableMapHints.Value || InputGuard.ModWindowOpen || EventPicker.IsWaiting || !Active(_hovered))
+		// 只在绘制时画（其他界面事件不用这个框，省得一帧里重复做几遍）
+		if (Event.current.type != EventType.Repaint || _hovered == null || !ConfigManager.EnableMapHints.Value || InputGuard.ModWindowOpen || EventPicker.IsWaiting || !Active(_hovered))
 		{
 			return;
 		}
@@ -153,11 +168,15 @@ public class MapEventHints : MonoBehaviour
 			_box = PanelTheme.Toast(scale, 19);
 			_box.alignment = TextAnchor.UpperLeft;
 			_box.padding = new RectOffset((int)(14f * scale), (int)(14f * scale), (int)(10f * scale), (int)(10f * scale));
+			_laidOutText = null;
 		}
 		// 事件名已按界面语言翻译；切换语言时只重建提示文字。
-		if (_text == null || _displayLanguage != TextConverter.DisplayLanguage)
+		if (_text == null || _displayLanguage != TextConverter.DisplayLanguage || _nowOnly != ConfigManager.MapHintsNowOnly.Value || _textFor != _hovered)
 		{
 			_displayLanguage = TextConverter.DisplayLanguage;
+			_nowOnly = ConfigManager.MapHintsNowOnly.Value;
+			_textFor = _hovered;
+			_textAt = Time.unscaledTime;
 			try
 			{
 				_text = Describe(_hovered);
@@ -173,16 +192,15 @@ public class MapEventHints : MonoBehaviour
 			return;
 		}
 		var content = new GUIContent(_text);
-		float width = 600f * scale;
-		float height = _box.CalcHeight(content, width);
-		// 比屏幕还高（事件特别多的建筑）就把字缩小、框放宽，整段都放得下
-		int fontSize = _box.fontSize;
-		while (height > Screen.height - 16f * scale && _box.fontSize > 10)
+		if (!ReferenceEquals(_laidOutText, _text) || _laidOutScale != scale || _laidOutW != Screen.width || _laidOutH != Screen.height || _drawStyle == null)
 		{
-			_box.fontSize--;
-			width = Mathf.Min(Screen.width * 0.6f, width * 1.04f);
-			height = _box.CalcHeight(content, width);
+			_laidOutText = _text;
+			_laidOutScale = scale;
+			_laidOutW = Screen.width;
+			_laidOutH = Screen.height;
+			LayOut(content, scale);
 		}
+		float width = _boxWidth, height = _boxHeight;
 		Vector2 mouse = Event.current.mousePosition;
 		// 放在鼠标右下，超出屏幕就挪到左边、上边
 		float x = mouse.x + 24f * scale, y = mouse.y + 16f * scale;
@@ -191,8 +209,33 @@ public class MapEventHints : MonoBehaviour
 			x = mouse.x - width - 16f * scale;
 		}
 		y = Mathf.Clamp(y, 0f, Mathf.Max(0f, Screen.height - height));
-		GUI.Box(new Rect(Mathf.Max(0f, x), y, width, height), content, PanelTheme.Sync(_box));
-		_box.fontSize = fontSize;
+		GUI.Box(new Rect(Mathf.Max(0f, x), y, width, height), content, PanelTheme.Sync(_drawStyle));
+	}
+
+	// 比屏幕还高（事件特别多的建筑）就把字缩小、框放宽，整段都放得下。
+	// 先按面积估一个字号再微调，只量两三种字号（每种字号都要把这些字画进字体贴图）
+	private void LayOut(GUIContent content, float scale)
+	{
+		_drawStyle = new GUIStyle(_box);
+		float width = 600f * scale;
+		float height = _drawStyle.CalcHeight(content, width);
+		float room = Screen.height - 16f * scale;
+		if (height > room)
+		{
+			int size = _drawStyle.fontSize;
+			float wide = Mathf.Max(width, Screen.width * 0.6f);
+			int guess = Mathf.Clamp(Mathf.FloorToInt(size * Mathf.Sqrt(room * wide / (height * width))), 10, size - 1);
+			width = wide;
+			_drawStyle.fontSize = guess;
+			height = _drawStyle.CalcHeight(content, width);
+			while (height > room && _drawStyle.fontSize > 10)
+			{
+				_drawStyle.fontSize--;
+				height = _drawStyle.CalcHeight(content, width);
+			}
+		}
+		_boxWidth = width;
+		_boxHeight = height;
 	}
 
 	// ---------------- 这里有什么事件 ----------------
