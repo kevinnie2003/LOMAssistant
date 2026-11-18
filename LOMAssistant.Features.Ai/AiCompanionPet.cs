@@ -106,7 +106,7 @@ internal sealed class PortraitLook : CompanionLook
 			return false;
 		}
 		Rect tr = sprite.textureRect;
-		Vector2 anchor = StoryReviewPanel.HeadAnchor(sprite, _persona.Folder + "/" + (string.IsNullOrEmpty(mood) ? _persona.Moods[0] : mood));
+		Vector2 anchor = UnderUmbrella(StoryReviewPanel.HeadAnchor(sprite, _persona.Folder + "/" + (string.IsNullOrEmpty(mood) ? _persona.Moods[0] : mood)), tr);
 		// 只要头时裁一个正方形，从头顶量到下巴以下：头顶是头发、头巾的最高处，戴头巾、头发蓬的人脸在更下面，裁 300 只到眼睛
 		float side = Mathf.Min(390f, Mathf.Min(tr.width, tr.height));
 		float w = head ? side : Mathf.Min(420f, tr.width), h = head ? side : Mathf.Min(480f, tr.height);
@@ -116,6 +116,17 @@ internal sealed class PortraitLook : CompanionLook
 		uv = new Rect((tr.x + left) / texture.width, (tr.yMax - top - h) / texture.height, w / texture.width, h / texture.height);
 		aspect = w / h;
 		return true;
+	}
+
+	// 夏侯兰撑伞的那几张：量到的头顶是伞顶（比头发高约 150 像素），头中线落在伞面上，裁出来只有伞和眼睛。
+	// 按这几张立绘（1056 宽、伞顶在第 338 行）改成真正的头顶和脸的中线；不打伞的几张量得准，不动
+	private Vector2 UnderUmbrella(Vector2 anchor, Rect tr)
+	{
+		if (_persona.Folder == "Girl6_小蘭" && Mathf.Abs(tr.width - 1056f) < 1f && Mathf.Abs(anchor.y * tr.height - 338f) < 12f)
+		{
+			return new Vector2(480f / tr.width, (anchor.y * tr.height + 150f) / tr.height);
+		}
+		return anchor;
 	}
 }
 
