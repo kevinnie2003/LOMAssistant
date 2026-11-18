@@ -67,7 +67,7 @@ public static class AiCompanion
 	private const float BigGap = 20f;
 	// 三档：安静、正常、话多
 	private static readonly float[] MinGap = { 300f, 120f, 45f };
-	private static readonly int[] HourCap = { 6, 15, 30 };
+	private static readonly int[] HourCap = { 4, 15, 30 };
 	// 一段剧情里连着的往来最多留几轮（一问一答算一轮），换剧本清空
 	private const int ThreadTurns = 4;
 
@@ -580,13 +580,15 @@ public static class AiCompanion
 		float since = now - _lastSpokeAt;
 		// 还在冷却：先留着，过期了自然丢掉。大事可以插队一次（也不紧挨着上一句）；上一句就是插队说的，这次得等满冷却，
 		// 不然大事一件接一件时每二十秒就说一句，安静档也不安静
+		// 安静档只有结局能插队、能多说：打完一场、好感变化也等满冷却，省得一阵一阵地说
+		bool urgent = big && (level > 0 || worth[0].Kind == "ending");
 		bool cooling = since < MinGap[level];
-		if (cooling && !(big && since >= BigGap && !_jumped))
+		if (cooling && !(urgent && since >= BigGap && !_jumped))
 		{
 			return;
 		}
 		Spoken.RemoveAll(t => now - t > 3600f);
-		if (Spoken.Count >= HourCap[level] + (big ? 2 : 0))
+		if (Spoken.Count >= HourCap[level] + (urgent ? 2 : 0))
 		{
 			LogInfo("这一小时说够了，不说", Pending);
 			Pending.Clear();
@@ -804,7 +806,10 @@ public static class AiCompanion
 			Thread.Clear();
 			_threadScript = script;
 		}
-		var lines = Lines.Skip(Math.Max(0, Lines.Count - LinesSent)).ToList();
+		// 安静档隔得久，前面的往来接不上话，不带；最近对白也少带一半
+		bool quiet = Level == 0;
+		int sent = quiet ? LinesSent / 2 : LinesSent;
+		var lines = Lines.Skip(Math.Max(0, Lines.Count - sent)).ToList();
 		// 最近说过的几句是这一位说的；换了人就不带
 		if ((persona?.Id ?? "") != _recentPersona)
 		{
@@ -812,7 +817,7 @@ public static class AiCompanion
 			_recentPersona = persona?.Id ?? "";
 		}
 		var turn = new ChatMessage { Role = ChatMessage.User, Text = AiCompanionPrompts.Turn(AiCompanionPrompts.State(persona, scene), lines, Recent, card) };
-		send = Thread.Concat(new[] { turn }).ToList();
+		send = (quiet ? new List<ChatMessage>() : Thread).Concat(new[] { turn }).ToList();
 		AiDebug.Turn(AiCompanionPrompts.DebugWho(persona), _system, turn.Text, Model);
 		return turn;
 	}
