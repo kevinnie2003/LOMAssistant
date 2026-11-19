@@ -51,6 +51,7 @@ public sealed partial class Gallery
 		if (_foeWrapped != null && _foeStatsSkin != null && Mathf.Approximately(_foeStatsScale, _scale) && _foeStatsDark == PanelTheme.Dark) return;
 		_foeStatsScale = _scale;
 		_foeStatsDark = PanelTheme.Dark;
+		BuildFoeTauntStyles();
 		_foeWrapped = PanelTheme.Label(_scale, 18, PanelTheme.Ink, wrap: true);
 		_foeWrapped.richText = false; // 原游戏说明有富文本，走纯文本以免固定色在深色主题下不可读。
 		_foeStatsHeading = PanelTheme.Label(_scale, 22, PanelTheme.Ink, wrap: true);
@@ -259,6 +260,10 @@ public sealed partial class Gallery
 		if (_foeEncounter == null)
 		{
 			GUILayout.Label(_foeCatalogError ?? TextConverter.ForDisplay(_foeLoading ? "正在加载…" : "此立绘没有关联的决斗配置"), _foeWrapped);
+		}
+		else if (_foeShowTaunts)
+		{
+			DrawFoeTaunts(_foeEncounter, Mathf.Max(1f, content.width - FoeGutter));
 		}
 		else
 		{

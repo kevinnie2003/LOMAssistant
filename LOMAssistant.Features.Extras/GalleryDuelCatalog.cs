@@ -81,6 +81,7 @@ internal sealed class DuelEncounter
 	public string Id, StatId, Title;
 	public int Difficulty;
 	public List<DuelEvent> Events;
+	public Dictionary<string, string[]> Taunts = new Dictionary<string, string[]>(StringComparer.Ordinal);
 }
 
 internal sealed class DuelSkill

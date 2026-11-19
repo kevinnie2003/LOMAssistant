@@ -536,7 +536,7 @@ public sealed partial class Gallery
 		{
 			DrawDuelPractice(content);
 		}
-		else if (_foeShowStats)
+		else if (_foeShowStats || _foeShowTaunts)
 		{
 			float gap = S(14f);
 			float available = Mathf.Max(1f, content.width - gap);
@@ -558,7 +558,7 @@ public sealed partial class Gallery
 	/// <summary>底部工具栏按文字宽度换行，练习时保留返回立绘/资料的入口。</summary>
 	private Rect[] FoeToolbarRects(Rect bar)
 	{
-		string[] labels = { "重置视图", "面板与技能", "自定义决斗", "导出 PNG" };
+		string[] labels = { "重置视图", "面板与技能", "嘴功台词", "自定义决斗", "导出 PNG" };
 		var rects = new Rect[labels.Length];
 		float x = bar.x, y = bar.y, gap = S(8f), height = S(40f);
 		for (int i = 0; i < labels.Length; i++)
@@ -576,7 +576,11 @@ public sealed partial class Gallery
 		return rects;
 	}
 
-	private float FoeToolbarHeight(float width) => FoeToolbarRects(new Rect(0f, 0f, width, 0f))[3].yMax;
+	private float FoeToolbarHeight(float width)
+	{
+		Rect[] buttons = FoeToolbarRects(new Rect(0f, 0f, width, 0f));
+		return buttons[buttons.Length - 1].yMax;
+	}
 
 	private void DrawFoeToolbar(Rect bar)
 	{
@@ -592,22 +596,36 @@ public sealed partial class Gallery
 		if (GUI.Button(buttons[1], TextConverter.ForDisplay("面板与技能"), _foeShowStats && !_practiceVisible ? _trackOn : _track))
 		{
 			_foeShowStats = _practiceVisible || !_foeShowStats;
-			_practiceVisible = false;
-			EndFoeResize();
-			_foeDragging = false;
-			_foeZoom = 0f;
-			_foePan = Vector2.zero;
+			_foeShowTaunts = false;
+			ResetFoeDetailView();
 		}
-		if (GUI.Button(buttons[2], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track))
+		if (GUI.Button(buttons[2], TextConverter.ForDisplay("嘴功台词"), _foeShowTaunts && !_practiceVisible ? _trackOn : _track))
+		{
+			_foeShowTaunts = _practiceVisible || !_foeShowTaunts;
+			_foeShowStats = false;
+			ResetFoeDetailView();
+		}
+		if (GUI.Button(buttons[3], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track))
 		{
 			ToggleDuelPractice();
 		}
 		GUI.enabled = wasEnabled && !_practiceVisible && _foePose?.Sprite != null;
-		if (GUI.Button(buttons[3], TextConverter.ForDisplay("导出 PNG"), _button))
+		if (GUI.Button(buttons[buttons.Length - 1], TextConverter.ForDisplay("导出 PNG"), _button))
 		{
 			ExportFoeImage();
 		}
 		GUI.enabled = wasEnabled;
+	}
+
+	private void ResetFoeDetailView()
+	{
+		_practiceVisible = false;
+		_foePickEncounter = false;
+		_foeStatsScroll = Vector2.zero;
+		EndFoeResize();
+		_foeDragging = false;
+		_foeZoom = 0f;
+		_foePan = Vector2.zero;
 	}
 
 	private float ClampFoeStatsWidth(float width, float available)

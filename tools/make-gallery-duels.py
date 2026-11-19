@@ -28,6 +28,15 @@ def extract(game):
     gen.load_local_dll_folder(str(root / "Managed"))
     cache = {}
 
+    def fix_string_arrays(node):
+        # TypeTreeGenerator labels string[] as string, so UnityPy treats the
+        # array count as a string length unless we restore the vector type.
+        if (node.m_Type == "string" and node.m_Children
+                and node.m_Children[0].m_Children[1].m_Type == "string"):
+            node.m_Type = "vector"
+        for child in node.m_Children:
+            fix_string_arrays(child)
+
     def read(obj):
         identity = (obj.assets_file.name, obj.path_id)
         if identity not in cache:
@@ -42,6 +51,7 @@ def extract(game):
                 match = next((n for n in header.m_Children if n.m_Name == child.m_Name), None)
                 if match is not None:
                     node.m_Children[i] = match
+            fix_string_arrays(node)
             cache[identity] = (script.m_ClassName, obj.read_typetree(node))
         return cache[identity]
 
@@ -140,6 +150,34 @@ def extract(game):
             row["Remove"] = d["_type"] == 2
         return row
 
+    # Store references to the game's localization table, not the script text.
+    taunt_fields = ("NormalTalk", "GoodTalk", "BadTalk", "StopTalk", "TalkAttacked")
+    sequential_units = set()
+
+    def collect_taunt_action(obj, taunts, *, talking_event=False):
+        if obj is None:
+            return
+        cls = obj.read(check_read=False).m_Script.deref().read().m_ClassName
+        if cls == "CombatEventActionCount":
+            for item in sorted(read(obj)[1]["_items"], key=lambda i: i["Count"]):
+                for ptr in item["Actions"]:
+                    collect_taunt_action(deref(obj, ptr), taunts, talking_event=talking_event)
+        elif cls == "CombatEventActionStateEffect":
+            d = read(obj)[1]
+            if d["_character"] != 2 or d["_type"] != 1:  # Enemy, add effect
+                return
+            effect_obj = deref(obj, d["_effect"])
+            for ptr in read(effect_obj)[1]["_units"]:
+                unit = deref(effect_obj, ptr)
+                if unit.read(check_read=False).m_Script.deref().read().m_ClassName == "C_Effect_103":
+                    sequential_units.add(unit.path_id)
+                    taunts.setdefault("Sequential", []).extend(read(unit)[1]["_talkKeys"])
+        elif talking_event and cls == "CombatEventActionDialog":
+            # The player taunt triggers this dialogue. Include replies spoken by
+            # the duel opponent (3), excluding narrator, thoughts and bystanders.
+            taunts.setdefault("StoryReply", []).extend(
+                item["_key"] for item in read(obj)[1]["_dialogs"] if item["_character"] == 3)
+
     levels = []
     for obj in types["CombatLevel"]:
         d = read(obj)[1]
@@ -147,12 +185,16 @@ def extract(game):
         if not enemy:
             raise ValueError("Missing enemy: " + d["m_Name"])
         stat_id = stat_ids[(enemy.assets_file.name, enemy.path_id)]
+        dialogue = data(obj, d["_enemyTalking"])
+        taunts = {field: dialogue[field] for field in taunt_fields} if dialogue else {}
         events = []
         for ptr in d["Events"]:
             ev = deref(obj, ptr)
             ed = read(ev)[1]
             for ap in ed["_initAction"]:
-                row = action(deref(ev, ap), "", "Start")
+                action_obj = deref(ev, ap)
+                collect_taunt_action(action_obj, taunts)
+                row = action(action_obj, "", "Start")
                 if row: events.append(row)
             for cp in ed["_conditionAction"]:
                 ca = deref(ev, cp)
@@ -161,11 +203,22 @@ def extract(game):
                 trigger = sep.join(condition(deref(ca, p)) for p in cd["_conditions"])
                 for field, phase in [("_actions", "Round"), ("_afterActions", "Action"), ("_afterResult", "Result")]:
                     for ap in cd[field]:
-                        row = action(deref(ca, ap), trigger, phase)
+                        action_obj = deref(ca, ap)
+                        collect_taunt_action(action_obj, taunts)
+                        row = action(action_obj, trigger, phase)
                         if row: events.append(row)
+        talking_event = deref(obj, d["_talkingEvent"])
+        if talking_event:
+            for cp in read(talking_event)[1]["_conditionAction"]:
+                ca = deref(talking_event, cp)
+                for ap in read(ca)[1]["_afterActions"]:
+                    collect_taunt_action(deref(ca, ap), taunts, talking_event=True)
+        taunts = {kind: [key for key in keys if key.strip()] for kind, keys in taunts.items() if keys}
         difficulty = re.search(r"難度\s*(\d+)", d["_desc"])
         levels.append(dict(Id=d["m_Name"], StatId=stat_id, Title=d["_desc"],
-                           Difficulty=int(difficulty[1]) if difficulty else 0, Events=events))
+                           Difficulty=int(difficulty[1]) if difficulty else 0, Events=events, Taunts=taunts))
+
+    print(f"Enemy sequential talk sources: {len(sequential_units)} / {len(types.get('C_Effect_103', []))} assets")
 
     # Extract numerical rules, rather than interpreting translated descriptions.
     # Only read known unit layouts: unrelated VFX/action units can contain Unity
