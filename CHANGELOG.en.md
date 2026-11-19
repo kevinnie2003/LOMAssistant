@@ -2,6 +2,12 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.7 (2026-11-18)
+
+- **Map building hints**: hovering over a building no longer drops the frame rate.
+- **Proactive companion**: when Xiahou Lan holds her umbrella, the on-screen figure no longer shows only the umbrella and her eyes.
+- **Proactive companion, Quiet**: only endings can speak up before the usual gap, and each line sends less to the model, using fewer tokens.
+
 ## 3.7.6 (2026-11-17)
 
 - **Save-anywhere and branch saves**: with many saves, scrolling these two pages and writing notes no longer lags.
