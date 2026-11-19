@@ -79,6 +79,36 @@ public static class GalleryDuelTests
 			Assert(profile.Folders.All(folder => catalog.ForFolder(folder).Any(e => e.StatId == profile.Id)), "Orphan profile hidden: " + profile.Id);
 	}
 
+	public static void TestGalleryTauntsAreIndexedByEncounter()
+	{
+		var catalog = GalleryDuelCatalog.Instance;
+		Assert(catalog.Levels.All(e => e.Taunts.Count != 0), "Missing taunt groups for a game duel");
+		Assert(catalog.Levels.SelectMany(e => e.Taunts.Values).SelectMany(keys => keys).Distinct().Count() == 244,
+			"Lost localization keys from enemy dialogue assets");
+		DuelEncounter a = catalog.Levels.Single(e => e.Id == "CL_1504_01");
+		DuelEncounter b = catalog.Levels.Single(e => e.Id == "CL_1512_01");
+		Assert(a.StatId == b.StatId, "Regression fixture must use the same enemy configuration");
+		Assert(a.Taunts["NormalTalk"].Length == 4 && b.Taunts["NormalTalk"].Length == 15,
+			"Distinct Tong Dachong taunts were collapsed across story duels");
+		Assert(a.Taunts["StopTalk"].Length > 0 && a.Taunts["TalkAttacked"].Length > 0,
+			"Interrupted taunts or replies were dropped");
+		Assert(catalog.Profile(a.StatId).Folders.All(folder =>
+			catalog.ForFolder(folder).Contains(a) && catalog.ForFolder(folder).Contains(b)),
+			"Both scenes must be reachable from the enemy's gallery portrait");
+	}
+
+	public static void TestGalleryTauntsIncludeStoryRepliesToCombatActions()
+	{
+		var catalog = GalleryDuelCatalog.Instance;
+		DuelEncounter challenge = catalog.Levels.Single(e => e.Id == "CL_S0022_01");
+		Assert(challenge.Taunts.TryGetValue("StoryReply", out var replies)
+			&& replies.SequenceEqual(new[] { "S0022_01_02_001", "S0022_01_02_002" }),
+			"Dragon's Challenge should include both enemy replies triggered by a taunt, and exclude replies to other actions");
+		DuelEncounter other = catalog.Levels.Single(e => e.Id == "CL_1404_01");
+		Assert(other.StatId == challenge.StatId && !other.Taunts.ContainsKey("StoryReply"),
+			"Encounter-specific replies must not leak into another fight with the same enemy profile");
+	}
+
 	public static void TestGalleryDuelStoryVariants()
 	{
 		var c = GalleryDuelCatalog.Instance;
