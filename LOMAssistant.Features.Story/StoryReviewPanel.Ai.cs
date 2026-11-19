@@ -192,12 +192,12 @@ public partial class StoryReviewPanel
 		GUILayout.BeginHorizontal();
 		GUILayout.BeginVertical(GUILayout.Width(listWidth));
 		GUILayout.Label("服务商", _heading);
-		int current = ConfigManager.AiProvider.Value;
-		for (int i = 0; i < LlmProvider.All.Length; i++)
+		int current = AiChat.Provider.Id;
+		foreach (LlmProvider p in LlmProvider.All)
 		{
-			if (GUILayout.Button(LlmProvider.All[i].Name, i == current ? _aiListOn : _aiListOff, GUILayout.Width(listWidth), Ctl()) && i != current)
+			if (GUILayout.Button(p.Name, p.Id == current ? _aiListOn : _aiListOff, GUILayout.Width(listWidth), Ctl()) && p.Id != current)
 			{
-				_aiPickedProvider = i;
+				_aiPickedProvider = p.Id;
 			}
 		}
 		GUILayout.EndVertical();
@@ -229,9 +229,23 @@ public partial class StoryReviewPanel
 		LlmProvider provider = AiChat.Provider;
 		GUILayout.Label("连接", _heading);
 		GUILayout.BeginVertical(_card, GUILayout.Width(width));
-		float name = AiNameWidth("API Key", "API 地址", "问答模型", "深度模式模型");
+		float name = AiNameWidth("API Key", "密钥文件", "API 地址", "问答模型", "深度模式模型");
 		// 选好服务商后多数人只用填 Key，放最上面；地址和模型名已经填好
-		if (!provider.NoKey)
+		if (provider.Vertex)
+		{
+			// Vertex AI 不用 Key，填服务账号 JSON 密钥文件的路径（路径不是秘密，明文显示，方便核对）
+			GUILayout.BeginHorizontal();
+			AiName("密钥文件", name);
+			Assign(ConfigManager.AiApiKey, AiHinted(GUILayout.TextField(ConfigManager.AiApiKey.Value, 300, _field, Ctl()), "JSON 文件的完整路径"));
+			if (GUILayout.Button("创建服务账号", _button, GUILayout.Width(TextWidth("创建服务账号", _button, S(120))), Ctl()))
+			{
+				Application.OpenURL(provider.KeysPage);
+			}
+			GUILayout.EndHorizontal();
+			GUILayout.Label("在 Google Cloud 创建服务账号，授予「Vertex AI 用户」角色，下载 JSON 密钥后把文件路径填在这里。地址里的 {project} 会自动换成密钥文件里的项目。", _muted);
+			GUILayout.Space(S(4));
+		}
+		else if (!provider.NoKey)
 		{
 			GUILayout.BeginHorizontal();
 			AiName("API Key", name);

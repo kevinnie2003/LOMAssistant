@@ -559,7 +559,7 @@ public static class ConfigManager
 		AutoPlayInterval = new ConfigElement<int>("AutoPlayInterval", "自动播放间隔：开着游戏的「自动」时，一句对白显示完后等多久翻下一句。0=原版（不管有没有显示完，固定每 8 秒点一下），1=4 秒，2=2 秒，3=1 秒，4=0 秒（显示完马上翻）", 0);
 		EnableMouseWheelDialogue = new ConfigElement<bool>("EnableMouseWheelDialogue", "鼠标滚轮推进对白：剧情里滚轮往下滚一格推进一句对白，往上滚打开回想；回想翻到最底下再往下滚就关上回想。true=开，false=关", false);
 		AiPanelKey = new ConfigElement<KeyCode>("AiPanelKey", "打开咖啡伴侣窗口的 AI 页并把光标放进输入框的热键（已经在 AI 页时再按一次关上）", KeyCode.F3);
-		AiProvider = new ConfigElement<int>("AiProvider", "AI 攻略用哪家服务商（序号，在咖啡伴侣窗口「AI」页里选）", 0);
+		AiProvider = new ConfigElement<int>("AiProvider", "AI 攻略用哪家服务商（编号，不是列表里的第几个；在咖啡伴侣窗口「AI」页里选）", 0);
 		AiBaseUrl = new ConfigElement<string>("AiBaseUrl", "AI 服务商的 API 地址（选服务商时自动填）", "https://api.deepseek.com/v1");
 		AiModel = new ConfigElement<string>("AiModel", "AI 用的模型名（选服务商时自动填建议的，可以改）", "deepseek-flash");
 		AiApiKey = new ConfigElement<string>("AiApiKey", "正在使用的 AI 服务商的 API Key：只存在这台电脑上，只发给这家服务商。其他服务商填过的 Key 存在 config 文件夹的 LOMAssistant_AI/providers.json，切换服务商时自动换上", "");

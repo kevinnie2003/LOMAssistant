@@ -68,7 +68,7 @@ Setting names below are written as they appear on the settings page. The preset 
 
 ### AI companion (F3)
 
-Connect a large language model with your own API key to ask about the story and strategy, or to chat with characters from the game. Supports DeepSeek, Kimi, Qwen, Zhipu GLM, SiliconFlow, OpenRouter, OpenAI, Claude, Gemini, local Ollama, and any OpenAI-compatible endpoint.
+Connect a large language model with your own API key to ask about the story and strategy, or to chat with characters from the game. Supports DeepSeek, Kimi, Qwen, Zhipu GLM, SiliconFlow, OpenRouter, OpenAI, Claude, Gemini, Vertex AI (with a service account JSON key file instead of an API key), local Ollama, and any OpenAI-compatible endpoint.
 
 - **Guide**: looks up the game's own story data before answering: quests and their triggers, script branches and dialogue, affection and stat totals along each route, endings and deaths, romance routes, character bios, location events, duel conditions, plus your current progress and the options on screen.
 - **Heroines and the Eldest Brother**: the nine romanceable heroines and Tang Buyi, the Eldest Brother, speak in their own voice, their portraits change expression with what they say, and how they address you follows the story. They only know the story you have read. When you ask for help, a separate guide tip follows the reply; you can also set them to chat only.
@@ -255,7 +255,7 @@ The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
   - CG: CGs appear once you have seen them; all scene images are open, and a switch on the page shows locked content.
   - Portraits: pick a background, place characters and change variants, then export the current view as a PNG or hide the UI for screenshots.
   - Animations: plays frame-by-frame animations of character battle moves and effects and exports transparent GIFs.
-  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. **Stats & skills** shows each encounter's six stats, skills, the four traits (temperament, conduct, morality, cultivation) with their ratings, and the state changes at battle start or when conditions are met. Tick a buff from a skill or the story to see the six stats with it applied, along with its trigger conditions. **Custom duel** lets you fight the chosen story's original duel with a hero you set up, with the story events still triggering; the hero's stats and talents can be loaded from a manual save and then changed, and practice never writes to your saves.
+  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag, exported as transparent PNGs. **Stats & skills** shows each encounter's six stats, skills, the four traits (temperament, conduct, morality, cultivation) with their ratings, and the state changes at battle start or when conditions are met. Tick a buff from a skill or the story to see the six stats with it applied, along with its trigger conditions. **Simulated duel** lets you fight the chosen story's original duel with a hero you set up, with the story events still triggering; the hero's stats and talents can be loaded from a manual save and then changed, and practice never writes to your saves.
   - Music: all 39 official soundtrack tracks, with pause and playback progress.
 - **Title screen partner**: choose which character appears on the title screen, or show everyone or nobody.
 

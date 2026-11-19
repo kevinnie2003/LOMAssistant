@@ -21,10 +21,10 @@ internal static class AiProviderStore
 	// 和对话存在同一个文件夹。读对话时会扫到这个文件：里面没有对话编号，当成空对话跳过
 	private static string StorePath => Path.Combine(AiSessions.Folder, "providers.json");
 
-	/// <summary>换到第 index 家：记下现在这家填的，再取出那家上次填的；没填过的用默认地址、默认模型，Key 空着。</summary>
-	public static void Switch(int index)
+	/// <summary>换到编号为 id 的那家：记下现在这家填的，再取出那家上次填的；没填过的用默认地址、默认模型，Key 空着。</summary>
+	public static void Switch(int id)
 	{
-		LlmProvider from = AiChat.Provider, to = LlmProvider.At(index);
+		LlmProvider from = AiChat.Provider, to = LlmProvider.At(id);
 		JObject all = Load();
 		JObject mine = Snapshot(from);
 		if (mine.Count > 0)
@@ -37,7 +37,7 @@ internal static class AiProviderStore
 		}
 		Save(all);
 		JObject saved = all[to.Name] as JObject;
-		ConfigManager.AiProvider.Value = index;
+		ConfigManager.AiProvider.Value = to.Id;
 		ConfigManager.AiApiKey.Value = Text(saved, "Key") ?? "";
 		ConfigManager.AiBaseUrl.Value = Text(saved, "BaseUrl") ?? to.BaseUrl;
 		ConfigManager.AiModel.Value = Text(saved, "Model") ?? to.Model;

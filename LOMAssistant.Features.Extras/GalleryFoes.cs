@@ -559,7 +559,7 @@ public sealed partial class Gallery
 	/// <summary>底部工具栏按文字宽度换行，练习时保留返回立绘/资料的入口。</summary>
 	private Rect[] FoeToolbarRects(Rect bar)
 	{
-		string[] labels = { "重置视图", "面板与技能", "嘴功台词", "自定义决斗", "导出 PNG" };
+		string[] labels = { "重置视图", "面板与技能", "嘴功台词", "模拟决斗", "导出 PNG" };
 		var rects = new Rect[labels.Length];
 		float x = bar.x, y = bar.y, gap = S(8f), height = S(40f);
 		for (int i = 0; i < labels.Length; i++)
@@ -606,7 +606,7 @@ public sealed partial class Gallery
 			_foeShowStats = false;
 			ResetFoeDetailView();
 		}
-		if (GUI.Button(buttons[3], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track))
+		if (GUI.Button(buttons[3], TextConverter.ForDisplay("模拟决斗"), _practiceVisible ? _trackOn : _track))
 		{
 			ToggleDuelPractice();
 			EnsureFoeEncounterInDetailList();
