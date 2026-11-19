@@ -48,6 +48,8 @@ public sealed class LlmProvider
 	public bool NoKey;
 	/// <summary>地址要玩家自己填（自定义）。</summary>
 	public bool Custom;
+	/// <summary>Vertex AI：Key 一栏填服务账号 JSON 密钥文件的路径，用它换访问令牌（见 VertexAuth）。</summary>
+	public bool Vertex;
 
 	public static readonly LlmProvider[] All =
 	{
@@ -62,6 +64,8 @@ public sealed class LlmProvider
 		new LlmProvider { Name = "Gemini（Google）", BaseUrl = "https://generativelanguage.googleapis.com/v1beta/openai", Model = "gemini-3.6-flash", DeepModel = "gemini-3.8-flash", KeysPage = "https://aistudio.google.com/apikey" },
 		new LlmProvider { Name = "本地模型（Ollama）", BaseUrl = "http://localhost:11434/v1", Model = "qwen3", NoKey = true },
 		new LlmProvider { Name = "自定义（OpenAI 兼容）", BaseUrl = "", Model = "", Custom = true },
+		// 放在最后：配置里记的是序号，插在中间会让已经选好的人换了服务商
+		new LlmProvider { Name = "Vertex AI（Google Cloud）", BaseUrl = "https://aiplatform.googleapis.com/v1/projects/{project}/locations/global/endpoints/openapi", Model = "google/gemini-3.6-flash", DeepModel = "google/gemini-3.8-flash", KeysPage = "https://console.cloud.google.com/iam-admin/serviceaccounts", Vertex = true },
 	};
 
 	public static LlmProvider At(int index) => All[Math.Max(0, Math.Min(All.Length - 1, index))];
@@ -121,6 +125,18 @@ public static class LlmClient
 		{
 			done(new LlmReply { Error = "没有填模型名" });
 			yield break;
+		}
+		if (provider.Vertex)
+		{
+			string token = null, project = null, error = null;
+			yield return VertexAuth.Token(key, (t, p, e) => { token = t; project = p; error = e; });
+			if (error != null)
+			{
+				done(new LlmReply { Error = error });
+				yield break;
+			}
+			key = token;
+			url = url.Replace("{project}", project);
 		}
 		JObject body = provider.Claude ? ClaudeBody(model, system, messages, useTools, maxTokens, light) : OpenAiBody(model, system, messages, useTools, maxTokens, url, light);
 		// 最后一轮：工具定义照给（历史里有工具调用，不给定义有的服务商会报错，DeepSeek 还会把调用格式当正文写出来），但不许再调用
@@ -597,7 +613,8 @@ public static class LlmClient
 			body["reasoning_effort"] = "none";
 		}
 		// Gemini 3 系列的思考关不掉，不设时想得太久会超时：平时、极速 low，深度模式 medium（3.8-flash 不认 minimal，会报 400）
-		if (url.IndexOf("generativelanguage.googleapis.com", StringComparison.OrdinalIgnoreCase) >= 0 && model.IndexOf("gemini-3", StringComparison.OrdinalIgnoreCase) >= 0)
+		if ((url.IndexOf("generativelanguage.googleapis.com", StringComparison.OrdinalIgnoreCase) >= 0 || url.IndexOf("aiplatform.googleapis.com", StringComparison.OrdinalIgnoreCase) >= 0)
+			&& model.IndexOf("gemini-3", StringComparison.OrdinalIgnoreCase) >= 0)
 		{
 			body["reasoning_effort"] = AiChat.Deep && !light ? "medium" : "low";
 		}

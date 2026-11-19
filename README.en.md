@@ -68,7 +68,7 @@ Setting names below are written as they appear on the settings page. The preset 
 
 ### AI companion (F3)
 
-Connect a large language model with your own API key to ask about the story and strategy, or to chat with characters from the game. Supports DeepSeek, Kimi, Qwen, Zhipu GLM, SiliconFlow, OpenRouter, OpenAI, Claude, Gemini, local Ollama, and any OpenAI-compatible endpoint.
+Connect a large language model with your own API key to ask about the story and strategy, or to chat with characters from the game. Supports DeepSeek, Kimi, Qwen, Zhipu GLM, SiliconFlow, OpenRouter, OpenAI, Claude, Gemini, Vertex AI (with a service account JSON key file instead of an API key), local Ollama, and any OpenAI-compatible endpoint.
 
 - **Guide**: looks up the game's own story data before answering: quests and their triggers, script branches and dialogue, affection and stat totals along each route, endings and deaths, romance routes, character bios, location events, duel conditions, plus your current progress and the options on screen.
 - **Heroines and the Eldest Brother**: the nine romanceable heroines and Tang Buyi, the Eldest Brother, speak in their own voice, their portraits change expression with what they say, and how they address you follows the story. They only know the story you have read. When you ask for help, a separate guide tip follows the reply; you can also set them to chat only.
