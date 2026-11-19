@@ -192,12 +192,12 @@ public partial class StoryReviewPanel
 		GUILayout.BeginHorizontal();
 		GUILayout.BeginVertical(GUILayout.Width(listWidth));
 		GUILayout.Label("服务商", _heading);
-		int current = ConfigManager.AiProvider.Value;
-		for (int i = 0; i < LlmProvider.All.Length; i++)
+		int current = AiChat.Provider.Id;
+		foreach (LlmProvider p in LlmProvider.All)
 		{
-			if (GUILayout.Button(LlmProvider.All[i].Name, i == current ? _aiListOn : _aiListOff, GUILayout.Width(listWidth), Ctl()) && i != current)
+			if (GUILayout.Button(p.Name, p.Id == current ? _aiListOn : _aiListOff, GUILayout.Width(listWidth), Ctl()) && p.Id != current)
 			{
-				_aiPickedProvider = i;
+				_aiPickedProvider = p.Id;
 			}
 		}
 		GUILayout.EndVertical();
