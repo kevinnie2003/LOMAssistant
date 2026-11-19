@@ -26,7 +26,7 @@ internal static class GalleryDuelPractice
 	internal static string LastError { get; private set; }
 	internal static event Action Finished;
 
-	private const string BlockedText = "游戏版本或其他 Mod 和自定义决斗对不上，为了不碰存档，这次不能开始练习。";
+	private const string BlockedText = "游戏版本或其他 Mod 和模拟决斗对不上，为了不碰存档，这次不能开始练习。";
 
 	/// <summary>
 	/// 不为 null 时不能开始练习。只有两种情况会挡：存档保护没装全，或者缺了练习根本跑不起来的部分。

@@ -119,7 +119,7 @@ public static class UiTextEnglish
 	public static readonly Dictionary<string, string> Table = new Dictionary<string, string>
 	{
 		["决斗练习失败："] = "Duel practice failed: ",
-		["游戏版本或其他 Mod 和自定义决斗对不上，为了不碰存档，这次不能开始练习。"] = "The game version or another mod does not match custom duel. To keep your saves untouched, practice cannot start this time.",
+		["游戏版本或其他 Mod 和模拟决斗对不上，为了不碰存档，这次不能开始练习。"] = "The game version or another mod does not match simulated duel. To keep your saves untouched, practice cannot start this time.",
 		["这个游戏版本不能单独练习独立配置的角色，请选一个剧情。"] = "This game version cannot practice a standalone character on its own. Please choose a story.",
 		["决斗练习正在进行。"] = "Duel practice is already running.",
 		["原版决斗场景未能完成初始化。"] = "The native duel scene could not finish initializing.",
@@ -174,7 +174,7 @@ public static class UiTextEnglish
 		["等级 0 为不启用；上限按游戏原生天赋定义。高阶技能可能覆盖同系低阶技能。"] = "Level 0 disables a talent. Maximum levels follow the game definitions. Higher skills may override lower skills in the same family.",
 		["练习不保存进度；结束或退出后返回鉴赏。"] = "Practice progress is not saved. Finishing or leaving returns to the gallery.",
 		["练习启动失败，请重试。"] = "Could not start practice. Please try again.",
-		["自定义决斗"] = "Custom duel",
+		["模拟决斗"] = "Simulated duel",
 		["血量上限"] = "Maximum health",
 		["请先修正标红的数值，再开始练习。"] = "Correct the values marked in red before starting practice.",
 		["请选择有关联决斗配置的角色。"] = "Choose a character with a duel profile.",

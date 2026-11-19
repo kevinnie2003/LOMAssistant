@@ -137,7 +137,7 @@ public sealed partial class Gallery
 			// 窄屏时标题、剧情选择和开始按钮分行，开始按钮始终在滚动区外。
 			float startWidth = Mathf.Max(S(160f), _trackOn.CalcSize(new GUIContent(TextConverter.ForDisplay("开始练习"))).x + S(32f));
 			bool wide = width >= S(620f);
-			GUI.Label(new Rect(x, y, wide ? width - startWidth - gap : width, S(32f)), TextConverter.ForDisplay("自定义决斗"), _practiceHeading);
+			GUI.Label(new Rect(x, y, wide ? width - startWidth - gap : width, S(32f)), TextConverter.ForDisplay("模拟决斗"), _practiceHeading);
 			var launch = new Rect(wide ? x + width - startWidth : x, wide ? y : y + S(42f), wide ? startWidth : width, S(42f));
 			string validation = PracticeValidation();
 			bool enabled = GUI.enabled;
