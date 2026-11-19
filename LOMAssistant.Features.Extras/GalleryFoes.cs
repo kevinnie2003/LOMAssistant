@@ -355,6 +355,7 @@ public sealed partial class Gallery
 		_foe = null;
 		_foePose = null;
 		_foeEncounters.Clear();
+		_foeTauntEncounters.Clear();
 		_foeEncounter = null;
 		_foeRadar?.Dispose();
 		_foeRadar = null;
@@ -608,6 +609,7 @@ public sealed partial class Gallery
 		if (GUI.Button(buttons[3], TextConverter.ForDisplay("自定义决斗"), _practiceVisible ? _trackOn : _track))
 		{
 			ToggleDuelPractice();
+			EnsureFoeEncounterInDetailList();
 		}
 		GUI.enabled = wasEnabled && !_practiceVisible && _foePose?.Sprite != null;
 		if (GUI.Button(buttons[buttons.Length - 1], TextConverter.ForDisplay("导出 PNG"), _button))
@@ -620,12 +622,20 @@ public sealed partial class Gallery
 	private void ResetFoeDetailView()
 	{
 		_practiceVisible = false;
+		EnsureFoeEncounterInDetailList();
 		_foePickEncounter = false;
 		_foeStatsScroll = Vector2.zero;
 		EndFoeResize();
 		_foeDragging = false;
 		_foeZoom = 0f;
 		_foePan = Vector2.zero;
+	}
+
+	private void EnsureFoeEncounterInDetailList()
+	{
+		var encounters = FoeDetailEncounters;
+		if (_foeEncounter != null && !encounters.Contains(_foeEncounter))
+			_foeEncounter = encounters.FirstOrDefault();
 	}
 
 	private float ClampFoeStatsWidth(float width, float available)

@@ -13,7 +13,9 @@ public sealed partial class Gallery
 	private GalleryDuelRadar _foeRadar;
 	private string _foeEncounterSearch = "", _foeCatalogError;
 	private List<DuelEncounter> _foeEncounters = new List<DuelEncounter>();
+	private List<DuelEncounter> _foeTauntEncounters = new List<DuelEncounter>();
 	private DuelEncounter _foeEncounter;
+	private List<DuelEncounter> FoeDetailEncounters => _foeShowTaunts && !_practiceVisible ? _foeTauntEncounters : _foeEncounters;
 	private Vector2 _foeEncounterScroll, _foeStatsScroll;
 	private GUISkin _foeStatsSkin;
 	private GUIStyle _foeWrapped, _foeStatsHeading, _foeStatsSubheading, _foeSubtitle, _foeDetail, _foeCondition;
@@ -29,13 +31,16 @@ public sealed partial class Gallery
 		_foePickEncounter = false;
 		_foeEncounterSearch = "";
 		_foeEncounters.Clear();
+		_foeTauntEncounters.Clear();
 		_foeEncounter = null;
 		_foeCatalogError = null;
 		try
 		{
 			var all = GalleryDuelCatalog.Instance.ForFolder(_foe.Folder);
-			// 「测试」关卡（CL_0000_*）是开发用的，玩家碰不到；只有测试关卡的角色才留着
-			var real = all.Where(e => !e.Id.StartsWith("CL_0000", StringComparison.Ordinal)).ToList();
+			bool Development(DuelEncounter e) => e.Id.StartsWith("CL_0000", StringComparison.Ordinal);
+			// 测试关卡也有独立台词，台词页将它们排在剧情关卡之后。
+			_foeTauntEncounters = all.OrderBy(Development).ToList();
+			var real = all.Where(e => !Development(e)).ToList();
 			_foeEncounters = real.Count > 0 ? real : all;
 			_foeEncounter = _foeEncounters.FirstOrDefault();
 		}
@@ -132,7 +137,7 @@ public sealed partial class Gallery
 		if (string.IsNullOrEmpty(_foeEncounterSearch) && GUI.GetNameOfFocusedControl() != "LOMAssistant_FoeEncounterSearch")
 			GUI.Label(new Rect(area.x + S(10f), area.y, width - S(20f), S(40f)), TextConverter.ForDisplay("搜索剧情 / 配置"), _foeHint);
 		string query = TextConverter.ToSimplified(_foeEncounterSearch.Trim());
-		var shown = _foeEncounters.Where(e => query.Length == 0 || TextConverter.ToSimplified(
+		var shown = FoeDetailEncounters.Where(e => query.Length == 0 || TextConverter.ToSimplified(
 			EncounterTitle(e) + " " + e.Title + " " + e.Id + " " + e.StatId).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
 		GUI.Label(new Rect(area.x, area.y + S(46f), width, S(26f)),
 			string.Format(TextConverter.ForDisplay("{0} 个剧情 / 状态"), shown.Count), _foeSmall);
@@ -232,7 +237,7 @@ public sealed partial class Gallery
 		if (_foeEncounter != null)
 		{
 			DuelProfile current = GalleryDuelCatalog.Instance.Profile(_foeEncounter.StatId);
-			bool many = _foeEncounters.Count > 1;
+			bool many = FoeDetailEncounters.Count > 1;
 			string open = TextConverter.ForDisplay("选择剧情"), close = TextConverter.ForDisplay("收起");
 			float buttonWidth = many ? Mathf.Min(Mathf.Max(_track.CalcSize(new GUIContent(open)).x, _track.CalcSize(new GUIContent(close)).x) + S(32f), header.width * 0.4f) : 0f;
 			var title = new GUIStyle(_foeStatsHeading) { wordWrap = false, clipping = TextClipping.Clip, alignment = TextAnchor.MiddleLeft, padding = new RectOffset() };

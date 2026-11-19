@@ -154,14 +154,19 @@ def extract(game):
     taunt_fields = ("NormalTalk", "GoodTalk", "BadTalk", "StopTalk", "TalkAttacked")
     sequential_units = set()
 
-    def collect_taunt_action(obj, taunts, *, talking_event=False):
+    def checks_taunt(obj):
+        cls, data = read(obj)
+        # CombatActionType.嘴砲 is serialized as 1 in the action type list.
+        return cls == "CombatEventConditionActionType" and 1 in data["_typeList"]
+
+    def collect_taunt_action(obj, taunts, *, taunt_triggered=False):
         if obj is None:
             return
         cls = obj.read(check_read=False).m_Script.deref().read().m_ClassName
         if cls == "CombatEventActionCount":
             for item in sorted(read(obj)[1]["_items"], key=lambda i: i["Count"]):
                 for ptr in item["Actions"]:
-                    collect_taunt_action(deref(obj, ptr), taunts, talking_event=talking_event)
+                    collect_taunt_action(deref(obj, ptr), taunts, taunt_triggered=taunt_triggered)
         elif cls == "CombatEventActionStateEffect":
             d = read(obj)[1]
             if d["_character"] != 2 or d["_type"] != 1:  # Enemy, add effect
@@ -172,9 +177,8 @@ def extract(game):
                 if unit.read(check_read=False).m_Script.deref().read().m_ClassName == "C_Effect_103":
                     sequential_units.add(unit.path_id)
                     taunts.setdefault("Sequential", []).extend(read(unit)[1]["_talkKeys"])
-        elif talking_event and cls == "CombatEventActionDialog":
-            # The player taunt triggers this dialogue. Include replies spoken by
-            # the duel opponent (3), excluding narrator, thoughts and bystanders.
+        elif taunt_triggered and cls == "CombatEventActionDialog":
+            # CombatDialogCharacterType.Enemy (3) speaks these lines.
             taunts.setdefault("StoryReply", []).extend(
                 item["_key"] for item in read(obj)[1]["_dialogs"] if item["_character"] == 3)
 
@@ -200,11 +204,13 @@ def extract(game):
                 ca = deref(ev, cp)
                 cd = read(ca)[1]
                 sep = " AND " if cd["_logic"] == 0 else " OR "
-                trigger = sep.join(condition(deref(ca, p)) for p in cd["_conditions"])
+                conditions = [deref(ca, p) for p in cd["_conditions"]]
+                trigger = sep.join(condition(c) for c in conditions)
+                taunt_triggered = any(checks_taunt(c) for c in conditions)
                 for field, phase in [("_actions", "Round"), ("_afterActions", "Action"), ("_afterResult", "Result")]:
                     for ap in cd[field]:
                         action_obj = deref(ca, ap)
-                        collect_taunt_action(action_obj, taunts)
+                        collect_taunt_action(action_obj, taunts, taunt_triggered=taunt_triggered)
                         row = action(action_obj, trigger, phase)
                         if row: events.append(row)
         talking_event = deref(obj, d["_talkingEvent"])
@@ -212,7 +218,7 @@ def extract(game):
             for cp in read(talking_event)[1]["_conditionAction"]:
                 ca = deref(talking_event, cp)
                 for ap in read(ca)[1]["_afterActions"]:
-                    collect_taunt_action(deref(ca, ap), taunts, talking_event=True)
+                    collect_taunt_action(deref(ca, ap), taunts, taunt_triggered=True)
         taunts = {kind: [key for key in keys if key.strip()] for kind, keys in taunts.items() if keys}
         difficulty = re.search(r"難度\s*(\d+)", d["_desc"])
         levels.append(dict(Id=d["m_Name"], StatId=stat_id, Title=d["_desc"],
