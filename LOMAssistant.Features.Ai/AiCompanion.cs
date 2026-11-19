@@ -67,7 +67,7 @@ public static class AiCompanion
 	private const float BigGap = 20f;
 	// 三档：安静、正常、话多
 	private static readonly float[] MinGap = { 300f, 120f, 45f };
-	private static readonly int[] HourCap = { 4, 15, 30 };
+	private static readonly int[] HourCap = { 6, 15, 30 };
 	// 一段剧情里连着的往来最多留几轮（一问一答算一轮），换剧本清空
 	private const int ThreadTurns = 4;
 
