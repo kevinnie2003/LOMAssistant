@@ -2,6 +2,14 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.7.8 (2026-11-20)
+
+- **Duels gallery page**: new **Taunts** lists the enemy's taunts, interrupted taunts and replies to taunts for each encounter; **Custom duel** is renamed **Simulated duel**.
+- **Save anywhere**: you can also quick-save during story duels; it saves the last line before the fight, so loading it lets you retry from there. Save-anywhere saves can also be loaded during duels.
+- **AI Companion**: supports Vertex AI (Google Cloud), using a service account JSON key file instead of an API key; providers in the AI settings are reordered; a line under the chat box notes that replies are AI-generated and may contain mistakes.
+- **Stats tab**: pick your love interest from a dropdown, with each option showing its value.
+- **Gallery**: removed exporting from the Portraits, Animations and Duels pages; the Animations and Duels pages now have only black and white backgrounds, and the Duels page can switch between them too.
+
 ## 3.7.7 (2026-11-18)
 
 - **Map building hints**: hovering over a building no longer drops the frame rate.

@@ -170,7 +170,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 ### Saves
 
-- **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots; not available in combat.
+- **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots. In story duels it saves the last line before the fight; not available in other combat.
   - F5 saves, F7 loads the latest, F6 opens the list.
   - In the list you can write notes, see the dialogue at that point, group saves by save slot, save time or game date, filter them and delete a whole group.
   - No limit by default; set one in Settings.
@@ -226,7 +226,7 @@ Stats, martial arts, sects, relationships (everyone), talents, training and craf
 
 - **Books and items**: set the count directly; quests advance as if bought in a shop. Hover over a martial manual to see what each layer adds when learned; learned layers are ticked.
 - **Stats**: can be set below the bonus from manuals and the like, even below zero, and stay there through later story changes and loading.
-- **Love interest and titles**: your love interest is shown by name; mood, the four personality stats and yin-yang show their current title after the value. Pick any title or write your own.
+- **Love interest and titles**: pick your love interest from a dropdown, with each option showing its value; mood, the four personality stats and yin-yang show their current title after the value. Pick any title or write your own.
 - **Locks**: mood, the four personality stats, yin-yang, silver and contribution each have a lock that keeps story and options from changing them; locks stay on across restarts and saves.
 - **Flags**: over a thousand, grouped by sect favour, characters, story and more.
 - **Reverse lookup**: click a flag, book or item to list the scenes that change or check it; click a name under relationships to list the scenes that check it. Each links to the story map.
@@ -255,7 +255,7 @@ The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
   - CG: CGs appear once you have seen them; all scene images are open, and a switch on the page shows locked content.
   - Portraits: pick a background, place characters and change variants, then hide the UI for screenshots.
   - Animations: plays frame-by-frame animations of character battle moves and effects.
-  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag. **Stats & skills** shows each encounter's six stats, skills, the four traits (temperament, conduct, morality, cultivation) with their ratings, and the state changes at battle start or when conditions are met. Tick a buff from a skill or the story to see the six stats with it applied, along with its trigger conditions. **Simulated duel** lets you fight the chosen story's original duel with a hero you set up, with the story events still triggering; the hero's stats and talents can be loaded from a manual save and then changed, and practice never writes to your saves.
+  - Duels: every duel character's battle portraits (normal, attack, hurt, block), with zoom and drag. **Stats & skills** shows each encounter's six stats, skills, the four traits (temperament, conduct, morality, cultivation) with their ratings, and the state changes at battle start or when conditions are met. Tick a buff from a skill or the story to see the six stats with it applied, along with its trigger conditions. **Taunts** lists the enemy's taunts, interrupted taunts and replies to taunts for each encounter. **Simulated duel** lets you fight the chosen story's original duel with a hero you set up, with the story events still triggering; the hero's stats and talents can be loaded from a manual save and then changed, and practice never writes to your saves.
   - Music: all 39 official soundtrack tracks, with pause and playback progress.
 - **Title screen partner**: choose which character appears on the title screen, or show everyone or nobody.
 
