@@ -289,7 +289,7 @@ The title screen gets two more buttons, **Training Pagoda** and **Gallery**.
 
 ## Building
 
-You need the .NET 8 SDK and a game folder with the mod installed (the build references the game's and BepInEx's assemblies; no game files are in this repository).
+You need the .NET 8 SDK and a game folder with the mod installed (the build references the game's and BepInEx's assemblies; no game files are in this repository). The data scripts in `tools/` only read the locally installed game to produce the duel data, condition table and save-anywhere compatibility contract the mod uses; they don't export game code or assets.
 
 ```bash
 GAME="D:/Steam/steamapps/common/LegendOfMortal" DOTNET=/path/to/dotnet ./build.sh

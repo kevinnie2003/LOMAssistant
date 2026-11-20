@@ -287,7 +287,7 @@
 
 ## 开发
 
-需要 .NET 8 SDK 和装好本 Mod 的游戏目录（编译时引用游戏和 BepInEx 的程序集，仓库里没有游戏文件）。
+需要 .NET 8 SDK 和装好本 Mod 的游戏目录（编译时引用游戏和 BepInEx 的程序集，仓库里没有游戏文件）。`tools/` 里生成数据的脚本只读本机已安装的游戏，产出 Mod 要用的决斗配置、条件表和随时存档兼容契约，不导出游戏代码或素材。
 
 ```bash
 GAME="D:/Steam/steamapps/common/LegendOfMortal" DOTNET=/path/to/dotnet ./build.sh
