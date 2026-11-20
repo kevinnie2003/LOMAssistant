@@ -114,6 +114,7 @@ public partial class AnytimeSave : MonoBehaviour
 	private float panelTimeScale = 1;
 	private readonly List<InputAction> pausedActions = new List<InputAction>();
 	private SaveFile loading;
+	private SaveFile duelCheckpoint;
 	private Script currentInterpreter;
 	private DiceState pendingDice;
 
@@ -160,8 +161,15 @@ public partial class AnytimeSave : MonoBehaviour
 
 	private void SceneChanged(Scene previous, Scene next)
 	{
+		if (previous.name == "Story" && next.name != "Title" && next.name != "Free"
+			&& !LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive && !Restoring)
+		{
+			CaptureDuelCheckpoint();
+		}
+		if (next.name == "Story" || next.name == "Title" || next.name == "Free") duelCheckpoint = null;
 		active = -1; busy = false;
-		if (next.name != "Story" && !Restoring) { trace.Clear(); stamps.Clear(); rootScript = null; ClearRollback(); }
+		bool enteringStoryDuel = next.name == "Combat" && !LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive;
+		if (next.name != "Story" && !enteringStoryDuel && !Restoring) { trace.Clear(); stamps.Clear(); rootScript = null; ClearRollback(); }
 		// 回到标题（之后可能读别的档、开新游戏）：分支回退点作废；读随时存档、回退时经过标题界面不算
 		if (next.name == "Title" && !Restoring) ClearBranchPoint();
 	}
@@ -411,6 +419,34 @@ public partial class AnytimeSave : MonoBehaviour
 
 	private static string SceneName => SceneManager.GetActiveScene().name;
 
+	private int DuelSaveTarget()
+	{
+		return duelCheckpoint?.target ?? -1;
+	}
+
+	private void CaptureDuelCheckpoint()
+	{
+		duelCheckpoint = null;
+		try
+		{
+			int target = -1;
+			for (int i = Math.Min(active >= 0 ? active : trace.Count - 1, trace.Count - 1); i >= 0; i--)
+				if (trace[i]?.kind == "say") { target = i; break; }
+			if (target < 0 || string.IsNullOrEmpty(rootScript))
+			{
+				FileLogger.LogWarning($"[随时存档] 离开剧情时没有可用的决斗检查点：target={target}, active={active}, trace={trace.Count}, root={rootScript ?? "<null>"}");
+				return;
+			}
+			duelCheckpoint = CaptureSave(target, true);
+			FileLogger.Log($"[随时存档] 已缓存决斗前对白：target={target}, trace={duelCheckpoint.trace.Count}, script={duelCheckpoint.currentScript}");
+		}
+		catch (Exception ex)
+		{
+			duelCheckpoint = null;
+			FileLogger.Log("[随时存档] 无法缓存决斗前剧情检查点：" + ex);
+		}
+	}
+
 	private bool CanSave(out string reason)
 	{
 		reason = null;
@@ -427,6 +463,11 @@ public partial class AnytimeSave : MonoBehaviour
 				else if (!ActiveField(dice, "_continueButton") && ((bool)Field(dice, "_pressStartButton") || DiceManualSelectionPatch.IsClicked)) reason = "掷骰正在处理，请等结果显示";
 			}
 		}
+		else if (SceneName == "Combat")
+		{
+			if (LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive) reason = "鉴赏模拟决斗中不能快速存档";
+			else if (DuelSaveTarget() < 0) reason = "没有捕获到进入决斗前的剧情台词";
+		}
 		else if (SceneName == "Free")
 		{
 			var f = Mortal.Free.FreeManager.Instance;
@@ -439,25 +480,13 @@ public partial class AnytimeSave : MonoBehaviour
 	/// <summary>存一个新的随时存档，返回文件名（存不了返回 null）。note 给了就一并写上备注（剧情跳转存「跳转前」用）。</summary>
 	public string SaveSlot(string note = null)
 	{
-		if (!CanSave(out string reason)) { Notice("暂不能保存：" + reason); return null; }
+		if (!CanSave(out string reason)) { Notice(TextConverter.ForDisplay("暂不能保存：" + reason)); return null; }
 		try
 		{
-			var data = new SaveFile
-			{
-				version = Application.version, coreHash = coreHash, storyHash = storyHash, compatibilityId = compatibilityId,
-				savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), scene = SceneName,
-				rootScript = rootScript, currentScript = PlayerStatManagerData.Instance.CurrentStoryScript,
-				nativeSlot = SaveSystem.Instance.CurrentSlot,
-				gameJson = SaveSystem.Instance.GetCurrentSaveData(), randomJson = JsonUtility.ToJson(UnityEngine.Random.state),
-				music = CurrentSound("_currentMusic"), envSound = CurrentSound("_currentEnvSound"), musicVolume = CurrentVolume("BackgroundMusic"), envVolume = CurrentVolume("EnvSound"),
-				visibleCharacters = VisibleCharacters(),
-				target = active, preview = Preview(), gameTime = GameTimeText(),
-				dice = CaptureDice(),
-				hiddenOptions = runHidden,
-				freeRng = SceneName == "Free" ? CaptureFreeRng() : null,
-				trace = SceneName == "Story" ? trace.Take(active + 1).ToList() : new List<Entry>(),
-				scripts = new List<ScriptStamp>(stamps)
-			};
+			bool duel = SceneName == "Combat";
+			int saveTarget = duel ? DuelSaveTarget() : active;
+			var data = duel ? duelCheckpoint : CaptureSave(saveTarget, false);
+			data.savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 			string payload = JsonConvert.SerializeObject(data);
 			string text = JsonConvert.SerializeObject(new Envelope { payload = payload, sha256 = Hash(payload) });
 			Directory.CreateDirectory(StoreRoot);
@@ -480,10 +509,37 @@ public partial class AnytimeSave : MonoBehaviour
 		catch (Exception ex) { Notice("保存失败：" + ex.Message); LOMAssistantPlugin.LogError("随时存档保存失败: " + ex); return null; }
 	}
 
+	private SaveFile CaptureSave(int saveTarget, bool storySnapshot)
+	{
+		bool story = storySnapshot || SceneName == "Story";
+		return new SaveFile
+		{
+			version = Application.version, coreHash = coreHash, storyHash = storyHash, compatibilityId = compatibilityId,
+			savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), scene = storySnapshot ? "Story" : SceneName,
+			rootScript = rootScript, currentScript = PlayerStatManagerData.Instance.CurrentStoryScript,
+			nativeSlot = SaveSystem.Instance.CurrentSlot,
+			gameJson = SaveSystem.Instance.GetCurrentSaveData(), randomJson = JsonUtility.ToJson(UnityEngine.Random.state),
+			music = CurrentSound("_currentMusic"), envSound = CurrentSound("_currentEnvSound"), musicVolume = CurrentVolume("BackgroundMusic"), envVolume = CurrentVolume("EnvSound"),
+			visibleCharacters = VisibleCharacters(),
+			target = saveTarget, preview = PreviewAt(saveTarget), gameTime = GameTimeText(),
+			dice = SceneName == "Story" ? CaptureDice() : null,
+			hiddenOptions = runHidden,
+			freeRng = SceneName == "Free" ? CaptureFreeRng() : null,
+			trace = story ? trace.Take(saveTarget + 1).Select(e => new Entry { kind = e.kind, label = e.label, type = e.type, value = e.value }).ToList() : new List<Entry>(),
+			scripts = new List<ScriptStamp>(stamps)
+		};
+	}
+
 	private string Preview()
 	{
 		if (SceneName != "Story" || active < 0) return "养成";
-		var e = trace[active];
+		return PreviewAt(active);
+	}
+
+	private string PreviewAt(int index)
+	{
+		if (index < 0 || index >= trace.Count) return "养成";
+		var e = trace[index];
 		if (e.kind == "roll") { var d = CaptureDice(); return d.resultReady ? "掷骰结果：" + d.count + "（待确认）" : "掷骰前"; }
 		if (e.kind == "choose" || e.kind == "timer") return ChoicePreview(e.label);
 		return Regex.Replace(e.label ?? "", @"<[^>]+>|\{[^}]+\}", "");
@@ -514,7 +570,8 @@ public partial class AnytimeSave : MonoBehaviour
 		if (!installed) { Notice(compatibilityFailure ?? "随时存档尚未初始化"); return; }
 		if (Replaying || Restoring || pendingLoad) { Notice("正在恢复，请稍候"); return; }
 		if (SceneController.Instance == null || SceneController.Instance.IsPrepare || SceneController.Instance.IsLoading) { Notice("场景切换中，暂不能读取"); return; }
-		if (SceneName != "Story" && SceneName != "Free" && SceneName != "Title") { Notice("请在标题、剧情或养成界面读取"); return; }
+		if (SceneName == "Combat" && LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive) { Notice(TextConverter.ForDisplay("鉴赏模拟决斗中不能读取随时存档")); return; }
+		if (SceneName != "Story" && SceneName != "Free" && SceneName != "Title" && SceneName != "Combat") { Notice(TextConverter.ForDisplay("请在标题、剧情、养成或决斗界面读取")); return; }
 		SaveFile data;
 		try { data = ReadSave(Path.Combine(StoreRoot, name)); }
 		catch (Exception ex) { Notice("无法读取：" + ex.Message); return; }
@@ -910,7 +967,7 @@ public static class AnytimeSavePatches
 	[HarmonyPatch(typeof(LuaEnvironment), "LoadLuaFunction")]
 	public static void LoadLuaFunction_Prefix(LuaEnvironment __instance, ref string luaString, string friendlyName)
 	{
-		if (AnytimeSave.Instance == null) return;
+		if (AnytimeSave.Instance == null || SceneManager.GetActiveScene().name == "Combat") return;
 		var timer = System.Diagnostics.Stopwatch.StartNew();
 		luaString = AnytimeSave.Instance.PrepareScript(__instance, luaString, friendlyName);
 		LuaLoadTiming.AnytimeMs += timer.ElapsedMilliseconds;

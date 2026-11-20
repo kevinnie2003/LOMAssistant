@@ -39,7 +39,7 @@ public partial class AnytimeSave
 	public string Status()
 	{
 		if (Time.realtimeSinceStartup < messageUntil && !string.IsNullOrEmpty(message)) return message;
-		return CanSave(out string reason) ? "" : "暂不能保存：" + reason;
+		return CanSave(out string reason) ? "" : TextConverter.ForDisplay("暂不能保存：" + reason);
 	}
 
 	public bool CanSaveNow => CanSave(out _);
