@@ -161,15 +161,10 @@ public partial class AnytimeSave : MonoBehaviour
 
 	private void SceneChanged(Scene previous, Scene next)
 	{
-		if (previous.name == "Story" && next.name != "Title" && next.name != "Free"
-			&& !LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive && !Restoring)
-		{
-			CaptureDuelCheckpoint();
-		}
+		// 决斗检查点只在这场决斗里有用：回到剧情、地图、标题就作废
 		if (next.name == "Story" || next.name == "Title" || next.name == "Free") duelCheckpoint = null;
 		active = -1; busy = false;
-		bool enteringStoryDuel = next.name == "Combat" && !LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive;
-		if (next.name != "Story" && !enteringStoryDuel && !Restoring) { trace.Clear(); stamps.Clear(); rootScript = null; ClearRollback(); }
+		if (next.name != "Story" && !Restoring) { trace.Clear(); stamps.Clear(); rootScript = null; ClearRollback(); }
 		// 回到标题（之后可能读别的档、开新游戏）：分支回退点作废；读随时存档、回退时经过标题界面不算
 		if (next.name == "Title" && !Restoring) ClearBranchPoint();
 	}
@@ -424,26 +419,35 @@ public partial class AnytimeSave : MonoBehaviour
 		return duelCheckpoint?.target ?? -1;
 	}
 
-	private void CaptureDuelCheckpoint()
+	/// <summary>
+	/// 剧本要进决斗了（这时剧情场景还在）：把开打前最后一句台词、选项记成检查点，决斗里按快速存档就存它。
+	/// 数据用回退到判定前的快照：那一句之后第一次改数值之前取的，就是那一句时的数据；
+	/// 不能用开打时的数据——最后一句和开打之间常有加旗标、加好感，读档后从那一句往下走会再加一次。
+	/// </summary>
+	internal void CaptureDuelCheckpoint()
 	{
 		duelCheckpoint = null;
+		if (Replaying || Restoring || LOMAssistant.Features.Extras.GalleryDuelPractice.IsActive || SceneName != "Story") return;
 		try
 		{
-			int target = -1;
-			for (int i = Math.Min(active >= 0 ? active : trace.Count - 1, trace.Count - 1); i >= 0; i--)
-				if (trace[i]?.kind == "say") { target = i; break; }
-			if (target < 0 || string.IsNullOrEmpty(rootScript))
+			if (lastInteraction < 0 || string.IsNullOrEmpty(rootScript))
 			{
-				FileLogger.LogWarning($"[随时存档] 离开剧情时没有可用的决斗检查点：target={target}, active={active}, trace={trace.Count}, root={rootScript ?? "<null>"}");
+				FileLogger.LogWarning($"[随时存档] 进决斗时没有可用的检查点：last={lastInteraction}, trace={trace.Count}, root={rootScript ?? "<null>"}");
 				return;
 			}
-			duelCheckpoint = CaptureSave(target, true);
-			FileLogger.Log($"[随时存档] 已缓存决斗前对白：target={target}, trace={duelCheckpoint.trace.Count}, script={duelCheckpoint.currentScript}");
+			SaveFile point = PointAtLastInteraction();
+			if (point == null) return;
+			// 复制一份：快照对象还给回退功能用
+			var data = JsonConvert.DeserializeObject<SaveFile>(JsonConvert.SerializeObject(point));
+			data.version = Application.version; data.coreHash = coreHash; data.storyHash = storyHash; data.compatibilityId = compatibilityId;
+			data.preview = PreviewAt(lastInteraction); data.gameTime = GameTimeText();
+			duelCheckpoint = data;
+			FileLogger.Log($"[随时存档] 已记下决斗前检查点：target={data.target}, trace={data.trace.Count}, script={data.currentScript}");
 		}
 		catch (Exception ex)
 		{
 			duelCheckpoint = null;
-			FileLogger.Log("[随时存档] 无法缓存决斗前剧情检查点：" + ex);
+			FileLogger.Log("[随时存档] 无法记下决斗前检查点：" + ex);
 		}
 	}
 
@@ -485,7 +489,7 @@ public partial class AnytimeSave : MonoBehaviour
 		{
 			bool duel = SceneName == "Combat";
 			int saveTarget = duel ? DuelSaveTarget() : active;
-			var data = duel ? duelCheckpoint : CaptureSave(saveTarget, false);
+			var data = duel ? duelCheckpoint : CaptureSave(saveTarget);
 			data.savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 			string payload = JsonConvert.SerializeObject(data);
 			string text = JsonConvert.SerializeObject(new Envelope { payload = payload, sha256 = Hash(payload) });
@@ -509,23 +513,22 @@ public partial class AnytimeSave : MonoBehaviour
 		catch (Exception ex) { Notice("保存失败：" + ex.Message); LOMAssistantPlugin.LogError("随时存档保存失败: " + ex); return null; }
 	}
 
-	private SaveFile CaptureSave(int saveTarget, bool storySnapshot)
+	private SaveFile CaptureSave(int saveTarget)
 	{
-		bool story = storySnapshot || SceneName == "Story";
 		return new SaveFile
 		{
 			version = Application.version, coreHash = coreHash, storyHash = storyHash, compatibilityId = compatibilityId,
-			savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), scene = storySnapshot ? "Story" : SceneName,
+			savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), scene = SceneName,
 			rootScript = rootScript, currentScript = PlayerStatManagerData.Instance.CurrentStoryScript,
 			nativeSlot = SaveSystem.Instance.CurrentSlot,
 			gameJson = SaveSystem.Instance.GetCurrentSaveData(), randomJson = JsonUtility.ToJson(UnityEngine.Random.state),
 			music = CurrentSound("_currentMusic"), envSound = CurrentSound("_currentEnvSound"), musicVolume = CurrentVolume("BackgroundMusic"), envVolume = CurrentVolume("EnvSound"),
 			visibleCharacters = VisibleCharacters(),
 			target = saveTarget, preview = PreviewAt(saveTarget), gameTime = GameTimeText(),
-			dice = SceneName == "Story" ? CaptureDice() : null,
+			dice = CaptureDice(),
 			hiddenOptions = runHidden,
 			freeRng = SceneName == "Free" ? CaptureFreeRng() : null,
-			trace = story ? trace.Take(saveTarget + 1).Select(e => new Entry { kind = e.kind, label = e.label, type = e.type, value = e.value }).ToList() : new List<Entry>(),
+			trace = SceneName == "Story" ? trace.Take(saveTarget + 1).ToList() : new List<Entry>(),
 			scripts = new List<ScriptStamp>(stamps)
 		};
 	}
@@ -960,6 +963,14 @@ public static class AnytimeSavePatches
 	}
 
 	private static bool AllowWrite() => !AnytimeSave.Replaying && !AnytimeSave.Restoring && !AnytimeSave.Faulted;
+
+	// 剧本调 luamanager.ChangeScene("Combat", …) 进剧情决斗：剧情场景卸载前记下决斗检查点
+	[HarmonyPrefix]
+	[HarmonyPatch(typeof(LuaManager), nameof(LuaManager.ChangeScene))]
+	public static void ChangeScene_Prefix(string name)
+	{
+		if (name == "Combat") AnytimeSave.Instance?.CaptureDuelCheckpoint();
+	}
 
 	// 排在本 Mod 其它 LoadLuaFunction 补丁之后，让信息窗口、选项提示解析的还是原始剧本
 	[HarmonyPrefix]
