@@ -440,6 +440,7 @@ public static class UiTextEnglish
 		["API 地址"] = "API URL",
 		["模型"] = "Model",
 		["去申请 Key"] = "Get a key",
+		["AI 生成的内容可能有误，仅供参考，不代表游戏官方或本 Mod 的立场。"] = "AI-generated content may contain mistakes and is for reference only. It doesn't represent the views of the game's developer or this mod.",
 		["密钥文件"] = "Key file",
 		["JSON 文件的完整路径"] = "Full path to the JSON file",
 		["创建服务账号"] = "Create a service account",

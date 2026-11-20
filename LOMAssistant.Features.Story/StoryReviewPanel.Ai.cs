@@ -1317,6 +1317,9 @@ public partial class StoryReviewPanel
 			return;
 		}
 
+		// 输入框下面一行说明：说的话都是 AI 现场生成的
+		GUI.Label(new Rect(r.x, r.yMax - S(26), r.width, S(26)), "AI 生成的内容可能有误，仅供参考，不代表游戏官方或本 Mod 的立场。", Middle(_muted));
+		r = new Rect(r.x, r.y, r.width, r.height - S(32));
 		float inputHeight = S(76);
 		var area = new Rect(r.x, r.y, r.width, r.height - inputHeight - S(10));
 		// 新消息来了滚到最下面
