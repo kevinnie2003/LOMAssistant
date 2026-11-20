@@ -25,7 +25,11 @@ public partial class StoryReviewPanel
 		public GameStat LockStat; // 有值时这一行多一个锁按钮（心相、四种性格、阴阳、银两）
 		public string Group; // 旗标的分类（见 FlagGroup）
 		public Func<List<StoryUse>> Uses; // 有就能点名字看在哪些剧情里用到（剧本没读完返回 null）
+		public List<(int Value, string Name)> Choices; // 有就画成下拉框（心上人：直接选人，不用加减猜是谁）
 	}
+
+	// 现在展开着的下拉框（行的 Id）
+	private string _statDropdown;
 
 	private string _statsSearch = "";
 	private Vector2 _statsScroll;
@@ -270,6 +274,11 @@ public partial class StoryReviewPanel
 
 	private void DrawStatRow(StatRow row, float width)
 	{
+		if (row.Choices != null && row.Set != null)
+		{
+			DrawStatChoiceRow(row, width);
+			return;
+		}
 		GUILayout.BeginHorizontal(_card, GUILayout.Width(width - S(10)));
 		// 一行放得下：名字、说明太长就截短，鼠标停上去看全文
 		// 文字竖直居中、每个控件一样高（和设置页一样），一行里的字和框才对得齐
@@ -378,6 +387,55 @@ public partial class StoryReviewPanel
 		}
 		GUI.enabled = wasEnabled;
 		GUILayout.EndHorizontal();
+		StatsPadRow(row);
+	}
+
+	// 下拉框的一行：名字、现在选的是谁；点开后在这一格下面列出全部选项，点一个就改
+	private void DrawStatChoiceRow(StatRow row, float width)
+	{
+		GUIStyle line = Middle(_label);
+		bool open = _statDropdown == row.Id;
+		int value = row.Get();
+		string current = row.Choices.Where(c => c.Value == value).Select(c => c.Name).FirstOrDefault() ?? value.ToString();
+		GUILayout.BeginVertical(_card, GUILayout.Width(width - S(10)));
+		GUILayout.BeginHorizontal();
+		GUILayout.Label(Fit(TextConverter.ForDisplay(row.Name), line, S(120)), line, GUILayout.Width(S(120)), Ctl());
+		if (row.Note.Length > 0)
+		{
+			Hover(GUILayoutUtility.GetLastRect(), row.Name + "\n" + row.Note);
+		}
+		// 这一项本来是个整数：数值照样写在名字后面，和别的行对齐
+		GUILayout.Label(value.ToString(), line, GUILayout.Width(S(52)), Ctl());
+		GUILayout.FlexibleSpace();
+		if (GUILayout.Button(TextConverter.ForDisplay(current) + (open ? "  ▲" : "  ▼"), open ? _primary : _button, GUILayout.Width(S(240)), Ctl()))
+		{
+			_statDropdown = open ? null : row.Id;
+		}
+		GUILayout.EndHorizontal();
+		if (open)
+		{
+			// 选项按一格的宽度分几列排
+			float inner = width - S(10) - _card.padding.horizontal;
+			float cell = S(140);
+			int perLine = Mathf.Max(1, Mathf.FloorToInt(inner / (cell + _button.margin.horizontal)));
+			GUILayout.Space(S(6));
+			for (int i = 0; i < row.Choices.Count; i += perLine)
+			{
+				GUILayout.BeginHorizontal();
+				for (int j = i; j < Mathf.Min(row.Choices.Count, i + perLine); j++)
+				{
+					var (choice, name) = row.Choices[j];
+					if (GUILayout.Button(TextConverter.ForDisplay(name) + " " + choice, choice == value ? _primary : _button, GUILayout.Width(cell), Ctl()) && choice != value)
+					{
+						SetManual(row, choice);
+						_statDropdown = null;
+					}
+				}
+				GUILayout.FlexibleSpace();
+				GUILayout.EndHorizontal();
+			}
+		}
+		GUILayout.EndVertical();
 		StatsPadRow(row);
 	}
 
@@ -901,6 +959,7 @@ public partial class StoryReviewPanel
 			// 可以调到加成以下（底数为负），见 NegativeBasePatch
 			Set = v => LOMAssistant.Features.Extras.NegativeBasePatch.SetFinal(s, v),
 			Step = money ? 500 : small ? 1 : 5,
+			Choices = type == GameStatType.愛人 ? LoverChoices() : null,
 			Extra = () =>
 			{
 				if (type == GameStatType.愛人)
@@ -917,6 +976,17 @@ public partial class StoryReviewPanel
 				return addition;
 			},
 		};
+	}
+
+	// 心上人的选项：「自己」（99，还没有心上人）在最前，然后是九位（PlayerInfo/Lover/N 的游戏名字）
+	private static List<(int, string)> LoverChoices()
+	{
+		var list = new List<(int, string)> { (99, Localized("PlayerInfo/Lover/99", "自己")) };
+		for (int i = 0; i <= 8; i++)
+		{
+			list.Add((i, Localized("PlayerInfo/Lover/" + i, i.ToString())));
+		}
+		return list;
 	}
 
 	/// <summary>数值现在是哪一档称号，分档算法和游戏角色面板相同；数值超出范围时按两头的称号算。</summary>
