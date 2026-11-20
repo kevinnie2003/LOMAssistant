@@ -183,7 +183,6 @@ public static class ConfigManager
 
 	public static ConfigElement<int> GalleryFrameFps;
 	public static ConfigElement<int> GalleryFrameBg;
-	public static ConfigElement<string> GalleryFrameExportDir;
 
 	public static ConfigElement<bool> TitleTower;
 
@@ -615,9 +614,8 @@ public static class ConfigManager
 		TitleTower = new ConfigElement<bool>("TitleTower", "标题画面练功塔按钮：标题画面多一个「练功塔」按钮，游玩试玩版的练功塔模式。存档、自动存档和生死簿都和正常游玩一样。回到标题画面后生效", defaultValue: true);
 		FateBonusRepeat = new ConfigElement<bool>("FateBonusRepeat", "继承页沿用上次分配：开新档的「继承」页多一个「沿用上次」按钮，照上次点「开始」时的分配逐格加点。命运点数照扣，不够时点到用完为止，点完还能自己调", defaultValue: true);
 		GalleryShowLocked = new ConfigElement<bool>("GalleryShowLocked", "鉴赏页的「显示未解锁内容」按钮：打开后没解锁的 CG 和音乐也能看、能听，会剧透", defaultValue: false);
-		GalleryFrameFps = new ConfigElement<int>("GalleryFrameFps", "鉴赏「动图」页的播放帧率（每秒几帧，1～50；再快 GIF 存不下，导出会按 50 算）", 12);
-		GalleryFrameBg = new ConfigElement<int>("GalleryFrameBg", "鉴赏「动图」页播放区的底色：0=深色棋盘格（默认），1=白色，2=黑色。透明底的图在深色底上看不清时换白色", 0);
-		GalleryFrameExportDir = new ConfigElement<string>("GalleryFrameExportDir", "鉴赏「立绘」「决斗」页导出 PNG、「动图」页导出 GIF 的位置：默认是桌面。可以在动图、决斗页顶部改，目录不存在会自动建", defaultValue: DefaultGalleryExportDir());
+		GalleryFrameFps = new ConfigElement<int>("GalleryFrameFps", "鉴赏「动图」页的播放帧率（每秒几帧，1～50）", 12);
+		GalleryFrameBg = new ConfigElement<int>("GalleryFrameBg", "鉴赏「动图」页播放区和「决斗」页立绘的底色（两页共用）：1=白色，2=黑色（默认）", 2);
 		SaveListOrder = new ConfigElement<int>("SaveListOrder", "新版存档、读档界面里手动存档的排列：0=按栏位号（默认），1=最近保存的在上面，2=按栏位号、读档页也列出所有空栏位（点空栏位在那一格开新游戏，同原版）。打开界面时都会选中并滚到上次保存的那个存档", 0);
 		SaveSlotCount = new ConfigElement<int>("SaveSlotCount", "手动存档栏位数量（原版 20，小于 20 时按 20）", 100);
 		LegendSlotPages = new ConfigElement<int>("LegendSlotPages", "传奇栏位页数：保存传奇和图鉴的传奇界面每页 12 格，多于 1 页时下面出现翻页按钮（原版 1 页）", 5);

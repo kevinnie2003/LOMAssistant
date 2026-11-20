@@ -13,7 +13,7 @@ namespace LOMAssistant.Features.Extras;
 
 /// <summary>
 /// 鉴赏的「动图」页：直接读游戏本体 <c>Mortal_Data/StreamingAssets/aa/*/battle_*.bundle</c> 里的 Sprite，
-/// 按「同前缀 + 编号连续」认成一段序列帧动画，可以播放、逐帧看、调帧率、换缩放、导出透明底 GIF。
+/// 按「同前缀 + 编号连续」认成一段序列帧动画，可以播放、逐帧看、调帧率、换缩放。
 /// 不依赖任何解包出来的图片，装好游戏本体就能用；一次只加载一个角色的包，换角色就把上一个卸掉。
 /// </summary>
 public sealed partial class Gallery
@@ -97,30 +97,26 @@ public sealed partial class Gallery
 	private string _frameSearch = "";
 	private Vector2 _frameCharScroll, _frameClipScroll;
 	private int _frameIndex;
-	private bool _framePlaying, _frameLoop = true, _frameLoading, _frameExporting;
+	private bool _framePlaying, _frameLoop = true, _frameLoading;
 	private float _frameNextAt;
 	private string _frameNotice = "";
 	private float _frameNoticeUntil;
-	private string _frameExportResult;
 	private GUIStyle _frameRow, _frameRowOn, _frameSmall, _frameName, _frameNameOn, _frameHint;
 	private float _frameRowScale = -1f;
 	private float _frameZoom;
-	private string _frameExportDirEdit;
-	private static Texture2D _frameChecker;
 
-	/// <summary>GIF 的时间精度只有 10 毫秒、且延时低于 20 毫秒会被查看器当成 100 毫秒，
-	/// 所以帧率上限按 50 算（20 毫秒一帧）。</summary>
+	/// <summary>帧率上限 50（20 毫秒一帧）。</summary>
 	private const int MaxFrameFps = 50;
 
 	private int FrameFps => Mathf.Clamp(ConfigManager.GalleryFrameFps.Value, 1, MaxFrameFps);
 
-	/// <summary>GIF 里实际写进去的延时（单位 1/100 秒）：四舍五入到 10 毫秒，下限 2（20 毫秒）。</summary>
+	/// <summary>每帧的延时（单位 1/100 秒）：四舍五入到 10 毫秒，下限 2（20 毫秒）。</summary>
 	private static int FrameDelayCentiseconds(int fps)
 	{
 		return Math.Min(65535, Math.Max(2, (Mathf.RoundToInt(1000f / Math.Max(1, fps)) + 5) / 10));
 	}
 
-	/// <summary>每帧实际耗时（秒）。预览和导出都用它，保证看到多快、导出就多快。</summary>
+	/// <summary>每帧实际耗时（秒）。</summary>
 	private float FrameStep => FrameDelayCentiseconds(FrameFps) / 100f;
 
 	/// <summary>游戏本体的 Addressables 包目录（Windows 下是 StandaloneWindows64）。</summary>
@@ -677,20 +673,7 @@ public sealed partial class Gallery
 		float left = S(40f);
 		float width = screen.width - S(80f);
 
-		// 导出位置：默认是桌面，可以在这里改，目录不存在会自动建
-		if (_frameExportDirEdit == null)
-		{
-			_frameExportDirEdit = ConfigManager.GalleryFrameExportDir.Value ?? "";
-		}
-		GUI.Label(new Rect(left, top, S(80f), S(44f)), TextConverter.ForDisplay("导出到"), _muted);
-		var dirField = new Rect(left + S(84f), top, width - S(280f), S(44f));
-		_frameExportDirEdit = GUI.TextField(dirField, _frameExportDirEdit ?? "", _field);
-		if (GUI.Button(new Rect(dirField.xMax + S(10f), top, S(150f), S(44f)), TextConverter.ForDisplay("打开文件夹"), _button))
-		{
-			OpenExportFolder();
-		}
-
-		var body = new Rect(left, top + S(58f), width, screen.height - top - S(58f) - S(40f));
+		var body = new Rect(left, top, width, screen.height - top - S(40f));
 		var chars = new Rect(body.x, body.y, S(FrameCharWidth), body.height);
 		var clips = new Rect(chars.xMax + S(12f), body.y, S(FrameClipWidth), body.height);
 		var stage = new Rect(clips.xMax + S(12f), body.y, body.width - chars.width - clips.width - S(24f), body.height);
@@ -796,7 +779,7 @@ public sealed partial class Gallery
 	private void DrawFrameStage(Rect stage)
 	{
 		var image = new Rect(stage.x, stage.y, stage.width, Mathf.Max(S(160f), stage.height - S(FrameStageBarHeight)));
-		DrawChecker(image);
+		DrawBackdrop(image);
 
 		Sprite sprite = _frameClip != null && _frameIndex < _frameClip.Sprites.Count ? _frameClip.Sprites[_frameIndex] : null;
 		if (sprite == null)
@@ -867,55 +850,26 @@ public sealed partial class Gallery
 			_frameZoom = _frameZoom > 0f ? 0f : 1f;
 		}
 
-		string[] bgLabels = { "底色 深", "底色 白", "底色 黑" };
-		int bg = Mathf.Clamp(ConfigManager.GalleryFrameBg.Value, 0, 2);
-		if (GUI.Button(new Rect(fpsBar.xMax + S(276f), y2, S(96f), S(40f)),
-			TextConverter.ForDisplay(bgLabels[bg]), _track))
+		if (GUI.Button(new Rect(fpsBar.xMax + S(276f), y2, S(96f), S(40f)), TextConverter.ForDisplay(BgLabel), _track))
 		{
-			ConfigManager.GalleryFrameBg.Value = (bg + 1) % 3;
+			CycleBg();
 		}
-
-		var export = new Rect(stage.xMax - S(180f), y2, S(180f), S(40f));
-		bool canExport = !_frameExporting && _frameClip != null && !_frameLoading;
-		bool wasOn = GUI.enabled;
-		GUI.enabled = wasOn && canExport;
-		if (GUI.Button(export, TextConverter.ForDisplay(_frameExporting ? "导出中…" : "导出 GIF"), _button))
-		{
-			ExportClip();
-		}
-		GUI.enabled = wasOn;
-
-		FrameNoticeTick();
 	}
 
-	private void DrawChecker(Rect box)
+	// 动图页、决斗页共用的底色：白、黑来回切。配置里 1 是白，其他都算黑（以前的 0 是深灰，现在也是黑）
+	private static bool BgWhite => ConfigManager.GalleryFrameBg.Value == 1;
+
+	private static string BgLabel => BgWhite ? "底色 白" : "底色 黑";
+
+	private static void CycleBg()
 	{
-		// 透明底的图在深色棋盘格上轮廓不清，可以让用户换成白底或黑底
-		switch (ConfigManager.GalleryFrameBg.Value)
-		{
-			case 1:
-				Fill(box, Color.white);
-				return;
-			case 2:
-				Fill(box, Color.black);
-				return;
-		}
-		Fill(box, new Color(0.1f, 0.1f, 0.11f, 1f));
-		if (_frameChecker == null)
-		{
-			_frameChecker = new Texture2D(2, 2, TextureFormat.RGBA32, false)
-			{
-				hideFlags = HideFlags.HideAndDontSave,
-				filterMode = FilterMode.Point,
-				wrapMode = TextureWrapMode.Repeat,
-			};
-			var dark = new Color32(26, 26, 29, 255);
-			var light = new Color32(34, 34, 38, 255);
-			_frameChecker.SetPixels32(new[] { light, dark, dark, light });
-			_frameChecker.Apply();
-		}
-		float cell = Mathf.Max(6f, S(14f));
-		GUI.DrawTextureWithTexCoords(box, _frameChecker, new Rect(0f, 0f, box.width / (cell * 2f), box.height / (cell * 2f)));
+		ConfigManager.GalleryFrameBg.Value = BgWhite ? 2 : 1;
+	}
+
+	// 立绘、动画的底色：黑（默认）或白；深色的图在黑底上看不清时换白底
+	private void DrawBackdrop(Rect box)
+	{
+		Fill(box, BgWhite ? Color.white : Color.black);
 	}
 
 	/// <summary>自绘滑条：点、拖都改值，返回新值。</summary>
@@ -945,18 +899,6 @@ public sealed partial class Gallery
 	{
 		_frameNotice = text;
 		_frameNoticeUntil = Time.unscaledTime + seconds;
-	}
-
-	private void FrameNoticeTick()
-	{
-		if (_frameExportResult == null)
-		{
-			return;
-		}
-		string result = _frameExportResult;
-		_frameExportResult = null;
-		_frameExporting = false;
-		FrameNotice(result, 6f);
 	}
 
 	// ---------------- 播放 ----------------
@@ -1052,158 +994,5 @@ public sealed partial class Gallery
 		_frameClip = null;
 		_framePlaying = false;
 		_frameLoading = false;
-	}
-
-	// ---------------- 导出 ----------------
-
-	private void ExportClip()
-	{
-		if (_frameClip == null || _frameExporting)
-		{
-			return;
-		}
-		var frames = new List<(Color32[], int, int)>();
-		var cache = new Dictionary<Texture2D, Color32[]>();
-		try
-		{
-			foreach (Sprite sprite in _frameClip.Sprites)
-			{
-				frames.Add((ReadSprite(sprite, cache), Mathf.RoundToInt(sprite.textureRect.width), Mathf.RoundToInt(sprite.textureRect.height)));
-			}
-		}
-		catch (Exception e)
-		{
-			FileLogger.LogWarning("[鉴赏] 读帧像素失败: " + e);
-			FrameNotice(TextConverter.ForDisplay("读不出这一段的像素，导不了"), 6f);
-			return;
-		}
-		string name = SafeFileName(_frameClip.Name) + ".gif";
-		string dir = ExportDirectory();
-		string path;
-		try
-		{
-			Directory.CreateDirectory(dir);
-			path = Path.Combine(dir, name);
-		}
-		catch (Exception e)
-		{
-			FileLogger.LogWarning("[鉴赏] 导出目录不可用 " + dir + ": " + e.Message);
-			FrameNotice(TextConverter.ForDisplay("这个导出目录用不了，换一个"), 6f);
-			return;
-		}
-		// 和预览用同一套延时，导出的速度和看到的一样
-		int delay = FrameDelayCentiseconds(FrameFps) * 10;
-		_frameExporting = true;
-		FrameNotice(string.Format(TextConverter.ForDisplay("正在导出 {0}…"), name), 120f);
-		Task.Run(() =>
-		{
-			try
-			{
-				GifWriter.Save(path, frames, delay);
-				_frameExportResult = string.Format(TextConverter.ForDisplay("已导出：{0}"), name);
-			}
-			catch (Exception e)
-			{
-				FileLogger.LogWarning("[鉴赏] 导出 GIF 失败: " + e);
-				_frameExportResult = string.Format(TextConverter.ForDisplay("导出失败：{0}"), e.Message);
-			}
-		});
-	}
-
-	/// <summary>把 sprite 在纹理上的那块抠出来。纹理多半不可读，用 RenderTexture 拷一份。</summary>
-	private static Color32[] ReadSprite(Sprite sprite, Dictionary<Texture2D, Color32[]> cache)
-	{
-		Texture2D texture = sprite.texture;
-		if (!cache.TryGetValue(texture, out Color32[] source))
-		{
-			source = ReadTexture(texture);
-			cache[texture] = source;
-		}
-		Rect part = sprite.textureRect;
-		int width = Mathf.RoundToInt(part.width), height = Mathf.RoundToInt(part.height);
-		int x0 = Mathf.RoundToInt(part.x), y0 = Mathf.RoundToInt(part.y);
-		var pixels = new Color32[Mathf.Max(1, width * height)];
-		for (int y = 0; y < height; y++)
-		{
-			int sy = y0 + y;
-			if (sy < 0 || sy >= texture.height)
-			{
-				continue;
-			}
-			for (int x = 0; x < width; x++)
-			{
-				int sx = x0 + x;
-				if (sx < 0 || sx >= texture.width)
-				{
-					continue;
-				}
-				pixels[y * width + x] = source[sy * texture.width + sx];
-			}
-		}
-		return pixels;
-	}
-
-	private static Color32[] ReadTexture(Texture2D texture)
-	{
-		if (texture.isReadable)
-		{
-			return texture.GetPixels32();
-		}
-		RenderTexture previous = RenderTexture.active;
-		RenderTexture temp = RenderTexture.GetTemporary(texture.width, texture.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.sRGB);
-		Graphics.Blit(texture, temp);
-		RenderTexture.active = temp;
-		var copy = new Texture2D(texture.width, texture.height, TextureFormat.RGBA32, false)
-		{
-			hideFlags = HideFlags.HideAndDontSave,
-		};
-		copy.ReadPixels(new Rect(0f, 0f, texture.width, texture.height), 0, 0);
-		copy.Apply();
-		RenderTexture.active = previous;
-		RenderTexture.ReleaseTemporary(temp);
-		Color32[] pixels = copy.GetPixels32();
-		Destroy(copy);
-		return pixels;
-	}
-
-	/// <summary>页面上填的导出目录；空着就用配置里的。填了会顺手记进配置。</summary>
-	private string ExportDirectory()
-	{
-		string dir = (_frameExportDirEdit ?? "").Trim();
-		if (dir.Length == 0)
-		{
-			dir = ConfigManager.GalleryFrameExportDir.Value;
-		}
-		if (dir != ConfigManager.GalleryFrameExportDir.Value)
-		{
-			ConfigManager.GalleryFrameExportDir.Value = dir;
-		}
-		return dir;
-	}
-
-	private void OpenExportFolder()
-	{
-		string dir = ExportDirectory();
-		try
-		{
-			Directory.CreateDirectory(dir);
-			System.Diagnostics.Process.Start("explorer.exe", "\"" + dir + "\"");
-		}
-		catch (Exception e)
-		{
-			FileLogger.LogWarning("[鉴赏] 打开导出文件夹失败: " + e.Message);
-			FrameNotice(TextConverter.ForDisplay("打不开这个文件夹"), 5f);
-		}
-	}
-
-	private static string SafeFileName(string name)
-	{
-		char[] invalid = Path.GetInvalidFileNameChars();
-		var builder = new System.Text.StringBuilder(name.Length);
-		foreach (char c in name)
-		{
-			builder.Append(invalid.Contains(c) || c == '/' || c == '\\' ? '_' : c);
-		}
-		return builder.ToString().Trim();
 	}
 }

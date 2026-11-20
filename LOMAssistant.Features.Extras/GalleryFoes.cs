@@ -410,28 +410,7 @@ public sealed partial class Gallery
 		float top = S(110f);
 		float left = S(40f);
 		float width = screen.width - S(80f);
-		// 导出位置和动图页共用（默认桌面），可以在这里改，目录不存在会自动建
-		if (_frameExportDirEdit == null)
-		{
-			_frameExportDirEdit = ConfigManager.GalleryFrameExportDir.Value ?? "";
-		}
-		if (_practiceVisible)
-		{
-			PracticeStyles();
-			GUI.Label(new Rect(left, top, width, S(44f)), TextConverter.ForDisplay("选择对手与原生剧情，自定义主角后开始练习。"), _practiceMuted);
-		}
-		else
-		{
-			GUI.Label(new Rect(left, top, S(80f), S(44f)), TextConverter.ForDisplay("导出到"), _muted);
-			var dirField = new Rect(left + S(84f), top, width - S(280f), S(44f));
-			_frameExportDirEdit = GUI.TextField(dirField, _frameExportDirEdit ?? "", _field);
-			if (GUI.Button(new Rect(dirField.xMax + S(10f), top, S(150f), S(44f)), TextConverter.ForDisplay("打开文件夹"), _button))
-			{
-				OpenExportFolder();
-			}
-		}
-
-		var body = new Rect(left, top + S(58f), width, screen.height - top - S(58f) - S(40f));
+		var body = new Rect(left, top, width, screen.height - top - S(40f));
 
 		var list = new Rect(body.x, body.y, Mathf.Min(S(FoeListWidth), body.width * 0.14f), body.height);
 		var poses = new Rect(list.xMax + S(12f), body.y, Mathf.Min(S(FoePoseWidth), body.width * 0.115f), body.height);
@@ -559,7 +538,7 @@ public sealed partial class Gallery
 	/// <summary>底部工具栏按文字宽度换行，练习时保留返回立绘/资料的入口。</summary>
 	private Rect[] FoeToolbarRects(Rect bar)
 	{
-		string[] labels = { "重置视图", "面板与技能", "嘴功台词", "模拟决斗", "导出 PNG" };
+		string[] labels = { "重置视图", BgLabel, "面板与技能", "嘴功台词", "模拟决斗" };
 		var rects = new Rect[labels.Length];
 		float x = bar.x, y = bar.y, gap = S(8f), height = S(40f);
 		for (int i = 0; i < labels.Length; i++)
@@ -570,7 +549,6 @@ public sealed partial class Gallery
 				x = bar.x;
 				y += height + gap;
 			}
-			if (i == labels.Length - 1) x = Mathf.Max(x, bar.xMax - width);
 			rects[i] = new Rect(x, y, width, height);
 			x += width + gap;
 		}
@@ -593,30 +571,29 @@ public sealed partial class Gallery
 			_foeZoom = 0f;
 			_foePan = Vector2.zero;
 		}
+		// 和动图页共用一个底色
+		if (GUI.Button(buttons[1], TextConverter.ForDisplay(BgLabel), _track))
+		{
+			CycleBg();
+		}
 		GUI.enabled = wasEnabled;
-		if (GUI.Button(buttons[1], TextConverter.ForDisplay("面板与技能"), _foeShowStats && !_practiceVisible ? _trackOn : _track))
+		if (GUI.Button(buttons[2], TextConverter.ForDisplay("面板与技能"), _foeShowStats && !_practiceVisible ? _trackOn : _track))
 		{
 			_foeShowStats = _practiceVisible || !_foeShowStats;
 			_foeShowTaunts = false;
 			ResetFoeDetailView();
 		}
-		if (GUI.Button(buttons[2], TextConverter.ForDisplay("嘴功台词"), _foeShowTaunts && !_practiceVisible ? _trackOn : _track))
+		if (GUI.Button(buttons[3], TextConverter.ForDisplay("嘴功台词"), _foeShowTaunts && !_practiceVisible ? _trackOn : _track))
 		{
 			_foeShowTaunts = _practiceVisible || !_foeShowTaunts;
 			_foeShowStats = false;
 			ResetFoeDetailView();
 		}
-		if (GUI.Button(buttons[3], TextConverter.ForDisplay("模拟决斗"), _practiceVisible ? _trackOn : _track))
+		if (GUI.Button(buttons[4], TextConverter.ForDisplay("模拟决斗"), _practiceVisible ? _trackOn : _track))
 		{
 			ToggleDuelPractice();
 			EnsureFoeEncounterInDetailList();
 		}
-		GUI.enabled = wasEnabled && !_practiceVisible && _foePose?.Sprite != null;
-		if (GUI.Button(buttons[buttons.Length - 1], TextConverter.ForDisplay("导出 PNG"), _button))
-		{
-			ExportFoeImage();
-		}
-		GUI.enabled = wasEnabled;
 	}
 
 	private void ResetFoeDetailView()
@@ -682,7 +659,7 @@ public sealed partial class Gallery
 	private void DrawFoePortrait(Rect area)
 	{
 		var view = area;
-		DrawChecker(view);
+		DrawBackdrop(view);
 		HandleFoeViewMouse(view);
 		GUI.BeginGroup(view);
 		var localView = new Rect(0, 0, view.width, view.height);
@@ -745,40 +722,6 @@ public sealed partial class Gallery
 		else if (e.type == EventType.MouseUp)
 		{
 			_foeDragging = false;
-		}
-	}
-
-	/// <summary>把当前选中的立绘导出成 PNG，文件放在动图页那个导出目录里。</summary>
-	private void ExportFoeImage()
-	{
-		Sprite sprite = _foePose?.Sprite;
-		if (sprite == null)
-		{
-			return;
-		}
-		string dir = ExportDirectory();
-		string name = SafeFileName(FoeDisplay(_foe) + "_" + _foePose.Variant) + ".png";
-		try
-		{
-			System.IO.Directory.CreateDirectory(dir);
-			int width = Mathf.RoundToInt(sprite.textureRect.width);
-			int height = Mathf.RoundToInt(sprite.textureRect.height);
-			Color32[] pixels = ReadSprite(sprite, new Dictionary<Texture2D, Color32[]>());
-			var texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
-			{
-				hideFlags = HideFlags.HideAndDontSave,
-			};
-			texture.SetPixels32(pixels);
-			texture.Apply();
-			byte[] png = ImageConversion.EncodeToPNG(texture);
-			UnityEngine.Object.Destroy(texture);
-			System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, name), png);
-			FrameNotice(string.Format(TextConverter.ForDisplay("已导出：{0}"), name), 6f);
-		}
-		catch (Exception e)
-		{
-			FileLogger.LogWarning("[鉴赏] 导出决斗立绘失败: " + e);
-			FrameNotice(TextConverter.ForDisplay("导出失败，换个目录试试"), 6f);
 		}
 	}
 
