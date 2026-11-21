@@ -574,8 +574,15 @@ public partial class StoryReviewPanel : MonoBehaviour
 		if (string.IsNullOrEmpty(value) && !focused)
 		{
 			string hint = TextConverter.ForDisplay(placeholder ?? "搜索");
-			float hintWidth = S(placeholder == null ? 80 : 144);
-			GUI.Label(new Rect(r.x + S(10), r.y, hintWidth, r.height), hint, _center);
+			// 带说明的提示字靠左对齐，和输入的字起点一样
+			if (placeholder == null)
+			{
+				GUI.Label(new Rect(r.x + S(10), r.y, S(80), r.height), hint, _center);
+			}
+			else
+			{
+				GUI.Label(new Rect(r.x + S(12), r.y, r.width - S(56), r.height), hint, Middle(_center));
+			}
 		}
 		else if (GUI.Button(new Rect(r.xMax - S(40), r.y, S(40), r.height), "×", _button))
 		{

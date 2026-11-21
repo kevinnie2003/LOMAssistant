@@ -142,7 +142,13 @@ public partial class StoryReviewPanel
 			}
 			fx += w + S(8);
 		}
-		string noteQuery = SearchBox(new Rect(r.x, r.y + S(114), Mathf.Min(S(520), r.width), S(36)), ref _anytimeSearch, "搜索备注");
+		// 搜索备注放在排法按钮右边同一行；窗口太窄放不下时才另起一行
+		fx += S(16);
+		float searchWidth = Mathf.Min(S(320), r.xMax - fx);
+		bool searchOwnRow = searchWidth < S(200);
+		var searchRect = searchOwnRow ? new Rect(r.x, r.y + S(114), Mathf.Min(S(320), r.width), S(32)) : new Rect(fx, r.y + S(74), searchWidth, S(32));
+		string noteQuery = SearchBox(searchRect, ref _anytimeSearch, "搜索备注");
+		float listTop = searchOwnRow ? S(154) : S(114);
 		// 筛选、分组只在存档、筛选、排法、备注数或搜索词变化时重算：存档上千个时每次刷新都重算会卡
 		int noted = saves.Count(s => !string.IsNullOrEmpty(s.note));
 		var signature = (saves, saves.Count, _anytimeFilter, sort, noted, noteQuery);
@@ -159,7 +165,7 @@ public partial class StoryReviewPanel
 			_anytimeGroupsFor = signature;
 		}
 
-		var area = new Rect(r.x, r.y + S(158), r.width, r.height - S(158));
+		var area = new Rect(r.x, r.y + listTop, r.width, r.height - listTop);
 		DragScroll("anytime", area, ref _anytimeScroll);
 		GUILayout.BeginArea(area);
 		_anytimeScroll = GUILayout.BeginScrollView(_anytimeScroll);
