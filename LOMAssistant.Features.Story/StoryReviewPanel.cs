@@ -562,7 +562,7 @@ public partial class StoryReviewPanel : MonoBehaviour
 	}
 
 	/// <summary>搜索框；返回去掉首尾空格的内容。</summary>
-	private string SearchBox(Rect r, ref string value)
+	private string SearchBox(Rect r, ref string value, string placeholder = null)
 	{
 		string name = "storyreview.search." + (int)r.x + "." + (int)r.y;
 		GUI.SetNextControlName(name);
@@ -573,7 +573,9 @@ public partial class StoryReviewPanel : MonoBehaviour
 		bool focused = GUI.GetNameOfFocusedControl() == name;
 		if (string.IsNullOrEmpty(value) && !focused)
 		{
-			GUI.Label(new Rect(r.x + S(10), r.y, S(80), r.height), "搜索", _center);
+			string hint = TextConverter.ForDisplay(placeholder ?? "搜索");
+			float hintWidth = S(placeholder == null ? 80 : 144);
+			GUI.Label(new Rect(r.x + S(10), r.y, hintWidth, r.height), hint, _center);
 		}
 		else if (GUI.Button(new Rect(r.xMax - S(40), r.y, S(40), r.height), "×", _button))
 		{

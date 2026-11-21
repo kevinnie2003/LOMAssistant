@@ -235,6 +235,7 @@ public static class UiTextEnglish
 		["读取「{0}」？\n当前没有存档的进度会丢失。"] = "Load 「{0}」?\nUnsaved progress will be lost.",
 		["确定删除？"] = "Delete?",
 		["有备注"] = "With notes",
+		["搜索备注"] = "Search notes",
 		["随时存档经过的剧本都被游戏更新改过了，读不了"] = "Every quick save passes through story scripts changed by a game update, so none can be loaded",
 		["游戏更新改过这个存档经过的剧本，读不了"] = "A game update changed a story script this save passes through, so it can't be loaded",
 		["这个随时存档经过的剧本 {0} 被游戏更新改过了，读不了。请读普通存档，再重新存随时存档。"] = "A game update changed the story script {0} this quick save passes through, so it can't be loaded. Load a regular save, then make a new quick save.",

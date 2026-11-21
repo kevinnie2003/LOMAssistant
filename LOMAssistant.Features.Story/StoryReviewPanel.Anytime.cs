@@ -16,6 +16,7 @@ public partial class StoryReviewPanel
 	private const int AnytimeTab = 4;
 	private Vector2 _anytimeScroll;
 	private string _noteFile, _noteText = "";
+	private string _anytimeSearch = "";
 	private string _deleteFile;
 	private float _deleteUntil;
 	// 列表筛选（0 全部、1 剧情、2 养成、3 有备注）、折起来的月份、整组删除要点两下
@@ -141,18 +142,24 @@ public partial class StoryReviewPanel
 			}
 			fx += w + S(8);
 		}
-		// 筛选、分组只在存档、筛选、排法、有备注的个数变了时重算：存档上千个时每次刷新都重算会卡
+		string noteQuery = SearchBox(new Rect(r.x, r.y + S(114), Mathf.Min(S(520), r.width), S(36)), ref _anytimeSearch, "搜索备注");
+		// 筛选、分组只在存档、筛选、排法、备注数或搜索词变化时重算：存档上千个时每次刷新都重算会卡
 		int noted = saves.Count(s => !string.IsNullOrEmpty(s.note));
-		var signature = (saves, saves.Count, _anytimeFilter, sort, noted);
+		var signature = (saves, saves.Count, _anytimeFilter, sort, noted, noteQuery);
 		if (_anytimeGroups == null || !_anytimeGroupsFor.Equals(signature))
 		{
+			if (_anytimeGroups != null && _anytimeGroupsFor.noteQuery != noteQuery)
+			{
+				_anytimeScroll = Vector2.zero;
+			}
 			List<SaveSummary> shown = saves.Where(s => _anytimeFilter == 0 || (_anytimeFilter == 1 && s.scene == "Story")
-				|| (_anytimeFilter == 2 && s.scene == "Free") || (_anytimeFilter == 3 && !string.IsNullOrEmpty(s.note))).ToList();
+				|| (_anytimeFilter == 2 && s.scene == "Free") || (_anytimeFilter == 3 && !string.IsNullOrEmpty(s.note)))
+				.Where(s => Matches(noteQuery, s.note)).ToList();
 			_anytimeGroups = AnytimeGroups(shown, sort);
 			_anytimeGroupsFor = signature;
 		}
 
-		var area = new Rect(r.x, r.y + S(114), r.width, r.height - S(114));
+		var area = new Rect(r.x, r.y + S(158), r.width, r.height - S(158));
 		DragScroll("anytime", area, ref _anytimeScroll);
 		GUILayout.BeginArea(area);
 		_anytimeScroll = GUILayout.BeginScrollView(_anytimeScroll);
@@ -193,7 +200,7 @@ public partial class StoryReviewPanel
 
 	private readonly LazyRows _anytimeRows = new LazyRows();
 	private List<(string Key, string Label, List<SaveSummary> Items)> _anytimeGroups;
-	private (List<SaveSummary>, int, int, int, int) _anytimeGroupsFor;
+	private (List<SaveSummary> saves, int count, int filter, int sort, int noted, string noteQuery) _anytimeGroupsFor;
 
 	/// <summary>存档时的游戏月份（「第2年　3月」，中间全角空格让两半各自翻译），分组用；没记下日期的归到一组。</summary>
 	private static string AnytimeMonth(SaveSummary s)
@@ -310,6 +317,7 @@ public partial class StoryReviewPanel
 			if (GUILayout.Button("保存备注", _primary, GUILayout.Width(S(110)), Ctl()))
 			{
 				save.SetNote(s.file, _noteText);
+				_anytimeGroups = null;
 				_noteFile = null;
 				GUIUtility.keyboardControl = 0;
 			}
