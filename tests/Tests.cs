@@ -74,6 +74,15 @@ public static partial class Tests
 		}
 	}
 
+	public static void TestAnytimeNoteSearch()
+	{
+		const BindingFlags flags = BindingFlags.Static | BindingFlags.NonPublic;
+		MethodInfo matches = typeof(StoryReviewPanel).GetMethod("Matches", flags);
+		Assert((bool)matches.Invoke(null, new object[] { "fox", new[] { "Before FOX, route B" } }), "备注搜索应忽略英文大小写并匹配备注片段");
+		Assert(!(bool)matches.Invoke(null, new object[] { "fox", new[] { "Route B" } }), "备注搜索不应匹配备注以外的内容");
+		Assert((bool)matches.Invoke(null, new object[] { "", new[] { "any note" } }), "空搜索词应保留全部存档");
+	}
+
 	/// <summary>选择窗口保留着时切换语言：只更新显示，去处、选中项和执行计划不变。</summary>
 	public static void TestChoiceDisplayLanguages()
 	{
