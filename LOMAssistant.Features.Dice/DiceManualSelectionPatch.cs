@@ -50,6 +50,7 @@ public static class DiceManualSelectionPatch
 			}
 		}
 		DiceGamepadSelector.Attach(__instance);
+		DiceAfterRollClick.Attach(__instance);
 		LOMAssistantPlugin.LogInfo("骰子手动选择：已注册按钮点击事件。");
 		FileLogger.Log("骰子手动选择：已注册按钮点击事件。");
 	}

@@ -130,7 +130,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 ### Story helpers
 
-- **Pick dice results**: click a line on the dice wheel to choose that result.
+- **Pick dice results**: click a line on the dice wheel, before or after it spins, to choose that result.
 - **Option results**: dialogue options and dice lines show what they will change.
   - Locked options show their real unlock conditions, and **Unlock** next to them sets the conditions.
   - With **Force locked options** on, options that are hidden when their conditions aren't met are listed too, marked **Conditions not met** in red; hover over one to see its conditions. Locked options whose conditions can't be set get **Force unlock**, which unlocks them without changing flags.
