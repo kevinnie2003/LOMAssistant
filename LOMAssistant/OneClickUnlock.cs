@@ -12,7 +12,7 @@ namespace LOMAssistant;
 
 /// <summary>
 /// 条件求解：算出要改哪些数值才能让条件成立。只看属性、好感、旗标（以及它们相加）；
-/// 含随机值、时间、物品、嵌套条件等改不了的部分时返回 null。思路参考赵活系统（Toufff，MIT）。
+/// 含随机值、时间、物品、嵌套条件等改不了的部分时返回 null。
 /// 不调用游戏的 Check/Execute（Execute 会累加计数，随机值会动随机数），自己按同样的规则算。
 /// </summary>
 internal static class ConditionSolver

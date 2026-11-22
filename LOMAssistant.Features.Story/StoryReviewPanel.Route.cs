@@ -36,7 +36,7 @@ public partial class StoryReviewPanel
 
 	/// <summary>
 	/// 主线骨架：几条路线并行的地方（三条留学线、江陵、跟不跟大师兄、你的决策……）每站放哪条车道，手工排好；
-	/// 按连线自动排容易把并行的路线交错在一起。车道参考赵活系统（Toufff，MIT）的路线图。0 是主线，负的在上面，正的在下面。
+	/// 按连线自动排容易把并行的路线交错在一起。0 是主线，负的在上面，正的在下面。
 	/// 不在表里的站（游戏更新新加的）照旧自动排。
 	/// </summary>
 	private static readonly Dictionary<string, int> RouteLanes = new Dictionary<string, int>(StringComparer.Ordinal)

@@ -20,7 +20,7 @@ namespace LOMAssistant;
 /// 不带随机值的分支判断，打开「分支判定手动选择」时也在这里停下，列出每一支的条件、对白看过没（见 BranchPicker）。
 /// 条件里带随机值的分支判断（checkpointmanager.Switch，比如飞天门修炼时「随机值 ≤ 小梅好感」就被小梅拉去跑步）也一样停下，
 /// 列出这次能走到的几条路和概率，选哪条就把这次判断里的随机值定成让它成立的数（其他条件照常判断，见 SwitchRandom）。
-/// 停下的办法参考赵活系统（Toufff，MIT）：把剧本里的调用包一层，在 Lua 协程里等待，选完再执行原调用。
+/// 停下的办法：把剧本里的调用包一层，在 Lua 协程里等待，选完再执行原调用。
 /// </summary>
 public class EventPicker : MonoBehaviour
 {
