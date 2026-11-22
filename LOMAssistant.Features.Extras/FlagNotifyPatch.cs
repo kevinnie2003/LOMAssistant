@@ -15,7 +15,6 @@ namespace LOMAssistant.Features.Extras;
 /// 「旗标名 旧值 → 新值」，例如救没救下大师兄、神兵帖进度，可以当场知道。
 /// 只拦剧情脚本用的 StatModifyManager.SetFlag/AddFlag，读档时逐个恢复旗标不经过这里，不会刷屏。
 /// 「旗标暂存」这类脚本内部临时用的旗标不提示。
-/// 另外：F9 面板的「心上人」只显示编号，这里在旁边显示人名。
 /// </summary>
 public static class FlagNotifyPatch
 {
@@ -235,36 +234,6 @@ public static class FlagNotifyPatch
 				to.scaleFactor = from.scaleFactor;
 			}
 			return _instance;
-		}
-	}
-
-	// F9「心上人」：括号里原本是加成值（永远是 +0），改成显示人名
-	[HarmonyPostfix]
-	[HarmonyPatch(typeof(TestGameStatPanel), "UpdateValue")]
-	public static void TestGameStatPanel_UpdateValue_Postfix(TestGameStatPanel __instance)
-	{
-		try
-		{
-			var tr = Traverse.Create(__instance);
-			GameStat stat = tr.Field("_stat").GetValue<GameStat>();
-			if (stat == null || stat.StatType != GameStatType.愛人)
-			{
-				return;
-			}
-			Text add = tr.Field("_addText").GetValue<Text>();
-			if (add == null)
-			{
-				return;
-			}
-			string key = "PlayerInfo/Lover/" + stat.FinalValue;
-			string name = LocalizationManager.Instance.LocaleResolver.GetString(key);
-			if (!string.IsNullOrEmpty(name) && name != key)
-			{
-				add.text = "(" + TextConverter.ForDisplay(TextConverter.ToSimplified(name)) + ")";
-			}
-		}
-		catch
-		{
 		}
 	}
 }
