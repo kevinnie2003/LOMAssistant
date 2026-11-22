@@ -1,5 +1,3 @@
-// 输入隔离的做法（透明挡板 + 拦截游戏的按键回调 + 拦截 Fungus 对话框的旧式输入）参考了
-// 赵活系统（https://github.com/Toufff/zhaohuo-system，Copyright (c) Toufff，MIT License），本文件为自行实现的精简版。
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -332,50 +330,53 @@ public class InputGuard : MonoBehaviour
 	}
 }
 
-/// <summary>拦截游戏里由按键 / 鼠标触发的输入回调（推进对话、菜单、确认等）。脚本、自动播放触发的不受影响。</summary>
+/// <summary>
+/// 拦截游戏里由按键 / 鼠标 / 手柄触发的输入回调（推进对话、菜单、确认、决斗出招等）。脚本、自动播放触发的不受影响。
+/// 不列名单：启动时把游戏各程序集（Mortal.*）里所有只收一个按键事件（InputAction.CallbackContext）的方法都找出来拦，
+/// 游戏以后新加的按键回调也自动算在内。
+/// </summary>
 [HarmonyPatch]
 public static class InputGuardActionGate
 {
-	private static readonly string[] Targets =
-	{
-		"Mortal.Core.InputButton:InputActionChanged",
-		"Mortal.Free.FreeManager:NextInputAction", "Mortal.Free.FreeManager:MenuActionChanged",
-		"Mortal.Free.FreeManager:StatusActionChanged", "Mortal.Free.FreeManager:SaveActionPerformed", "Mortal.Free.FreeManager:ToggleSelectedPerformed",
-		"Mortal.Free.FreeManager:LogActionPerformed", "Mortal.Core.StoryLogPanel:CloseActionPerformed",
-		"Mortal.Story.StoryManager:MenuActionChanged", "Mortal.Story.StoryManager:SubmitActionChanged", "Mortal.Story.StoryManager:StatusActionChanged",
-		"Mortal.Story.StoryManager:AutoActionChanged", "Mortal.Story.StoryManager:LogActionChanged", "Mortal.Story.StoryManager:SkipActionPerformed",
-		"Mortal.Story.DiceMenuDialog:NextInputAction", "Mortal.Story.DiceMenuDialog:DestinyAction",
-		"Mortal.Story.DiceMenuDialog:DestinyRestartAction", "Mortal.Story.DiceMenuDialog:RangeAction",
-		"Mortal.Battle.GameLevelManager:MenuActionChange", "Mortal.Battle.GameLevelManager:PlayerInputActionTriggered",
-		"Mortal.Combat.CombatUIManager:MenuActionChanged", "Mortal.Combat.CombatManager:NextInputAction",
-		"Mortal.Combat.CombatUIManager:SpeedActionPerformed", "Mortal.Combat.CombatUIManager:StatusActionChanged",
-		"Mortal.Core.CreditPanel:PerformedAction", "Mortal.Core.CgPanel:PerformedAction", "Mortal.Core.EndGamePanel:PerformedAction",
-		"Mortal.Battle.GameOverPanel:ContinueAction",
-		"Mortal.Core.ButtonNavigationInputAction:NextActionPerformed", "Mortal.Core.ButtonNavigationInputAction:PreviousActionPerfomed",
-		"Mortal.Core.CustomMenuDialog:NavigateActionChanged", "Mortal.Core.LoadGamePanel:DeleteActionPerformed",
-		"Mortal.Core.LongClickButton:ActionStarted", "Mortal.Core.LongClickButton:ActionPerformed",
-		"Mortal.Core.PlayerStatusPanel:NavLeft_1_Started", "Mortal.Core.PlayerStatusPanel:NavRight_1_Started",
-		"Mortal.Story.ShopPanel:NavRighPerformed", "Mortal.Story.ShopPanel:NavLeftPerformed",
-		"Mortal.Story.ShopPanel:MinusActionPerformed", "Mortal.Story.ShopPanel:PlusActionPerformed",
-	};
-
 	private static IEnumerable<MethodBase> TargetMethods()
 	{
-		var seen = new HashSet<MethodBase>();
-		foreach (string target in Targets)
+		var assemblies = new HashSet<Assembly>
 		{
-			int colon = target.IndexOf(':');
-			Type type = AccessTools.TypeByName(target.Substring(0, colon));
-			MethodInfo method = type != null ? AccessTools.Method(type, target.Substring(colon + 1), new[] { typeof(InputAction.CallbackContext) }) : null;
-			if (method != null && seen.Add(method))
+			typeof(Mortal.Core.InputButton).Assembly, typeof(Mortal.Story.StoryManager).Assembly, typeof(Mortal.Free.FreeManager).Assembly,
+			typeof(Mortal.Battle.GameLevelManager).Assembly, typeof(Mortal.Combat.CombatManager).Assembly,
+		};
+		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+		{
+			if (assembly.GetName().Name.StartsWith("Mortal."))
 			{
-				yield return method;
-			}
-			else if (method == null)
-			{
-				FileLogger.Log("输入隔离：游戏里没有 " + target + "，跳过");
+				assemblies.Add(assembly);
 			}
 		}
+		int count = 0;
+		foreach (Assembly assembly in assemblies)
+		{
+			foreach (Type type in AccessTools.GetTypesFromAssembly(assembly))
+			{
+				if (type.IsInterface || type.ContainsGenericParameters)
+				{
+					continue;
+				}
+				foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+				{
+					if (method.IsAbstract || method.ContainsGenericParameters || method.GetMethodBody() == null)
+					{
+						continue;
+					}
+					ParameterInfo[] parameters = method.GetParameters();
+					if (parameters.Length == 1 && parameters[0].ParameterType == typeof(InputAction.CallbackContext))
+					{
+						count++;
+						yield return method;
+					}
+				}
+			}
+		}
+		FileLogger.Log("输入隔离：拦截游戏的按键回调 " + count + " 个");
 	}
 
 	// 松开（canceled）要照常放行，否则游戏会以为按键一直按着
