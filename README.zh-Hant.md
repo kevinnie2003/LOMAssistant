@@ -305,6 +305,7 @@ DOTNET=/path/to/dotnet ./Installer/build-installer.sh
 | `LOMAssistant.Config/` | 設定項 |
 | `LOMAssistant.Features.*` | 各功能（`Extras` 是本項目新增的，`AnytimeSave` 是隨時存檔） |
 | `Installer/` | 一鍵安裝器 |
+| `tools/game-update.sh` | 遊戲更新後跑一次：檢查相容、重新產生決鬥資料和條件表，列出變化 |
 | `tools/anytime-contract/` | 遊戲更新後重新生成隨時存檔的相容契約 |
 | `tools/bepinex-patch/` | 給打包的 BepInEx 打補丁：修復遊戲裝在中文路徑下 BepInEx 啟動失敗 |
 
