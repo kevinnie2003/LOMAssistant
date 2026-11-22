@@ -8,7 +8,8 @@ using UnityEngine.UI;
 namespace LOMAssistant.Features.Combat;
 
 /// <summary>
-/// 技能表完整显示（思路来自爱死的 PR #9）：战斗时左上角我方的「技能 / 特殊」列表条目太多会超出屏幕、压住血条。
+/// 技能表分列显示（思路来自爱死的 PR #9，默认关）：战斗时左上角我方的「技能 / 特殊」列表条目太多会超出屏幕、压住血条。
+/// 游戏 1.0.6001.2 起自己会挤压这个列表（条目重叠到只露名字，再整列缩小）；打开这一项时关掉游戏的挤压，改用分列，关上时交还给游戏。
 /// 放不下时分列：量出从第一条往下到血条上方能放几条，第一列照原样竖排这么多条，其余每列同样多条向右排开（先填满左边再填下一列）。
 /// 放得下时和原版完全一样。只在列表增减条目时排一次，不每帧计算。
 /// </summary>
@@ -47,6 +48,10 @@ public static class SkillColumnsPatch
 		private bool _pending = true;
 		private int _logged;
 		private readonly List<RectTransform> _items = new List<RectTransform>();
+		// 游戏自带的挤压（CombatBuffLayoutFitter）；旧版游戏没有，按名字找，找不到就是 null
+		private Behaviour _fitter;
+
+		private void Awake() => _fitter = GetComponent("CombatBuffLayoutFitter") as Behaviour;
 
 		private void OnTransformChildrenChanged() => _pending = true;
 
@@ -68,6 +73,7 @@ public static class SkillColumnsPatch
 			}
 			// 先全部交回原来的竖向布局，量出第一条的位置和每条的间距
 			SetOverflow(int.MaxValue);
+			UseGameSqueeze(!ConfigManager.EnableSkillColumns.Value);
 			int perColumn = int.MaxValue;
 			if (ConfigManager.EnableSkillColumns.Value && _items.Count > 1)
 			{
@@ -95,6 +101,36 @@ public static class SkillColumnsPatch
 				item.sizeDelta = row.sizeDelta;
 				item.anchoredPosition = row.anchoredPosition + new Vector2(i / perColumn * (row.rect.width + ColumnGap), 0f);
 			}
+		}
+
+		/// <summary>
+		/// 开关游戏自带的挤压。关掉时把间距和大小恢复成原样（它记着的缩放也归位），分列按原来的大小量；
+		/// 打开时让它重新按条数算一遍。两边改的是同一个列表，不能同时开着。
+		/// </summary>
+		private void UseGameSqueeze(bool on)
+		{
+			if (_fitter == null || _fitter.enabled == on)
+			{
+				return;
+			}
+			var tr = Traverse.Create(_fitter);
+			if (on)
+			{
+				tr.Field("_lastCount").SetValue(-1);
+				_fitter.enabled = true;
+				return;
+			}
+			_fitter.enabled = false;
+			GetComponent<VerticalLayoutGroup>().spacing = tr.Field("_defaultSpacing").GetValue<float>();
+			Vector3 scale = tr.Field("_defaultScale").GetValue<Vector3>();
+			if (scale != Vector3.zero)
+			{
+				transform.localScale = scale;
+			}
+			tr.Field("_currentScale").SetValue(1f);
+			tr.Field("_targetScale").SetValue(1f);
+			tr.Field("_scaleVelocity").SetValue(0f);
+			tr.Field("_velocity").SetValue(0f);
 		}
 
 		/// <summary>从第一条往下到血条上方（屏幕底部留出 BottomReserve）能放几条。</summary>

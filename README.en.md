@@ -217,7 +217,7 @@ Connect a large language model with your own API key to ask about the story and 
   - Weapons, traps and poison clouds from your side no longer hurt you.
 - **Choose battle allies**: the ultimate list on the battle start panel also offers allies with affection of 40 or more, not only those the story names.
 - **Win now**: in the ESC menu during duels and battles.
-- **Show all skills**: in battle, a long skill list is split into columns.
+- **Skill list in columns**: in battle, a long skill list is split into columns instead of the game's own squeezing. Off by default; turn it on if the list feels cramped past twenty-odd entries.
 - **Combat cheats**: four switches, **Invincible in duels**, **Enemy unhurt in duels**, **Unhurt in battles** and **No ultimate cooldown**; no preset turns them on.
 
 ### Stats page (F9)

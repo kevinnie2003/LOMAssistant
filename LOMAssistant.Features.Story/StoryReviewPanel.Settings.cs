@@ -143,7 +143,7 @@ public partial class StoryReviewPanel
 				Row(ConfigManager.EnableDuelDialogueHistory, "决斗回想"),
 				Row(ConfigManager.FightDeathHint, "战斗失败死亡提示"),
 				Row(ConfigManager.FightRoundHint, "战斗回合事件提示"),
-				Row(ConfigManager.EnableSkillColumns, "技能表完整显示"),
+				Row(ConfigManager.EnableSkillColumns, "技能表分列显示"),
 				Row(ConfigManager.EnableCombatAssist, "决斗直接获胜按钮"),
 				Row(ConfigManager.CheatDuelInvincible, "决斗我方无敌"),
 				Row(ConfigManager.CheatDuelNoDamage, "决斗敌方不受伤"),

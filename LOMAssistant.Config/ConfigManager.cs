@@ -328,6 +328,27 @@ public static class ConfigManager
 		MigrateHideUIKey();
 		MigrateHotkeyToggles();
 		MigrateAnytimeLimit();
+		MigrateSkillColumns();
+	}
+
+	/// <summary>技能表分列显示的默认值从开改成关（游戏 1.0.6001.2 起自己会挤压这个列表）：老配置统一关掉，之后玩家再打开不会被改。只换一次。</summary>
+	private static void MigrateSkillColumns()
+	{
+		try
+		{
+			string mark = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(typeof(ConfigManager).Assembly.Location) ?? ".", "StoryReview", "skill-columns");
+			if (System.IO.File.Exists(mark))
+			{
+				return;
+			}
+			EnableSkillColumns.Value = false;
+			System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(mark));
+			System.IO.File.WriteAllText(mark, "");
+		}
+		catch (Exception ex)
+		{
+			DicePlugin.LogError("技能表分列迁移失败: " + ex.Message);
+		}
 	}
 
 	/// <summary>随时存档上限的默认值从 100 改成不限（0）：还是旧默认值 100 的改成 0，自己改过的不动。只换一次。</summary>
@@ -548,7 +569,7 @@ public static class ConfigManager
 		MemoWidth = new ConfigElement<float>("MemoWidth", "备忘录悬浮窗的宽度（占屏幕宽度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
 		MemoHeight = new ConfigElement<float>("MemoHeight", "备忘录悬浮窗的高度（占屏幕高度的比例，-1=默认）。调整窗口大小会自动保存", -1f);
 		MemoCollapsed = new ConfigElement<bool>("MemoCollapsed", "备忘录悬浮窗是否收起成标题栏（在窗口里点，自动记录）", defaultValue: false);
-		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表完整显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列）。true=开，false=关", defaultValue: true);
+		EnableSkillColumns = new ConfigElement<bool>("EnableSkillColumns", "技能表分列显示：战斗时左上角我方的「技能、特殊」列表太长、会压到血条时分列显示（先填满左边再填下一列），不用游戏自带的挤压缩小。游戏的挤压在二十多条以上可能太挤，可以打开这一项改用分列。true=开，false=关（默认）", defaultValue: false);
 		EnableOneClickUnlock = new ConfigElement<bool>("EnableOneClickUnlock", "被锁住的选项旁显示「一键设置」：把没满足的解锁条件（属性、好感、旗标）改到满足，选项当场解锁。true=开，false=关", defaultValue: true);
 		FlagNoticeSeconds = new ConfigElement<float>("FlagNoticeSeconds", "旗标、分支的屏幕上方提示停留几秒（按真实时间，开倍速也一样；原版 1 秒）。0=按游戏原样", 4f);
 		TopNoticeScale = new ConfigElement<int>("TopNoticeScale", "旗标、分支的屏幕上方提示的文字大小（百分比，50~150）。调小后同时能排下更多条", 80);
