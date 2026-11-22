@@ -12,6 +12,7 @@ namespace LOMAssistant.Features.Extras;
 /// <summary>
 /// 鉴赏的「决斗」页：把决斗场景里每个角色的战斗立绘列出来（正常、攻击、受击、防御等变体）。
 /// 立绘来自 combat / combat_02 这两个资源包，按容器里的路径分组；名字取自游戏的 CombatCharacter 名表。
+/// 键盘（和立绘、动图页一样）：← → 换立绘，↑ ↓ 换角色。在搜索框里打字、开着模拟决斗时不管。
 /// </summary>
 public sealed partial class Gallery
 {
@@ -55,6 +56,7 @@ public sealed partial class Gallery
 	private FoePose _foePose;
 	private string _foeSearch = "";
 	private Vector2 _foeListScroll, _foePoseScroll;
+	private float _foeListBoxHeight, _foePoseBoxHeight;
 	private float _foeZoom;
 	private Vector2 _foePan;
 	private bool _foeDragging;
@@ -253,6 +255,55 @@ public sealed partial class Gallery
 
 	// ---------------- 加载立绘 ----------------
 
+	/// <summary>角色列表里现在显示的（搜索框筛过的）。</summary>
+	private List<Foe> ShownFoes()
+	{
+		List<Foe> shown = _foes ?? new List<Foe>();
+		string query = TextConverter.ToSimplified((_foeSearch ?? "").Trim());
+		if (query.Length > 0)
+		{
+			shown = shown.Where(f => TextConverter.ToSimplified(FoeDisplay(f) + " " + f.Name + " " + f.Folder).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+		}
+		return shown;
+	}
+
+	/// <summary>键盘切换：← → 换立绘，↑ ↓ 换角色。</summary>
+	private void TickFoes()
+	{
+		Keyboard keyboard = Keyboard.current;
+		if (keyboard == null || _foes == null || _practiceVisible || GUIUtility.keyboardControl != 0)
+		{
+			return;
+		}
+		int pose = keyboard.leftArrowKey.wasPressedThisFrame ? -1 : keyboard.rightArrowKey.wasPressedThisFrame ? 1 : 0;
+		int foe = keyboard.upArrowKey.wasPressedThisFrame ? -1 : keyboard.downArrowKey.wasPressedThisFrame ? 1 : 0;
+		if (pose != 0 && _foe != null && _foe.Poses.Count > 0)
+		{
+			int at = _foe.Poses.IndexOf(_foePose);
+			int next = at < 0 ? 0 : Mathf.Clamp(at + pose, 0, _foe.Poses.Count - 1);
+			if (next != at)
+			{
+				SelectFoePose(_foe.Poses[next]);
+				_foePoseScroll.y = KeepRowVisible(_foePoseScroll.y, next, S(FoeRowHeight) + S(4f), _foePoseBoxHeight);
+			}
+		}
+		if (foe != 0)
+		{
+			List<Foe> shown = ShownFoes();
+			if (shown.Count == 0)
+			{
+				return;
+			}
+			int at = shown.IndexOf(_foe);
+			int next = at < 0 ? (foe > 0 ? 0 : shown.Count - 1) : Mathf.Clamp(at + foe, 0, shown.Count - 1);
+			if (next != at)
+			{
+				SelectFoe(shown[next]);
+				_foeListScroll.y = KeepRowVisible(_foeListScroll.y, next, S(FoeRowHeight) + S(4f), _foeListBoxHeight);
+			}
+		}
+	}
+
 	private void SelectFoe(Foe foe)
 	{
 		if (foe == null || foe == _foe)
@@ -445,18 +496,14 @@ public sealed partial class Gallery
 		{
 			GUI.Label(new Rect(search.x + S(10f), search.y, search.width - S(20f), search.height), TextConverter.ForDisplay("搜索"), _foeHint);
 		}
-		List<Foe> shown = _foes ?? new List<Foe>();
-		string query = TextConverter.ToSimplified((_foeSearch ?? "").Trim());
-		if (query.Length > 0)
-		{
-			shown = shown.Where(f => TextConverter.ToSimplified(FoeDisplay(f) + " " + f.Name + " " + f.Folder).IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
-		}
+		List<Foe> shown = ShownFoes();
 		GUI.Label(new Rect(area.x, search.yMax + S(4f), area.width, S(26f)),
 			_foeLoading ? TextConverter.ForDisplay("正在加载…")
 				: string.Format(TextConverter.ForDisplay("共 {0} 个"), shown.Count), _foeSmall);
 
 		float listTop = search.yMax + S(34f);
 		var box = new Rect(area.x, listTop, area.width, Mathf.Max(S(80f), area.yMax - listTop));
+		_foeListBoxHeight = box.height;
 		float content = Mathf.Max(box.height, shown.Count * (S(FoeRowHeight) + S(4f)));
 		_foeListScroll = GUI.BeginScrollView(box, _foeListScroll, new Rect(0f, 0f, area.width - S(18f), content));
 		for (int i = 0; i < shown.Count; i++)
@@ -489,6 +536,7 @@ public sealed partial class Gallery
 			_foe == null ? TextConverter.ForDisplay("先选角色")
 				: string.Format(TextConverter.ForDisplay("{0} 张立绘"), _foe.Poses.Count), _foeSmall);
 		var box = new Rect(area.x, area.y + S(32f), area.width, Mathf.Max(S(80f), area.height - S(32f)));
+		_foePoseBoxHeight = box.height;
 		float content = Mathf.Max(box.height, _foe.Poses.Count * (S(FoeRowHeight) + S(4f)));
 		_foePoseScroll = GUI.BeginScrollView(box, _foePoseScroll, new Rect(0f, 0f, area.width - S(18f), content));
 		for (int i = 0; i < _foe.Poses.Count; i++)

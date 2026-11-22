@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.InputSystem;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace LOMAssistant.Features.Extras;
@@ -11,6 +12,7 @@ namespace LOMAssistant.Features.Extras;
 /// <summary>
 /// 鉴赏的「立绘」页：选背景（场景图或已解锁的 CG），摆上任意角色的立绘，换差分、拖动、缩放、翻转、调整前后，
 /// 再隐藏界面就能截图。角色和差分从资源目录列出来，游戏里有什么就有什么。摆放不保存。
+/// 键盘：← → 换选中立绘的差分，↑ ↓ 把选中的立绘换成列表里上一个 / 下一个角色（位置、大小、翻转不变；没选中时放一个上来），隐藏界面时也能用。
 /// </summary>
 public sealed partial class Gallery
 {
@@ -61,6 +63,7 @@ public sealed partial class Gallery
 	private bool _hideUi, _dragging, _backIsCg, _pickingBack, _panelLeft;
 	private int _backIndex, _pickPage;
 	private Vector2 _grab, _figureScroll, _moodScroll;
+	private float _figureBoxHeight, _moodBoxHeight;
 	private string _figureSearch = "";
 
 	private void OpenStage()
@@ -450,9 +453,9 @@ public sealed partial class Gallery
 		y += S(30f);
 		_figureSearch = GUI.TextField(new Rect(x, y, width, S(36f)), _figureSearch, _field);
 		y += S(42f);
-		string query = TextConverter.ToSimplified(_figureSearch.Trim());
-		List<Figure> figures = query.Length == 0 ? _figures : _figures.Where(f => TextConverter.ToSimplified(f.Name).Contains(query) || f.Folder.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+		List<Figure> figures = ShownFigures();
 		float listHeight = (panel.yMax - y - S(170f)) / 2f;
+		_figureBoxHeight = listHeight;
 		var figureBox = new Rect(x, y, width, listHeight);
 		if (figureBox.Contains(Event.current.mousePosition))
 		{
@@ -474,6 +477,7 @@ public sealed partial class Gallery
 		GUI.Label(new Rect(x, y, width, S(28f)), TextConverter.ForDisplay("差分"), _muted);
 		y += S(30f);
 		var moodBox = new Rect(x, y, width, listHeight - S(38f));
+		_moodBoxHeight = moodBox.height;
 		if (moodBox.Contains(Event.current.mousePosition))
 		{
 			_moodScroll.y -= GamepadCursor.ScrollDelta().y;
@@ -531,6 +535,74 @@ public sealed partial class Gallery
 		{
 			_panelLeft = !_panelLeft;
 		}
+	}
+
+	/// <summary>角色列表里现在显示的（搜索框筛过的）。</summary>
+	private List<Figure> ShownFigures()
+	{
+		string query = TextConverter.ToSimplified(_figureSearch.Trim());
+		return query.Length == 0 ? _figures : _figures.Where(f => TextConverter.ToSimplified(f.Name).Contains(query) || f.Folder.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+	}
+
+	/// <summary>键盘切换：← → 换差分，↑ ↓ 换角色。在搜索框里打字、选背景时不管。</summary>
+	private void TickStage()
+	{
+		Keyboard keyboard = Keyboard.current;
+		if (keyboard == null || _figures == null || _pickingBack || GUIUtility.keyboardControl != 0)
+		{
+			return;
+		}
+		int mood = keyboard.leftArrowKey.wasPressedThisFrame ? -1 : keyboard.rightArrowKey.wasPressedThisFrame ? 1 : 0;
+		int figure = keyboard.upArrowKey.wasPressedThisFrame ? -1 : keyboard.downArrowKey.wasPressedThisFrame ? 1 : 0;
+		if (mood != 0 && _selected != null)
+		{
+			Figure owner = _figures.FirstOrDefault(f => f.Folder == _selected.Folder);
+			if (owner != null && owner.Moods.Count > 0)
+			{
+				int at = Mathf.Max(0, owner.Moods.IndexOf(_selected.Mood));
+				at = (at + mood + owner.Moods.Count) % owner.Moods.Count;
+				_selected.Mood = owner.Moods[at];
+				_figure = owner;
+				_moodScroll.y = KeepRowVisible(_moodScroll.y, at, S(36f), _moodBoxHeight);
+				TrimStage();
+			}
+		}
+		if (figure != 0)
+		{
+			List<Figure> figures = ShownFigures();
+			if (figures.Count == 0)
+			{
+				return;
+			}
+			string current = _selected != null ? _selected.Folder : _figure?.Folder;
+			int at = figures.FindIndex(f => f.Folder == current);
+			at = at < 0 ? (figure > 0 ? 0 : figures.Count - 1) : (at + figure + figures.Count) % figures.Count;
+			Figure next = figures[at];
+			if (_selected == null)
+			{
+				Place(next);
+			}
+			else
+			{
+				_figure = next;
+				_selected.Folder = next.Folder;
+				_selected.Mood = next.Moods.FirstOrDefault(m => m == "normal" || m.EndsWith("_normal", StringComparison.Ordinal)) ?? next.Moods[0];
+				_moodScroll = Vector2.zero;
+				TrimStage();
+			}
+			_figureScroll.y = KeepRowVisible(_figureScroll.y, at, S(36f), _figureBoxHeight);
+		}
+	}
+
+	/// <summary>列表滚到第 index 行看得见的位置（step 是每行占的高度，立绘、动图、决斗页共用）。</summary>
+	private static float KeepRowVisible(float scroll, int index, float step, float boxHeight)
+	{
+		float top = index * step, bottom = top + step;
+		if (boxHeight <= 0f)
+		{
+			return scroll;
+		}
+		return top < scroll ? top : bottom > scroll + boxHeight ? bottom - boxHeight : scroll;
 	}
 
 	private void SetBack(bool cg, int index)

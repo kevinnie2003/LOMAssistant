@@ -15,6 +15,7 @@ namespace LOMAssistant.Features.Extras;
 /// 鉴赏的「动图」页：直接读游戏本体 <c>Mortal_Data/StreamingAssets/aa/*/battle_*.bundle</c> 里的 Sprite，
 /// 按「同前缀 + 编号连续」认成一段序列帧动画，可以播放、逐帧看、调帧率、换缩放。
 /// 不依赖任何解包出来的图片，装好游戏本体就能用；一次只加载一个角色的包，换角色就把上一个卸掉。
+/// 键盘（和立绘、决斗页一样）：← → 换动作，↑ ↓ 换角色；空格播放 / 暂停，, . 逐帧。在搜索框里打字时不管。
 /// </summary>
 public sealed partial class Gallery
 {
@@ -96,6 +97,7 @@ public sealed partial class Gallery
 	private Coroutine _frameLoadRoutine;
 	private string _frameSearch = "";
 	private Vector2 _frameCharScroll, _frameClipScroll;
+	private float _frameCharBoxHeight, _frameClipBoxHeight;
 	private int _frameIndex;
 	private bool _framePlaying, _frameLoop = true, _frameLoading;
 	private float _frameNextAt;
@@ -727,6 +729,7 @@ public sealed partial class Gallery
 
 		float listTop = search.yMax + S(34f);
 		var list = new Rect(area.x, listTop, area.width, Mathf.Max(S(80f), area.yMax - listTop));
+		_frameCharBoxHeight = list.height;
 		float content = Mathf.Max(list.height, _frameCharShown.Count * (S(FrameRowHeight) + S(4f)));
 		_frameCharScroll = GUI.BeginScrollView(list, _frameCharScroll, new Rect(0f, 0f, area.width - S(18f), content));
 		for (int i = 0; i < _frameCharShown.Count; i++)
@@ -758,6 +761,7 @@ public sealed partial class Gallery
 			return;
 		}
 		var list = new Rect(area.x, area.y + S(32f), area.width, Mathf.Max(S(80f), area.height - S(32f)));
+		_frameClipBoxHeight = list.height;
 		float content = Mathf.Max(list.height, _frameClips.Count * (S(FrameRowHeight) + S(4f)));
 		_frameClipScroll = GUI.BeginScrollView(list, _frameClipScroll, new Rect(0f, 0f, area.width - S(18f), content));
 		for (int i = 0; i < _frameClips.Count; i++)
@@ -916,30 +920,38 @@ public sealed partial class Gallery
 	private void TickFrames()
 	{
 		Keyboard keyboard = Keyboard.current;
-		if (keyboard != null)
+		if (keyboard != null && GUIUtility.keyboardControl == 0)
 		{
 			if (keyboard.spaceKey.wasPressedThisFrame)
 			{
 				_framePlaying = !_framePlaying;
 				_frameNextAt = 0f;
 			}
-			if (keyboard.leftArrowKey.wasPressedThisFrame)
+			if (keyboard.commaKey.wasPressedThisFrame)
 			{
 				_framePlaying = false;
 				StepFrame(-1);
 			}
-			if (keyboard.rightArrowKey.wasPressedThisFrame)
+			if (keyboard.periodKey.wasPressedThisFrame)
 			{
 				_framePlaying = false;
 				StepFrame(1);
 			}
-			if (keyboard.upArrowKey.wasPressedThisFrame)
+			if (keyboard.leftArrowKey.wasPressedThisFrame)
 			{
 				SelectAdjacentClip(-1);
 			}
-			if (keyboard.downArrowKey.wasPressedThisFrame)
+			if (keyboard.rightArrowKey.wasPressedThisFrame)
 			{
 				SelectAdjacentClip(1);
+			}
+			if (keyboard.upArrowKey.wasPressedThisFrame)
+			{
+				SelectAdjacentCharacter(-1);
+			}
+			if (keyboard.downArrowKey.wasPressedThisFrame)
+			{
+				SelectAdjacentCharacter(1);
 			}
 		}
 		if (_frameClip == null || !_framePlaying)
@@ -978,6 +990,23 @@ public sealed partial class Gallery
 		if (next != index)
 		{
 			SelectClip(_frameClips[next]);
+			_frameClipScroll.y = KeepRowVisible(_frameClipScroll.y, next, S(FrameRowHeight) + S(4f), _frameClipBoxHeight);
+		}
+	}
+
+	/// <summary>换成列表（搜索筛过的）里上一个 / 下一个角色。</summary>
+	private void SelectAdjacentCharacter(int delta)
+	{
+		if (_frameCharShown == null || _frameCharShown.Count == 0)
+		{
+			return;
+		}
+		int index = _frameCharShown.IndexOf(_frameCharacter);
+		int next = index < 0 ? (delta > 0 ? 0 : _frameCharShown.Count - 1) : Mathf.Clamp(index + delta, 0, _frameCharShown.Count - 1);
+		if (next != index)
+		{
+			SelectCharacter(_frameCharShown[next]);
+			_frameCharScroll.y = KeepRowVisible(_frameCharScroll.y, next, S(FrameRowHeight) + S(4f), _frameCharBoxHeight);
 		}
 	}
 

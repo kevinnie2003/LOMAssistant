@@ -514,6 +514,14 @@ public sealed partial class Gallery : MonoBehaviour
 		{
 			TickFrames();
 		}
+		if (_tab == StageTab)
+		{
+			TickStage();
+		}
+		if (_tab == FoesTab)
+		{
+			TickFoes();
+		}
 		// 输入数字、搜索时右键留给输入框；Esc 先离开输入框
 		if (_tab == FoesTab && _practiceVisible && GUIUtility.keyboardControl != 0)
 		{
