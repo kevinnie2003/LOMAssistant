@@ -172,7 +172,7 @@ Connect a large language model with your own API key to ask about the story and 
 
 - **Save anywhere**: save during dialogue, options, dice rolls or on the training map, without using the game's slots. In story duels it saves the last line before the fight; not available in other combat.
   - F5 saves, F7 loads the latest, F6 opens the list.
-  - In the list you can write notes, see the dialogue at that point, group saves by save slot, save time or game date, filter them and delete a whole group.
+  - In the list you can write notes, see the dialogue at that point, group saves by save slot, save time or game date, filter them, delete a whole group, search notes, or tick several and delete them together.
   - No limit by default; set one in Settings.
   - Loading hides the fast-forward, shows progress and mutes the sound.
 

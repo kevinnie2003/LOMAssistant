@@ -10,6 +10,8 @@ namespace LOMAssistant.Features.Story;
 /// <summary>
 /// 「随时存档」页（F6）：存新档、读最近的、回退到判定前；下面按时间列出全部随时存档，每个可以读取、写备注、删除，
 /// 鼠标停上去看存档时的上下文（游戏日期、所在任务、之前几句对白、做过的选择）。
+/// 批量删除：点「批量删除」后每个存档、每组后面换成「选择」，上面一排是「删除选中的 N 个」（连点两下才删）、「全选」「退出批量删除」。
+/// 只能选列表里显示着的：换筛选、搜索后看不见的自动取消选择。
 /// </summary>
 public partial class StoryReviewPanel
 {
@@ -24,6 +26,10 @@ public partial class StoryReviewPanel
 	private readonly HashSet<string> _anytimeFolded = new HashSet<string>();
 	private string _deleteGroup;
 	private float _deleteGroupUntil;
+	// 批量删除：开着没有、选了哪些存档文件、「删除选中」第一下之后多久内再点才删
+	private bool _anytimeMulti;
+	private readonly HashSet<string> _anytimePicked = new HashSet<string>();
+	private float _anytimeMultiUntil;
 	private static readonly string[] AnytimeFilters = { "全部", "剧情", "养成", "有备注" };
 	// 列表排法（ConfigManager.AnytimeSaveSort）：按存档栏位分组（不同周目、不同存档各在一组）、按存的时间、按游戏日期
 	private static readonly string[] AnytimeSorts = { "按存档栏位", "按存的时间", "按游戏日期" };
@@ -105,6 +111,7 @@ public partial class StoryReviewPanel
 		}
 		x += S(250);
 		GUI.enabled = true;
+		x = DrawAnytimeMulti(save, x, r.y, h);
 		if (AnytimeSave.AnytimeSave.Faulted)
 		{
 			if (GUI.Button(new Rect(x, r.y, S(130), h), "返回标题", _primary))
@@ -114,7 +121,10 @@ public partial class StoryReviewPanel
 			}
 			x += S(140);
 		}
-		GUI.Label(new Rect(x + S(10), r.y, r.xMax - x - S(10), h), save.Status(), Middle(_muted));
+		if (!_anytimeMulti)
+		{
+			GUI.Label(new Rect(x + S(10), r.y, r.xMax - x - S(10), h), save.Status(), Middle(_muted));
+		}
 		GUI.Label(new Rect(r.x, r.y + S(42), r.width, S(28)),
 			ConfigManager.AnytimeSaveLimit.Value > 0
 				? $"共 {saves.Count} 个，最多保留 {ConfigManager.AnytimeSaveLimit.Value} 个，超过自动删最旧的，有备注的不删（设置页可改）。鼠标停在存档上看当时的剧情和对白。"
@@ -163,6 +173,7 @@ public partial class StoryReviewPanel
 				.Where(s => Matches(noteQuery, s.note)).ToList();
 			_anytimeGroups = AnytimeGroups(shown, sort);
 			_anytimeGroupsFor = signature;
+			_anytimePicked.IntersectWith(shown.Select(s => s.file));
 		}
 
 		var area = new Rect(r.x, r.y + listTop, r.width, r.height - listTop);
@@ -181,7 +192,7 @@ public partial class StoryReviewPanel
 		_anytimeRows.Begin((int)area.width + "|" + _rich.fontSize + "|" + TextConverter.DisplayLanguage, _anytimeScroll.y, area.height, saves.Count, S(96));
 		foreach (var (key, label, items) in _anytimeGroups)
 		{
-			if (_anytimeRows.Row("g|" + key, label + "|" + items.Count + "|" + (_deleteGroup == key), S(44)))
+			if (_anytimeRows.Row("g|" + key, label + "|" + items.Count + "|" + (_deleteGroup == key) + "|" + _anytimeMulti + "|" + items.Count(s => _anytimePicked.Contains(s.file)), S(44)))
 			{
 				DrawAnytimeGroup(save, key, label, items);
 				_anytimeRows.Measure(S(44), false);
@@ -192,7 +203,7 @@ public partial class StoryReviewPanel
 			}
 			foreach (SaveSummary s in items)
 			{
-				if (_anytimeRows.Row("r|" + s.file, s.note + "|" + (_noteFile == s.file) + "|" + (s.error != null) + "|" + s.preview.Length))
+				if (_anytimeRows.Row("r|" + s.file, s.note + "|" + (_noteFile == s.file) + "|" + (s.error != null) + "|" + s.preview.Length + "|" + _anytimeMulti + "|" + _anytimePicked.Contains(s.file)))
 				{
 					DrawAnytimeRow(save, s);
 					_anytimeRows.Measure();
@@ -259,6 +270,28 @@ public partial class StoryReviewPanel
 			}
 		}
 		GUILayout.FlexibleSpace();
+		if (_anytimeMulti)
+		{
+			bool all = items.All(s => _anytimePicked.Contains(s.file));
+			string pickText = all ? "取消这一组" : "选这一组";
+			if (GUILayout.Button(pickText, all ? _primary : _button, GUILayout.Width(TextWidth(pickText, _button, S(140))), Ctl()))
+			{
+				foreach (SaveSummary s in items)
+				{
+					if (all)
+					{
+						_anytimePicked.Remove(s.file);
+					}
+					else
+					{
+						_anytimePicked.Add(s.file);
+					}
+				}
+				_anytimeMultiUntil = 0f;
+			}
+			GUILayout.EndHorizontal();
+			return;
+		}
 		// 整组删除要点两下；有备注的留着
 		int removable = items.Count(s => string.IsNullOrEmpty(s.note));
 		GUI.enabled = removable > 0 && !save.Busy;
@@ -270,10 +303,7 @@ public partial class StoryReviewPanel
 			if (confirm)
 			{
 				_deleteGroup = null;
-				foreach (SaveSummary s in items.Where(s => string.IsNullOrEmpty(s.note)).ToList())
-				{
-					save.Delete(s.file);
-				}
+				save.Delete(items.Where(s => string.IsNullOrEmpty(s.note)).Select(s => s.file).ToList());
 			}
 			else
 			{
@@ -341,6 +371,21 @@ public partial class StoryReviewPanel
 		}
 		GUILayout.EndVertical();
 		GUILayout.FlexibleSpace();
+		if (_anytimeMulti)
+		{
+			bool picked = _anytimePicked.Contains(s.file);
+			if (GUILayout.Button(picked ? "已选" : "选择", picked ? _primary : _button, GUILayout.Width(S(110)), Ctl()))
+			{
+				if (!_anytimePicked.Remove(s.file))
+				{
+					_anytimePicked.Add(s.file);
+				}
+				_anytimeMultiUntil = 0f;
+			}
+			GUILayout.EndHorizontal();
+			Hover(GUILayoutUtility.GetLastRect(), Cached(("anytime", s.file, s.note), () => AnytimeContext(s)));
+			return;
+		}
 		if (_noteFile != s.file && GUILayout.Button(string.IsNullOrEmpty(s.note) ? "备注" : "改备注", _button, GUILayout.Width(S(90)), Ctl()))
 		{
 			_noteFile = s.file;
@@ -370,6 +415,72 @@ public partial class StoryReviewPanel
 		}
 		GUILayout.EndHorizontal();
 		Hover(GUILayoutUtility.GetLastRect(), Cached(("anytime", s.file, s.note), () => AnytimeContext(s)));
+	}
+
+	/// <summary>
+	/// 上面一排的批量删除：平时一个「批量删除」；开着时是「删除选中的 N 个」（第一下换成「再点一下」，3 秒内再点才删）、
+	/// 「全选 / 取消全选」（列表里显示着的）、「退出批量删除」。返回用掉以后的横坐标。
+	/// </summary>
+	private float DrawAnytimeMulti(AnytimeSave.AnytimeSave save, float x, float y, float h)
+	{
+		if (!_anytimeMulti)
+		{
+			if (GUI.Button(new Rect(x, y, S(130), h), "批量删除", _button))
+			{
+				_anytimeMulti = true;
+				_anytimePicked.Clear();
+				_anytimeMultiUntil = 0f;
+				_noteFile = null;
+			}
+			return x + S(140);
+		}
+		bool confirm = Time.unscaledTime < _anytimeMultiUntil;
+		string deleteText = string.Format(confirm ? "再点一下删除 {0} 个" : "删除选中的 {0} 个", _anytimePicked.Count);
+		GUI.enabled = _anytimePicked.Count > 0 && !save.Busy;
+		float w = TextWidth(deleteText, _primary, S(200));
+		if (GUI.Button(new Rect(x, y, w, h), deleteText, confirm ? _primary : _button))
+		{
+			if (confirm)
+			{
+				save.Delete(_anytimePicked.ToList());
+				_anytimePicked.Clear();
+				_anytimeMultiUntil = 0f;
+				_anytimeMulti = false;
+				_anytimeGroups = null;
+			}
+			else
+			{
+				_anytimeMultiUntil = Time.unscaledTime + 3f;
+			}
+		}
+		GUI.enabled = true;
+		x += w + S(10);
+		List<string> shown = _anytimeGroups == null ? new List<string>() : _anytimeGroups.SelectMany(g => g.Items).Select(s => s.file).ToList();
+		bool all = shown.Count > 0 && shown.All(_anytimePicked.Contains);
+		GUI.enabled = shown.Count > 0;
+		if (GUI.Button(new Rect(x, y, S(120), h), all ? "取消全选" : "全选", _button))
+		{
+			if (all)
+			{
+				_anytimePicked.Clear();
+			}
+			else
+			{
+				_anytimePicked.UnionWith(shown);
+			}
+			_anytimeMultiUntil = 0f;
+		}
+		GUI.enabled = true;
+		x += S(130);
+		string exitText = "退出批量删除";
+		float ew = TextWidth(exitText, _button, S(150));
+		if (GUI.Button(new Rect(x, y, ew, h), exitText, _button))
+		{
+			_anytimeMulti = false;
+			_anytimePicked.Clear();
+			_anytimeMultiUntil = 0f;
+		}
+		return x + ew + S(10);
 	}
 
 	/// <summary>存档时在哪个任务里（剧本读完以后才知道，没读完先空着）。</summary>

@@ -158,7 +158,8 @@ public partial class AnytimeSave
 		if (!Replaying && Time.realtimeSinceStartup < messageUntil)
 		{
 			var content = new GUIContent(message);
-			float width = Mathf.Min(Screen.width - 40f * scale, Mathf.Max(200f * scale, _toast.CalcSize(content).x));
+			// 框跟着字宽，不设最小宽度（字短时框比字宽，看着像后面多了几个空格）
+			float width = Mathf.Min(Screen.width - 40f * scale, _toast.CalcSize(content).x);
 			float height = _toast.CalcHeight(content, width);
 			GUI.Box(new Rect(20f * scale, Screen.height - height - 20f * scale, width, height), content, PanelTheme.Sync(_toast));
 		}

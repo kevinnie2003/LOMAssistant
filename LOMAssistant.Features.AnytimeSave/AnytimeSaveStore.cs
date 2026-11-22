@@ -286,6 +286,19 @@ public partial class AnytimeSave
 		Notice("已删除随时存档");
 	}
 
+	/// <summary>一次删掉多个随时存档（批量删除）：索引只写一次，只提示一条。</summary>
+	public void Delete(ICollection<string> names)
+	{
+		Saves();
+		foreach (string name in names)
+		{
+			DeleteFiles(name);
+		}
+		summaries.RemoveAll(s => names.Contains(s.file));
+		WriteIndex();
+		Notice(string.Format("已删除 {0} 个随时存档", names.Count));
+	}
+
 	/// <summary>改备注（空字符串就是去掉备注）。</summary>
 	public void SetNote(string name, string note)
 	{
