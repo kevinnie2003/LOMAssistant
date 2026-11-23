@@ -127,5 +127,11 @@ internal static class BranchPicker
 
 	/// <summary>这一支的对白看过没。</summary>
 	public static string ReadState(Arm arm) =>
-		arm.Lines == 0 ? "没有对白" : arm.Unread == arm.Lines ? RichText.Golden("没看过") : arm.Unread > 0 ? RichText.Golden("看过一半") : "看过";
+		arm.Lines == 0 ? "没有对白" : arm.Unread == arm.Lines ? RichText.Golden("没看过") : arm.Unread > 0 ? RichText.Golden(SeenPercent(arm.Unread, arm.Lines)) : "看过";
+
+	/// <summary>
+	/// 看过一部分时写「看过 N%」。四舍五入后夹在 1～99：读过一句不写成 0%，还剩一句没读也不写成 100%。
+	/// </summary>
+	public static string SeenPercent(int unread, int lines) =>
+		"看过 " + Math.Min(99, Math.Max(1, (int)Math.Round(100.0 * (lines - unread) / lines))) + "%";
 }

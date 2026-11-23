@@ -138,7 +138,7 @@ Connect a large language model with your own API key to ask about the story and 
 
   <img src="media/option-hint.webp" width="640" alt="Options followed by their results and unlock conditions">
 
-- **Read marks on choices**: dialogue options and dice lines show whether the lines that follow have been read (not seen, partly seen, seen).
+- **Read marks on choices**: dialogue options and dice lines show whether the lines that follow have been read (not seen, the percentage seen, seen).
 - **Pick random events**: when working, wandering and so on, see each event's odds and changes, then choose which one triggers or roll with the normal odds.
   - Changes that depend on a condition show the condition; events you haven't seen yet are marked **Not seen**.
   - Branch checks that roll a random number also let you pick the path.

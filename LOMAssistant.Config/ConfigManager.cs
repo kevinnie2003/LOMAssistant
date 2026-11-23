@@ -542,7 +542,7 @@ public static class ConfigManager
 		ShowFlagChanges = new ConfigElement<bool>("ShowFlagChanges", "剧情改动旗标时在屏幕上提示（可能剧透）。true=开，false=关", defaultValue: false);
 		DeadlineReminder = new ConfigElement<bool>("DeadlineReminder", "限时剧情提醒：条件已经满足、还没触发的剧情，离触发时间结束只剩 3 旬以内时，在养成地图左上角列出还剩几旬、去哪里触发；「此刻」页的任务也标出来。true=开（默认，辅助及以上的预设打开），false=关", defaultValue: true);
 		EnableMapHints = new ConfigElement<bool>("EnableMapHints", "养成地图事件提示：鼠标停在建筑上列出这里的主线、支线、随机事件和触发条件；有现在就能触发、这一局还没走过的主线或支线的建筑一直亮着。true=开，false=关", defaultValue: true);
-		ShowReadMarks = new ConfigElement<bool>("ShowReadMarks", "选项、骰子已读标记：在对话选项和掷骰线路后面标出后续对白是否已读（没看过、看过一半、看过）。true=开，false=关", defaultValue: false);
+		ShowReadMarks = new ConfigElement<bool>("ShowReadMarks", "选项、骰子已读标记：在对话选项和掷骰线路后面标出后续对白是否已读（没看过、看过百分之几、看过）。true=开，false=关", defaultValue: false);
 		ShowItemUses = new ConfigElement<bool>("ShowItemUses", "物品用途：背包里选中贵重品、杂物、书，或在商店里看商品时，说明后面列出哪些剧情会判定要不要有它、会把它收走（可能剧透任务名）。true=开，false=关", defaultValue: false);
 		MapHintsNowOnly = new ConfigElement<bool>("MapHintsNowOnly", "地图建筑事件提示只列现在点进去就会触发的主线、支线，时间不对、条件不满足的只写个数；随机事件本来就只列现在能抽到的。true=开，false=关", defaultValue: false);
 		EnableEventPicker = new ConfigElement<bool>("EnableEventPicker", "随机事件自选：剧情走到随机事件（工作、闲逛等）时先停下，列出满足条件的事件选一个，也可以选随机。true=开，false=关", defaultValue: false);

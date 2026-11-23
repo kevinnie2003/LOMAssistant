@@ -979,7 +979,7 @@ public static class UiTextEnglish
 		["{0}. 第 {1} 支"] = "{0}. Branch {1}",
 		["{0}. 以上条件都不满足"] = "{0}. None of the above",
 		["会走这一支"] = "Will go here",
-		["看过一半"] = "Partly seen",
+		["看过 {0}%"] = "{0}% seen",
 		["看过"] = "Seen",
 		["没有对白"] = "No lines",
 		["不满足"] = "Not met",
@@ -1790,7 +1790,7 @@ public static class UiTextEnglish
 	public static readonly Dictionary<string, string> Descriptions = new Dictionary<string, string>
 	{
 		["ShowItemUses"] = "When you select a valuable, misc item or book in the bag, or look at an item in a shop, its description ends with the stories that check for it or take it (may reveal quest names).",
-		["ShowReadMarks"] = "Marks after dialogue options and dice lines whether the lines that follow have been read: not seen, partly seen or seen.",
+		["ShowReadMarks"] = "Marks after dialogue options and dice lines whether the lines that follow have been read: not seen, the percentage seen, or seen.",
 		["CheatDevelopIgnoreStory"] = "The forge and the alchemy room can develop new gear and medicines without the story requirements (even before the story that unlocks them); level and sect size requirements still apply.",
 		["ForgeDirectSwap"] = "The forge and alchemy room development screens also list other branches of the same type. If your current item level and sect size are high enough you can swap directly, without going back to the default item first. Items whose previous tier was never developed are not listed; swapping refunds 90% of points and silver as usual.",
 		["MapHintsNowOnly"] = "Map building hints list only the main and side quests that would trigger if you went in now; the rest are only counted. Random events already list only the ones you can draw now.",

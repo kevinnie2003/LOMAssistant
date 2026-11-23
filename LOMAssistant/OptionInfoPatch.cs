@@ -351,7 +351,7 @@ internal static class OptionInfoPatch
 	}
 
 	/// <summary>
-	/// 选了这个选项（kind 为选项）或掷到这一档（kind 为掷骰）后的对白看过没，写成「　没看过」「　看过一半」「　看过」（和「分支判定手动选择」一样）。
+	/// 选了这个选项（kind 为选项）或掷到这一档（kind 为掷骰）后的对白看过没，写成「　没看过」「　看过 N%」「　看过」（和「分支判定手动选择」一样）。
 	/// 算现在这段剧本里这条路上的对白；这条路直接接到别的剧本时，也算那段剧本开头不分岔的对白。没有对白、认不出的返回空串。
 	/// </summary>
 	internal static string ReadMark(string kind, string key, string color = "#9A9284")
@@ -383,7 +383,7 @@ internal static class OptionInfoPatch
 		}
 		int unread = lines.Count(k => !read.ExistKey(k));
 		return "　" + (unread == lines.Count ? RichText.Golden(TextConverter.ForDisplay("没看过"))
-			: unread > 0 ? RichText.Golden(TextConverter.ForDisplay("看过一半"))
+			: unread > 0 ? RichText.Golden(TextConverter.ForDisplay(BranchPicker.SeenPercent(unread, lines.Count)))
 			: "<color=" + color + ">" + TextConverter.ForDisplay("看过") + "</color>");
 	}
 
