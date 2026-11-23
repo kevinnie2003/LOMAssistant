@@ -329,6 +329,25 @@ public partial class StoryReviewPanel
 		GUILayout.EndVertical();
 
 		GUILayout.Space(S(8));
+		GUILayout.Label("常用提问", _heading);
+		GUILayout.BeginVertical(_card, GUILayout.Width(width));
+		bool pinned = ConfigManager.AiQuickQuestions.Value;
+		GUILayout.BeginHorizontal();
+		if (GUILayout.Button("只在新对话里", pinned ? _button : _primary, GUILayout.Width(TextWidth("只在新对话里", _button, S(110))), Ctl()) && pinned)
+		{
+			ConfigManager.AiQuickQuestions.Value = false;
+		}
+		if (GUILayout.Button("一直显示", pinned ? _primary : _button, GUILayout.Width(TextWidth("一直显示", _button, S(110))), Ctl()) && !pinned)
+		{
+			ConfigManager.AiQuickQuestions.Value = true;
+		}
+		GUILayout.FlexibleSpace();
+		GUILayout.EndHorizontal();
+		GUILayout.Space(S(4));
+		GUILayout.Label("一直显示时，聊过以后输入框上方也留着这几个问题，点一下就能再问。", _muted);
+		GUILayout.EndVertical();
+
+		GUILayout.Space(S(8));
 		GUILayout.Label("自定义人设", _heading);
 		GUILayout.BeginVertical(_card, GUILayout.Width(width));
 		GUILayout.Label("可添加自行编写的人设和图片，也可替换内置人设的图片和人设文字。放置方法见文件夹内的说明文件。", _muted);
@@ -1321,7 +1340,9 @@ public partial class StoryReviewPanel
 		GUI.Label(new Rect(r.x, r.yMax - S(26), r.width, S(26)), "AI 生成的内容可能有误，仅供参考，不代表游戏官方或本 Mod 的立场。", Middle(_muted));
 		r = new Rect(r.x, r.y, r.width, r.height - S(32));
 		float inputHeight = S(76);
-		var area = new Rect(r.x, r.y, r.width, r.height - inputHeight - S(10));
+		// 设置里选了「常用提问：一直显示」：聊过以后输入框上方留一排常用提问
+		float quickHeight = ConfigManager.AiQuickQuestions.Value && AiChat.Shown.Count > 0 ? S(34) : 0f;
+		var area = new Rect(r.x, r.y, r.width, r.height - inputHeight - S(10) - (quickHeight > 0f ? quickHeight + S(8) : 0f));
 		// 新消息来了滚到最下面
 		if (AiChat.Shown.Count != _aiShownCount)
 		{
@@ -1548,7 +1569,7 @@ public partial class StoryReviewPanel
 		{
 			GUILayout.Space(S(12));
 			GUILayout.Label("可以这样问：", _muted);
-			foreach (string q in persona == null ? AssistantStarters : persona.Custom ? CustomStarters : HeroineStarters)
+			foreach (string q in Starters(persona))
 			{
 				GUILayout.BeginHorizontal();
 				// 宽度按界面语言量：按中文原文量，英文、韩文会被截掉
@@ -1641,6 +1662,37 @@ public partial class StoryReviewPanel
 				AskAi(question);
 			}
 		}
+		// 画在输入框后面：这一排出现、消失时，输入框的控件编号不跟着变，焦点不会跳走
+		if (quickHeight > 0f)
+		{
+			DrawQuickQuestions(new Rect(r.x, r.yMax - inputHeight - S(8) - quickHeight, r.width, quickHeight), persona);
+		}
+	}
+
+	private static string[] Starters(AiPersona persona) => persona == null ? AssistantStarters : persona.Custom ? CustomStarters : HeroineStarters;
+
+	// 输入框上方一排常用提问：放得下几个放几个，回答中点不了
+	private void DrawQuickQuestions(Rect r, AiPersona persona)
+	{
+		float x = r.x;
+		float lw = TextWidth("常用提问", Middle(_muted), 0f);
+		GUI.Label(new Rect(x, r.y, lw, r.height), "常用提问", Middle(_muted));
+		x += lw + S(8);
+		GUI.enabled = !AiChat.Busy;
+		foreach (string q in Starters(persona))
+		{
+			float w = TextWidth(q, _aiSmallButton, 0f) + _aiSmallButton.padding.horizontal;
+			if (x + w > r.xMax)
+			{
+				break;
+			}
+			if (GUI.Button(new Rect(x, r.y, w, r.height), q, _aiSmallButton))
+			{
+				AskAi(TextConverter.ForDisplay(q));
+			}
+			x += w + S(6);
+		}
+		GUI.enabled = true;
 	}
 
 	private static string Escape(string text) => (text ?? "").Replace("<", "‹").Replace(">", "›");

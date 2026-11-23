@@ -112,6 +112,7 @@ public static class ConfigManager
 	public static ConfigElement<int> AiSpoiler;
 	public static ConfigElement<bool> AiHints;
 	public static ConfigElement<bool> AiDebugLog;
+	public static ConfigElement<bool> AiQuickQuestions;
 	public static ConfigElement<bool> AiDeepMode;
 	public static ConfigElement<bool> AiFastMode;
 	public static ConfigElement<string> AiDeepModel;
@@ -586,7 +587,8 @@ public static class ConfigManager
 		AiDeepMode = new ConfigElement<bool>("AiDeepMode", "AI 深度模式：换用更强的模型（AiDeepModel），回答更长，答前把结论对照查到的资料核对一遍。更准，也更贵、更慢", defaultValue: false);
 		AiFastMode = new ConfigElement<bool>("AiFastMode", "AI 极速模式：少查几次资料、提示词更短、不让模型多想，免费额度和本地小模型也能较快回答；答案更粗略。和深度模式只能开一个", defaultValue: false);
 		AiDeepModel = new ConfigElement<string>("AiDeepModel", "深度模式用的模型名；空着就和平时用同一个模型", "deepseek-v4-pro");
-		AiDebugLog = new ConfigElement<bool>("AiDebugLog", "把每次发给 AI 的人设、现状、查资料的结果和用量写进 Mod 文件夹的 logs/ai_debug.txt，方便核对", defaultValue: false);
+		AiQuickQuestions = new ConfigElement<bool>("AiQuickQuestions", "AI陪玩的常用提问：聊过以后也一直显示在输入框上方。true=一直显示，false=只在新对话里显示", defaultValue: false);
+		AiDebugLog = new ConfigElement<bool>("AiDebugLog","把每次发给 AI 的人设、现状、查资料的结果和用量写进 Mod 文件夹的 logs/ai_debug.txt，方便核对", defaultValue: false);
 		AiHints = new ConfigElement<bool>("AiHints", "女主角人设问到攻略时，在回答后面单独给一段攻略提示；关掉就只用她的口吻聊天", defaultValue: true);
 		AiSpoiler = new ConfigElement<int>("AiSpoiler", "AI 剧透程度：0=想知道什么说什么，1=只说当前和走过的剧情，2=只给方向提示", 0);
 		AiCompanion = new ConfigElement<bool>("AiCompanion", "主动陪玩：选定的人设常驻游戏画面，对玩家的选择、掷骰、战斗结果等发表看法，只评论和建议，不修改存档。每次发言会将最近的对白和事件发送给 AI 服务商，按服务商的价格计费；需要游戏 1.0.6001 及以上版本。true=开，false=关（默认）", defaultValue: false);
