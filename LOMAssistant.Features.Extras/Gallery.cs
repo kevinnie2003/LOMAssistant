@@ -188,10 +188,11 @@ public sealed partial class Gallery : MonoBehaviour
 		Text text = copy.GetComponentsInChildren<Text>(true).FirstOrDefault(t => t.name == "Text");
 		if (text != null)
 		{
-			// 文字上挂的多语言组件会把字换回「讲经堂」
+			// 只移除会把文字改回「讲经堂」的本地化组件，保留按游戏语言切换字体的组件。
 			foreach (MonoBehaviour behaviour in text.GetComponents<MonoBehaviour>())
 			{
-				if (!(behaviour is Graphic) && !(behaviour is BaseMeshEffect))
+				if (behaviour != null && (behaviour.GetType().Name is "LeanLocalizedText"
+					or "LeanLocalizedTextMesh" or "LeanLocalizedTextMeshPro" or "LeanLocalizedTextMeshProUGUI"))
 				{
 					Destroy(behaviour);
 				}
