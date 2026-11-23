@@ -19,6 +19,7 @@ namespace LOMAssistant.Features.Extras;
 /// 列表每条有心上人头像、游戏日期、存档时间、备注，旁边就是「备注」「删除」按钮；详情栏是心上人立绘、任务、读档后的头几句对白。
 /// 读档页分「手动存档」「自动存档」两页，自动存档页最上面是当前进度（原来的「最近存档」），下面按剧情、养成、战斗列出全部旧档。
 /// 读档、存档、删除都还是调用游戏原来的栏位（藏起来的那些），确认框也是游戏自己的，读档防连点、备注照常起作用。
+/// 读档页可以批量删除：点「批量删除」后点存档行是勾选，详情栏的按钮换成「删除选中的 N 个」（连点两下才删）和「全选」。
 /// </summary>
 public class SaveBrowser : MonoBehaviour
 {
@@ -89,6 +90,12 @@ public class SaveBrowser : MonoBehaviour
 	private Text _loverCaption, _loverName, _date, _info, _mission, _section, _lines;
 	private InputField _noteBox;
 	private Button _primaryButton, _deleteButton;
+	// 批量删除：开着时点存档行是勾选；勾了哪些栏位；「删除选中」要在这之前再点一下才删
+	private bool _multi;
+	private readonly HashSet<string> _picked = new HashSet<string>();
+	private Button _multiButton;
+	private float _confirmUntil;
+	private readonly Dictionary<Entry, Image> _rowChecks = new Dictionary<Entry, Image>();
 	private readonly Dictionary<Entry, Text> _rowNotes = new Dictionary<Entry, Text>();
 	private float _noteEditedAt = -10f;
 	private static SaveBrowser _current;
@@ -247,6 +254,15 @@ public class SaveBrowser : MonoBehaviour
 			_selected = -1;
 			Refresh();
 		});
+		if (_isLoad)
+		{
+			// 放在标题那一行、和排序按钮右对齐：标签那一行放不下（会压到「自动存档」）
+			_multiButton = TextButton(_root, "批量删除");
+			Place((RectTransform)_multiButton.transform, margin + listWidth - 240f, top - 70f, 240f, 40f);
+			_multiButton.GetComponentInChildren<Text>().fontSize = 24;
+			_multiButton.GetComponentInChildren<Text>().alignment = TextAnchor.MiddleRight;
+			_multiButton.onClick.AddListener(() => SetMulti(!_multi));
+		}
 		BuildList(margin, listTop, listWidth, size.y - listTop - bottom);
 		BuildDetail(detailX, top, size.x - detailX - margin, size.y - top - bottom);
 		FileLogger.Log($"[存档界面] {(_isLoad ? "读档" : "存档")}页已换成新界面（{size.x:0}x{size.y:0}）");
@@ -309,6 +325,9 @@ public class SaveBrowser : MonoBehaviour
 		}
 		_tab = tab;
 		_selected = -1;
+		// 换页时勾选清空：另一页的存档看不见，不能跟着一起删
+		_picked.Clear();
+		_confirmUntil = 0f;
 		Refresh();
 	}
 
@@ -434,9 +453,29 @@ public class SaveBrowser : MonoBehaviour
 		_noteBox.onEndEdit.AddListener(SaveNote);
 
 		_primaryButton = MakeButton(_detail, "读取", 30, 24f, h - 88f, 260f, 62f);
-		_primaryButton.onClick.AddListener(() => Act(_shown));
+		_primaryButton.onClick.AddListener(() =>
+		{
+			if (_multi)
+			{
+				DeletePicked();
+			}
+			else
+			{
+				Act(_shown);
+			}
+		});
 		_deleteButton = MakeButton(_detail, "删除", 26, 304f, h - 88f, 140f, 62f);
-		_deleteButton.onClick.AddListener(() => Delete(_shown));
+		_deleteButton.onClick.AddListener(() =>
+		{
+			if (_multi)
+			{
+				PickAll();
+			}
+			else
+			{
+				Delete(_shown);
+			}
+		});
 	}
 
 	// ---------------- 内容 ----------------
@@ -481,6 +520,7 @@ public class SaveBrowser : MonoBehaviour
 			_listContent.DetachChildren();
 			_rows.Clear();
 			_rowNotes.Clear();
+			_rowChecks.Clear();
 			_current = this;
 			if (_isLoad && _tab == 1)
 			{
@@ -506,6 +546,10 @@ public class SaveBrowser : MonoBehaviour
 			if (_rows.Count == 0)
 			{
 				GroupHeader(_isLoad && _tab == 1 ? "还没有自动存档" : "还没有存档");
+			}
+			if (_multiButton != null)
+			{
+				SetButtonText(_multiButton, _multi ? "退出批量删除" : "批量删除");
 			}
 			if (_sortButton != null)
 			{
@@ -738,7 +782,17 @@ public class SaveBrowser : MonoBehaviour
 		back.color = new Color(0, 0, 0, 0);
 		Button button = rt.gameObject.AddComponent<Button>();
 		button.transition = Selectable.Transition.None;
-		button.onClick.AddListener(() => Act(e));
+		button.onClick.AddListener(() =>
+		{
+			if (_multi)
+			{
+				Pick(e);
+			}
+			else
+			{
+				Act(e);
+			}
+		});
 		if (e.LastSaved || e.Current)
 		{
 			// 上次保存、当前进度的存档：固定的底色，不随鼠标和选中移动，选中时的淡金底叠在它上面
@@ -807,7 +861,24 @@ public class SaveBrowser : MonoBehaviour
 		}
 		// 右边的小按钮：备注、删除
 		float right = 12f;
-		if (e.CanDelete && e.Data != null)
+		if (_multi && e.CanDelete && e.Data != null)
+		{
+			// 批量删除时右边是勾选框
+			RectTransform box = NewRect("Check", rt);
+			AnchorRight(box, right + 10f, e.Compact ? 23f : 45f, 30f, 30f);
+			Border(box, Gold);
+			RectTransform fill = NewRect("Fill", box);
+			fill.anchorMin = Vector2.zero;
+			fill.anchorMax = Vector2.one;
+			fill.offsetMin = new Vector2(6f, 6f);
+			fill.offsetMax = new Vector2(-6f, -6f);
+			Image dot = fill.gameObject.AddComponent<Image>();
+			dot.color = Gold;
+			dot.raycastTarget = false;
+			_rowChecks[e] = dot;
+			UpdateCheck(e);
+		}
+		else if (e.CanDelete && e.Data != null)
 		{
 			Button delete = TextButton(rt, "删除");
 			AnchorRight((RectTransform)delete.transform, right, e.Compact ? 20f : 44f, 60f, 36f);
@@ -939,6 +1010,10 @@ public class SaveBrowser : MonoBehaviour
 		_noteBox.SetTextWithoutNotify(note);
 		SetButtonText(_primaryButton, e.Caption == NewGame ? "开始新游戏" : _isLoad ? "读取" : data == null ? "存到这里" : "覆盖这一栏");
 		_deleteButton.gameObject.SetActive(e.CanDelete && data != null);
+		if (_multi)
+		{
+			UpdateMultiButtons();
+		}
 		ShowPortrait(data == null ? -1 : lover, data != null && Bonded(data, lover));
 		Localize(_detail);
 	}
@@ -1017,6 +1092,122 @@ public class SaveBrowser : MonoBehaviour
 		e.Primary?.Invoke();
 	}
 
+	// ---------------- 批量删除 ----------------
+
+	private void SetMulti(bool on)
+	{
+		_multi = on;
+		_picked.Clear();
+		_confirmUntil = 0f;
+		_primaryButton.interactable = true;
+		Refresh();
+		if (!on && _shown != null)
+		{
+			Show(_shown);
+		}
+	}
+
+	/// <summary>列表里能删的栏位（有存档的）。</summary>
+	private List<string> Deletable() => _rows.Where(r => r.Entry.CanDelete && r.Entry.Data != null).Select(r => r.Entry.Slot).Distinct().ToList();
+
+	private void Pick(Entry e)
+	{
+		if (!e.CanDelete || e.Data == null)
+		{
+			return;
+		}
+		if (!_picked.Remove(e.Slot))
+		{
+			_picked.Add(e.Slot);
+		}
+		_confirmUntil = 0f;
+		// 同一个栏位可能出现两行（当前进度和它本来那一行），一起改
+		foreach (Entry other in _rowChecks.Keys.ToList())
+		{
+			UpdateCheck(other);
+		}
+		UpdateMultiButtons();
+	}
+
+	private void PickAll()
+	{
+		List<string> all = Deletable();
+		bool everything = all.All(_picked.Contains);
+		_picked.Clear();
+		if (!everything)
+		{
+			_picked.UnionWith(all);
+		}
+		_confirmUntil = 0f;
+		foreach (Entry e in _rowChecks.Keys.ToList())
+		{
+			UpdateCheck(e);
+		}
+		UpdateMultiButtons();
+	}
+
+	private void UpdateCheck(Entry e)
+	{
+		if (_rowChecks.TryGetValue(e, out Image dot) && dot != null)
+		{
+			dot.enabled = _picked.Contains(e.Slot);
+		}
+	}
+
+	/// <summary>批量删除时详情栏的两个按钮：删除选中的、全选 / 取消全选。</summary>
+	private void UpdateMultiButtons()
+	{
+		if (!_multi || _primaryButton == null)
+		{
+			return;
+		}
+		int count = _picked.Count;
+		SetButtonText(_primaryButton, string.Format(Time.unscaledTime < _confirmUntil ? "再点一下删除 {0} 个" : "删除选中的 {0} 个", count));
+		_primaryButton.interactable = count > 0;
+		List<string> all = Deletable();
+		_deleteButton.gameObject.SetActive(all.Count > 0);
+		SetButtonText(_deleteButton, all.Count > 0 && all.All(_picked.Contains) ? "取消全选" : "全选");
+		Localize(_detail);
+	}
+
+	/// <summary>删除勾选的存档：第一下只换成「再点一下」，3 秒内再点才真的删（删了找不回来）。删完退出批量删除，界面跟着游戏刷新。</summary>
+	private void DeletePicked()
+	{
+		if (_picked.Count == 0)
+		{
+			return;
+		}
+		if (Time.unscaledTime >= _confirmUntil)
+		{
+			_confirmUntil = Time.unscaledTime + 3f;
+			UpdateMultiButtons();
+			return;
+		}
+		var slots = _picked.ToList();
+		int done = 0;
+		foreach (string slot in slots)
+		{
+			try
+			{
+				SaveSystem.Instance.DeleteSaveData(slot);
+				done++;
+			}
+			catch (Exception ex)
+			{
+				FileLogger.LogError("[存档界面] 批量删除 " + slot + " 失败: " + ex.Message);
+			}
+		}
+		FileLogger.Log($"[存档界面] 批量删除了 {done} 个存档");
+		_multi = false;
+		_picked.Clear();
+		_confirmUntil = 0f;
+		_selected = -1;
+		_primaryButton.interactable = true;
+		// 让游戏刷新原来的栏位（藏起来的那些），新界面再刷新一遍
+		Traverse.Create(_panel).Method("UpdateSlot").GetValue();
+		Refresh();
+	}
+
 	private void Delete(Entry e)
 	{
 		if (e == null || !e.CanDelete || e.Data == null || !_isLoad)
@@ -1093,6 +1284,11 @@ public class SaveBrowser : MonoBehaviour
 		if (_pendingReselect)
 		{
 			Reselect();
+		}
+		if (_confirmUntil > 0f && Time.unscaledTime >= _confirmUntil)
+		{
+			_confirmUntil = 0f;
+			UpdateMultiButtons();
 		}
 		if (!_isLoad)
 		{

@@ -183,6 +183,7 @@ Connect a large language model with your own API key to ask about the story and 
   - The list shows your love interest's portrait, date and note; the detail pane shows her full portrait (a shy expression once you have bonded with her in that save) and the first lines after loading.
   - Manual and auto saves are on separate pages; the screen opens on the save you made last.
   - A switch at the top right of the load page lists them by slot or newest first; with newest first, the save page starts with an empty slot.
+  - "Delete multiple" on the load page: tick several saves and delete them together, or select all.
 
   <img src="media/save-browser.webp" width="640" alt="New load screen: save list with portraits and notes, and a detail pane with the portrait and the dialogue after loading">
 
