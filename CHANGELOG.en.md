@@ -2,6 +2,16 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.8.0 (2026-11-22)
+
+- **Game 1.0.6001.2 support**: the **Training Pagoda** button on the title screen and the story flag change notices work again; the Duels gallery page's enemy data and radar chart and the built-in condition table are updated for the new version; the faster pacing between duel rounds follows the new version. Old save-anywhere saves that pass through story scripts changed by this game update can't be loaded. After a game update the opening logos come back; run the installer once more to skip them.
+- **Delete multiple**: on the load page and the save-anywhere page you can tick several saves and delete them together, or select all; the save-anywhere page can also select a whole group. Deleting takes two clicks.
+- **Save anywhere**: you can search notes.
+- **Pick dice results**: you can also click a line after the dice wheel stops; the line under the mouse is highlighted.
+- **Gallery**: the Portraits, Animations and Duels pages support arrow keys: ← → change variants (moves on Animations, portraits on Duels) and ↑ ↓ change characters; on Animations, comma and period now step frames.
+- **Skill list in columns**: formerly **Show all skills**, now off by default. The new game version squeezes a long skill list itself; turn this on to use columns instead if twenty-odd entries feel cramped.
+- **Input isolation**: while the mouse is over a Coffee Companion window or you are typing in its text boxes, duel gamepad controls, fate point adjustments and battle controls no longer reach the game either.
+
 ## 3.7.8 (2026-11-20)
 
 - **Duels gallery page**: new **Taunts** lists the enemy's taunts, interrupted taunts and replies to taunts for each encounter; **Custom duel** is renamed **Simulated duel**.
