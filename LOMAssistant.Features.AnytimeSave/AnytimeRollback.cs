@@ -24,6 +24,10 @@ public partial class AnytimeSave
 	// 最近一个台词/选项/掷骰在 trace 里的位置，以及为它取过的快照
 	private int lastInteraction = -1;
 	private SaveFile lastSnapshot;
+	// 那一句开始时回想的最后一条：对白在开始前取文字时就记进回想了，选项、掷骰的记录要等玩家选完、掷完才记。
+	// 读回那一句时回想只留到这一条，重新选、掷时游戏自己再记
+	private object logMark;
+	private bool logMarked;
 
 	private string restoreLabel = "";
 
@@ -40,6 +44,8 @@ public partial class AnytimeSave
 		rollbackPoints.Clear();
 		lastInteraction = -1;
 		lastSnapshot = null;
+		logMarked = false;
+		logMark = null;
 		branchInRun = false;
 	}
 
@@ -54,6 +60,8 @@ public partial class AnytimeSave
 	{
 		lastInteraction = index;
 		lastSnapshot = null;
+		logMark = StoryLogCompat.Tail();
+		logMarked = true;
 		// 掷骰会在游戏代码里直接改天命点等数据，不经过剧本，所以掷骰前就取
 		if (kind == "roll")
 		{
@@ -142,7 +150,8 @@ public partial class AnytimeSave
 				music = CurrentSound("_currentMusic"), envSound = CurrentSound("_currentEnvSound"), musicVolume = CurrentVolume("BackgroundMusic"), envVolume = CurrentVolume("EnvSound"),
 				visibleCharacters = VisibleCharacters(),
 				dice = new DiceState(),
-				hiddenOptions = runHidden
+				hiddenOptions = runHidden,
+				storyLog = StoryLogAtInteraction(true)
 			};
 		}
 		catch (System.Exception e)
@@ -150,6 +159,9 @@ public partial class AnytimeSave
 			FileLogger.LogWarning("[随时存档] 回退点快照失败: " + e.Message);
 		}
 	}
+
+	/// <summary>存档、回退点要带的回想：剧情里只到最近那一句开始时，养成界面整份。</summary>
+	private StoryLogDump StoryLogAtInteraction(bool story) => StoryLogCompat.Dump(story && logMarked, logMark);
 
 	/// <summary>回退到最近一个判定前；连按继续往前退。有分支回退点时先退到它。</summary>
 	public void Rollback()

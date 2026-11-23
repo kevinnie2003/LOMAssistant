@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Fungus;
 using HarmonyLib;
@@ -63,6 +64,145 @@ internal static class StoryLogCompat
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private static void LoadNow(GameSave game) => StoryLogData.Load(game);
+
+	/// <summary>回想里最后一条，只当记号用（见 Dump）；没有条目、旧版游戏是 null。</summary>
+	internal static object Tail() => Available ? TailNow() : null;
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static object TailNow()
+	{
+		IReadOnlyList<StoryLogEntry> entries = StoryLogData.Entries;
+		return entries.Count == 0 ? null : entries[entries.Count - 1];
+	}
+
+	/// <summary>
+	/// 把现在的回想整份记下来，连游戏不进存档的文字条目（判定记录）也记。cut 为 true 时只记到 last 这一条为止（last 是 null 就是一条不记）；
+	/// last 已经被挤出 300 条、旧版游戏、读失败都返回 null。
+	/// </summary>
+	internal static StoryLogDump Dump(bool cut, object last)
+	{
+		if (!Available)
+		{
+			return null;
+		}
+		try
+		{
+			return DumpNow(cut, last);
+		}
+		catch (Exception ex)
+		{
+			FileLogger.LogWarning("[回想] 记下回想失败（已忽略）：" + ex.Message);
+			return null;
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static StoryLogDump DumpNow(bool cut, object last)
+	{
+		IReadOnlyList<StoryLogEntry> entries = StoryLogData.Entries;
+		FieldInfo restart = AccessTools.Field(typeof(StoryLogData), "_restartCount");
+		if (restart == null)
+		{
+			return null;
+		}
+		int count = entries.Count;
+		if (cut)
+		{
+			count = 0;
+			if (last != null)
+			{
+				count = -1;
+				for (int i = entries.Count - 1; i >= 0; i--)
+				{
+					if (ReferenceEquals(entries[i], last))
+					{
+						count = i + 1;
+						break;
+					}
+				}
+				if (count < 0)
+				{
+					return null;
+				}
+			}
+		}
+		var dump = new StoryLogDump { restart = Math.Min((int)restart.GetValue(null), count) };
+		for (int i = 0; i < count; i++)
+		{
+			StoryLogEntry e = entries[i];
+			if (e == null)
+			{
+				continue;
+			}
+			var line = new StoryLogLine { type = (int)e.Type, key = e.Key, speaker = e.Speaker, text = e.Text, save = e.IsSave, ours = e.Text != null && Ours.Contains(e.Text) };
+			if (e.Args != null)
+			{
+				line.args = new string[e.Args.Length];
+				line.argIsKey = new bool[e.Args.Length];
+				for (int k = 0; k < e.Args.Length; k++)
+				{
+					line.args[k] = e.Args[k]?.Value;
+					line.argIsKey[k] = e.Args[k] != null && e.Args[k].IsKey;
+				}
+			}
+			dump.lines.Add(line);
+		}
+		return dump;
+	}
+
+	/// <summary>把回想换成 Dump 记下的那一份，「剧情开头」的位置也照原样；失败时回想保持原样。</summary>
+	internal static void Restore(StoryLogDump dump)
+	{
+		if (!Available || dump == null)
+		{
+			return;
+		}
+		try
+		{
+			RestoreNow(dump);
+		}
+		catch (Exception ex)
+		{
+			FileLogger.LogWarning("[回想] 恢复回想失败（已忽略）：" + ex.Message);
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private static void RestoreNow(StoryLogDump dump)
+	{
+		var list = StoryLogData.Entries as List<StoryLogEntry>;
+		FieldInfo restart = AccessTools.Field(typeof(StoryLogData), "_restartCount");
+		if (list == null || restart == null)
+		{
+			FileLogger.LogWarning("[回想] 游戏的回想结构变了，读随时存档时不恢复回想");
+			return;
+		}
+		var entries = new List<StoryLogEntry>(dump.lines.Count);
+		foreach (StoryLogLine line in dump.lines)
+		{
+			if (line == null)
+			{
+				continue;
+			}
+			var e = new StoryLogEntry { Type = (StoryLogType)line.type, Key = line.key, Speaker = line.speaker ?? "", Text = line.text, IsSave = line.save, Args = new StoryLogArg[line.args?.Length ?? 0] };
+			for (int k = 0; k < e.Args.Length; k++)
+			{
+				e.Args[k] = new StoryLogArg { Value = line.args[k], IsKey = line.argIsKey != null && k < line.argIsKey.Length && line.argIsKey[k] };
+			}
+			if (line.ours && line.text != null)
+			{
+				Ours.Add(line.text);
+			}
+			entries.Add(e);
+		}
+		if (entries.Count > StoryLogData.MaxCount)
+		{
+			entries.RemoveRange(0, entries.Count - StoryLogData.MaxCount);
+		}
+		StoryLogData.Reset();
+		list.AddRange(entries);
+		restart.SetValue(null, Math.Max(0, Math.Min(dump.restart, list.Count)));
+	}
 
 	/// <summary>回想里最后一条对白的说话人编号：没写说话人是 ""；没有对白、旧版游戏是 null。</summary>
 	internal static string LastSpeaker() => Available ? LastSpeakerNow() : null;
@@ -183,6 +323,25 @@ internal static class StoryLogCompat
 			into.Add(item);
 		}
 	}
+}
+
+/// <summary>随时存档里记下的完整回想（不依赖游戏类型，旧版游戏也能加载这个类）。restart 是「剧情开头」在第几条：游戏在剧情中途存档只写到这里，读档从这里重演。</summary>
+public sealed class StoryLogDump
+{
+	public List<StoryLogLine> lines = new List<StoryLogLine>();
+	public int restart;
+}
+
+public sealed class StoryLogLine
+{
+	public int type;
+	public string key, speaker, text;
+	/// <summary>游戏会把这一条写进存档（文字条目不写）。</summary>
+	public bool save;
+	/// <summary>本 Mod 写的判定记录（回想里用小字号）。</summary>
+	public bool ours;
+	public string[] args;
+	public bool[] argIsKey;
 }
 
 /// <summary>回想里的一条，换成不依赖游戏类型的样子：旧版游戏没有回想的那些类型，别的类不能直接提到它们。</summary>

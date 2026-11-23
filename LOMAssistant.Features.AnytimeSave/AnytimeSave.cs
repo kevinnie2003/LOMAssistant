@@ -50,6 +50,11 @@ public class SaveFile
 	public FreeRng freeRng;
 	/// <summary>这段记录跑的时候剧本里带条件的选项改写过（见 HiddenOptions），回放时要照样改写，执行记录才对得上。以前的存档没有，是 false。</summary>
 	public bool hiddenOptions;
+	/// <summary>
+	/// 存档那一刻完整的回想。游戏在剧情里存档只把回想写到这段剧情开头，重演又不记选项、掷骰和数值变化，
+	/// 只照存档读的话这一段的记录就没了。以前的存档没有，是 null，照旧只读存档里的。
+	/// </summary>
+	public StoryLogDump storyLog;
 }
 [Serializable] public class Envelope { public string sha256, payload; }
 
@@ -211,6 +216,8 @@ public partial class AnytimeSave : MonoBehaviour
 		if (!string.IsNullOrEmpty(data.nativeSlot)) SaveSystem.Instance.SetSlot(data.nativeSlot);
 		PlayerStatManagerData.Instance.SetStoryScript(atTarget || data.scene == "Free" ? data.currentScript : data.rootScript);
 		if (atTarget) PlayerStatManagerData.Instance.SetStartScript(game.StartStoryScript);
+		// 回想换成存档那一刻的完整记录。放在 SetStartScript 后面：它会把「剧情开头」挪到末尾，之后原版存档就会把这一段重复记一遍
+		if ((atTarget || data.scene == "Free") && data.storyLog != null) StoryLogCompat.Restore(data.storyLog);
 		UnityEngine.Random.state = JsonUtility.FromJson<UnityEngine.Random.State>(data.randomJson);
 	}
 
@@ -529,7 +536,8 @@ public partial class AnytimeSave : MonoBehaviour
 			hiddenOptions = runHidden,
 			freeRng = SceneName == "Free" ? CaptureFreeRng() : null,
 			trace = SceneName == "Story" ? trace.Take(saveTarget + 1).ToList() : new List<Entry>(),
-			scripts = new List<ScriptStamp>(stamps)
+			scripts = new List<ScriptStamp>(stamps),
+			storyLog = StoryLogAtInteraction(SceneName == "Story")
 		};
 	}
 
