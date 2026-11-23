@@ -2,6 +2,11 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.8.1 (2026-11-22)
+
+- **Faster flow**: on game versions before 1.0.6001.2, story duels no longer hang on the loading screen.
+- **Save anywhere**: after loading or rolling back, the backlog keeps this scene's lines, choices, dice rolls and check records from before the save. Saves made before this update load as before.
+
 ## 3.8.0 (2026-11-22)
 
 - **Game 1.0.6001.2 support**: the **Training Pagoda** button on the title screen and the story flag change notices work again; the Duels gallery page's enemy data and radar chart and the built-in condition table are updated for the new version; the faster pacing between duel rounds follows the new version. Old save-anywhere saves that pass through story scripts changed by this game update can't be loaded. After a game update the opening logos come back; run the installer once more to skip them.
