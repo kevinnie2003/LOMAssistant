@@ -197,7 +197,8 @@ public sealed partial class Gallery : MonoBehaviour
 					Destroy(behaviour);
 				}
 			}
-			text.text = TextConverter.ForDisplay(label);
+			// 在标题画面里换游戏语言时，文字也要跟着换
+			copy.AddComponent<TitleButtonLabel>().Bind(text, label);
 		}
 		return button;
 	}
@@ -917,5 +918,33 @@ public static class GalleryPatch
 		{
 			FileLogger.LogWarning("[鉴赏] 添加标题按钮失败: " + e.Message);
 		}
+	}
+}
+
+/// <summary>标题画面上咖啡伴侣加的按钮（练功塔、鉴赏）的文字：界面语言变了就按新语言重写。</summary>
+internal sealed class TitleButtonLabel : MonoBehaviour
+{
+	private Text _text;
+	private string _label;
+	private string _language;
+
+	internal void Bind(Text text, string label)
+	{
+		_text = text;
+		_label = label;
+		Refresh();
+	}
+
+	private void Update() => Refresh();
+
+	private void Refresh()
+	{
+		string language = TextConverter.DisplayLanguage;
+		if (_text == null || language == _language)
+		{
+			return;
+		}
+		_language = language;
+		_text.text = TextConverter.ForDisplay(_label);
 	}
 }
