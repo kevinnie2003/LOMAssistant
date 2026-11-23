@@ -383,7 +383,7 @@ public partial class StoryReviewPanel
 				_anytimeMultiUntil = 0f;
 			}
 			GUILayout.EndHorizontal();
-			Hover(GUILayoutUtility.GetLastRect(), Cached(("anytime", s.file, s.note), () => AnytimeContext(s)));
+			Hover(GUILayoutUtility.GetLastRect(), Cached(("anytime", s.file, s.savedAt, s.note), () => AnytimeContext(s)));
 			return;
 		}
 		if (_noteFile != s.file && GUILayout.Button(string.IsNullOrEmpty(s.note) ? "备注" : "改备注", _button, GUILayout.Width(S(90)), Ctl()))
@@ -414,7 +414,8 @@ public partial class StoryReviewPanel
 			}
 		}
 		GUILayout.EndHorizontal();
-		Hover(GUILayoutUtility.GetLastRect(), Cached(("anytime", s.file, s.note), () => AnytimeContext(s)));
+		// 键里带上存档时间：存档全删掉以后编号从 1 重来，新档和删掉的旧档文件名一样，只按文件名会拿到旧档的提示
+		Hover(GUILayoutUtility.GetLastRect(), Cached(("anytime", s.file, s.savedAt, s.note), () => AnytimeContext(s)));
 	}
 
 	/// <summary>
