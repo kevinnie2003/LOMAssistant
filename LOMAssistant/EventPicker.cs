@@ -204,8 +204,9 @@ public class EventPicker : MonoBehaviour
 					Choices.Add(choice);
 				}
 			}
-			// 能触发的不到两个时照旧不问（不然只有一个能触发的地方每次都要停下来）
-			if (Choices.Count < 2)
+			// 能触发的不到两个时照旧不问（不然只有一个能触发的地方每次都要停下来）；
+			// 打开「强制触发未满足条件的事件」时，有条件没满足的事件就问，好让玩家挑它们
+			if (Choices.Count < 2 && unmet.Count == 0)
 			{
 				Choices.Clear();
 				return false;

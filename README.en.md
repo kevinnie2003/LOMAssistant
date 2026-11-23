@@ -143,7 +143,7 @@ Connect a large language model with your own API key to ask about the story and 
   - Changes that depend on a condition show the condition; events you haven't seen yet are marked **Not seen**.
   - Branch checks that roll a random number also let you pick the path.
   - Each event or path can be set to **Always** or **Never**; the rule is remembered and applies even with the picker off.
-  - With **Force locked events** on, events whose conditions aren't met are also listed below with what they need; clicking one triggers it regardless, without changing flags.
+  - With **Force locked events** on, events whose conditions aren't met are also listed below with what they need; clicking one triggers it regardless, without changing flags. The picker also opens when only one event can trigger.
 
   <img src="media/event-picker.webp" width="480" alt="Pick random events: the events that can trigger, their odds and changes">
 

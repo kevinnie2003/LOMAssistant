@@ -546,7 +546,7 @@ public static class ConfigManager
 		ShowItemUses = new ConfigElement<bool>("ShowItemUses", "物品用途：背包里选中贵重品、杂物、书，或在商店里看商品时，说明后面列出哪些剧情会判定要不要有它、会把它收走（可能剧透任务名）。true=开，false=关", defaultValue: false);
 		MapHintsNowOnly = new ConfigElement<bool>("MapHintsNowOnly", "地图建筑事件提示只列现在点进去就会触发的主线、支线，时间不对、条件不满足的只写个数；随机事件本来就只列现在能抽到的。true=开，false=关", defaultValue: false);
 		EnableEventPicker = new ConfigElement<bool>("EnableEventPicker", "随机事件自选：剧情走到随机事件（工作、闲逛等）时先停下，列出满足条件的事件选一个，也可以选随机。true=开，false=关", defaultValue: false);
-		ForceUnmetEvents = new ConfigElement<bool>("ForceUnmetEvents", "随机事件自选里也列出出现条件没满足的事件，点了无视条件直接触发（不改旗标，之后的剧情可能对不上）。true=开，false=关", defaultValue: false);
+		ForceUnmetEvents = new ConfigElement<bool>("ForceUnmetEvents", "随机事件自选里也列出出现条件没满足的事件，点了无视条件直接触发（不改旗标，之后的剧情可能对不上）。能触发的事件只有一个时也会停下来。true=开，false=关", defaultValue: false);
 		EnableBranchPicker = new ConfigElement<bool>("EnableBranchPicker", "分支判定手动选择：剧情走到按条件分支的判断时，换一支能看到没读过的对白或接到别的剧情就先停下，列出每一支的条件、现在的值、对白看过没，选哪支就走哪支（先改数值，改不动直接走）。true=开，false=关", defaultValue: false);
 		BranchPickerSeen = new ConfigElement<bool>("BranchPickerSeen", "分支判定手动选择：另一支的对白都看过了也停（只要换一支有对白或接到别的剧情）。关掉时只在有没读过的对白或接到别的剧情时停。true=开，false=关", defaultValue: false);
 		BranchChangeValues = new ConfigElement<bool>("BranchChangeValues", "选分支时自动调整数值：分支判定手动选择、剧情跳转按选的分支走时，先把属性、好感、旗标改到正好走这一支（改了会一直留着），改不动的再直接走。关掉时不改数值，只是这一次直接走过去。true=开，false=关", defaultValue: false);
