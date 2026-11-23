@@ -1,4 +1,7 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
 using HarmonyLib;
 using LOMAssistant.Config;
 using Mortal.Combat;
@@ -12,6 +15,8 @@ namespace LOMAssistant.Features.Combat;
 /// </summary>
 internal static class DuelPacePatch
 {
+	private static readonly Func<IEnumerator, IEnumerable<object>> InlineCombatCoroutine = FindInline();
+
 	// 属于「流程提速」
 	private static bool On => ConfigManager.EnableFlowSpeedup.Value;
 
@@ -20,7 +25,7 @@ internal static class DuelPacePatch
 	[HarmonyPatch(typeof(CombatManager), "StartAction")]
 	public static void Flat(ref IEnumerator __result)
 	{
-		if (On && __result != null)
+		if (On && __result != null && InlineCombatCoroutine != null)
 		{
 			__result = Inline(__result);
 		}
@@ -28,9 +33,23 @@ internal static class DuelPacePatch
 
 	private static IEnumerator Inline(IEnumerator root)
 	{
-		foreach (object step in CombatCoroutine.Inline(root))
+		foreach (object step in InlineCombatCoroutine(root))
 		{
 			yield return step;
 		}
+	}
+
+	private static Func<IEnumerator, IEnumerable<object>> FindInline()
+	{
+		// 旧版游戏没有 CombatCoroutine，保留游戏原来的协程。
+		Type coroutineType = typeof(CombatManager).Assembly.GetType("Mortal.Combat.CombatCoroutine");
+		MethodInfo method = coroutineType?.GetMethod("Inline", BindingFlags.Public | BindingFlags.Static,
+			null, new[] { typeof(IEnumerator) }, null);
+		if (method == null)
+		{
+			return null;
+		}
+		return Delegate.CreateDelegate(typeof(Func<IEnumerator, IEnumerable<object>>), method, false)
+			as Func<IEnumerator, IEnumerable<object>>;
 	}
 }
