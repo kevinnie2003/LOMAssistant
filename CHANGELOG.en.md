@@ -2,6 +2,14 @@
 
 Changes in each version, newest first. Versions before 2.7.0 are only in Chinese; see CHANGELOG.md.
 
+## 3.8.2 (2026-11-23)
+
+- **AI Companion**: **AI settings** has a new **Quick questions** option; with **Always show**, the common questions stay above the input box after the chat starts, so you can ask again with one click.
+- **Pick random events**: with **Force locked events** on, the picker also opens when only one event can trigger, as long as the pool has events whose conditions aren't met.
+- **Manual branch choice**, **Read marks on choices**: partly seen lines now show the share seen, such as "37% seen", instead of "Partly seen".
+- **Title screen buttons**: the **Training Pagoda** and **Gallery** buttons now switch their text and font with the game's language, matching the original menu.
+- **Save anywhere**: after deleting all saves, the hover tooltip of a new save no longer shows the contents of a deleted one.
+
 ## 3.8.1 (2026-11-22)
 
 - **Faster flow**: on game versions before 1.0.6001.2, story duels no longer hang on the loading screen.
