@@ -226,6 +226,8 @@ public partial class AnytimeSave : MonoBehaviour
 	internal string PrepareScript(LuaEnvironment env, string code, string name)
 	{
 		if (!name.EndsWith(".LuaScript", StringComparison.Ordinal) || name == "tmp.LuaScript") return code;
+		// 别的 Mod 停用了随时存档（见 AnytimeSaveGate）：不做记录，只留随机事件自选
+		if (LOMAssistant.Api.AnytimeSaveGate.BlockedReason() != null) return EventPicker.Instrument(code, name.Substring(0, name.Length - 10));
 		// 版本核对按原剧本：「显示未满足条件的选项」改过的剧本（见 HiddenOptions）也按改之前的算
 		string original = LOMAssistant.HiddenOptions.Original(code);
 		string hash = Hash(original);
@@ -460,7 +462,9 @@ public partial class AnytimeSave : MonoBehaviour
 
 	private bool CanSave(out string reason)
 	{
-		reason = null;
+		// 别的 Mod 停用了随时存档（见 AnytimeSaveGate）
+		reason = LOMAssistant.Api.AnytimeSaveGate.BlockedReason();
+		if (reason != null) return false;
 		if (!installed) reason = compatibilityFailure ?? "随时存档尚未初始化";
 		else if (Faulted || Replaying || Restoring || pendingLoad) reason = "正在恢复或已发生错误";
 		else if (SceneController.Instance == null || SceneController.Instance.IsPrepare || SceneController.Instance.IsLoading) reason = "场景正在切换";
@@ -620,6 +624,16 @@ public partial class AnytimeSave : MonoBehaviour
 
 	private void LoadFrom(SaveFile data)
 	{
+		// 别的 Mod 登记了不让读（见 AnytimeSaveGate）：它自己记的状态随时存档还原不了
+		string blocked = LOMAssistant.Api.AnytimeSaveGate.LoadBlockedReason(new LOMAssistant.Api.AnytimeSaveInfo
+		{
+			NativeSlot = data.nativeSlot, RootScript = data.rootScript, CurrentScript = data.currentScript, Scene = data.scene,
+		});
+		if (blocked != null)
+		{
+			Notice(TextConverter.ForDisplay(blocked), 8);
+			return;
+		}
 		// 游戏更新改了存档经过的剧本时，重演到那里就对不上、只能停在半路：读之前先拦下，不进黑屏
 		string changed = ChangedScript(data.scripts);
 		if (changed != null)
