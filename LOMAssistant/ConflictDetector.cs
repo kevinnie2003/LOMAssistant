@@ -287,10 +287,13 @@ public static class ConflictDetector
 		}
 		return result;
 	}
+	// 剧情 Mod 加载器；MortalModHost 是 LOM 编辑器做的剧情 Mod 的运行时，只在「原版＋MOD」「纯 MOD」里接管存读档等，纯原版放行
+	private static bool IsStoryModLoader(Assembly assembly) => assembly.GetType("Mortal.HookCustomStory") != null
+		|| assembly.GetName().Name.StartsWith("HahuranGongdong", StringComparison.OrdinalIgnoreCase)
+		|| assembly.GetName().Name.Equals("MortalModHost", StringComparison.OrdinalIgnoreCase);
+
 	// 翻译补丁：日语补丁（LOM_JP_…）、英文补丁（LLM 版 FanslationStudio.LegendOfMortal…，XUnity.AutoTranslator），
 	// 和本 Mod 一起装玩家测试过，只是同一处游戏代码各改各的（翻译、字体），不算冲突
-	private static bool IsStoryModLoader(Assembly assembly) => assembly.GetType("Mortal.HookCustomStory") != null
-		|| assembly.GetName().Name.StartsWith("HahuranGongdong", StringComparison.OrdinalIgnoreCase);
 
 	private static bool IsTranslationPatch(string name) => name.StartsWith("LOM_JP_", StringComparison.OrdinalIgnoreCase)
 		|| name.StartsWith("FanslationStudio.LegendOfMortal", StringComparison.OrdinalIgnoreCase)
