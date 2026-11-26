@@ -113,7 +113,13 @@ public class SaveBrowser : MonoBehaviour
 
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(LoadGamePanel), "OnPanelOpen")]
-	public static void LoadGamePanel_OnPanelOpen_Postfix(LoadGamePanel __instance) => Open(__instance, load: true);
+	public static void LoadGamePanel_OnPanelOpen_Postfix(LoadGamePanel __instance, bool __runOriginal)
+	{
+		if (!TakenOver(__instance, __runOriginal))
+		{
+			Open(__instance, load: true);
+		}
+	}
 
 	[HarmonyPrefix]
 	[HarmonyPatch(typeof(SaveGamePanel), "OnPanelOpen")]
@@ -121,7 +127,39 @@ public class SaveBrowser : MonoBehaviour
 
 	[HarmonyPostfix]
 	[HarmonyPatch(typeof(SaveGamePanel), "OnPanelOpen")]
-	public static void SaveGamePanel_OnPanelOpen_Postfix(SaveGamePanel __instance) => Open(__instance, load: false);
+	public static void SaveGamePanel_OnPanelOpen_Postfix(SaveGamePanel __instance, bool __runOriginal)
+	{
+		if (!TakenOver(__instance, __runOriginal))
+		{
+			Open(__instance, load: false);
+		}
+	}
+
+	/// <summary>
+	/// 别的 Mod 拦下了游戏打开存档页（原方法没跑），说明它接管了这一页、换成自己的界面：
+	/// 本 Mod 不再搭界面叠在上面，之前搭过的也拆掉。下次原方法照常跑时再重新搭。
+	/// </summary>
+	private static bool TakenOver(MonoBehaviour panel, bool ranOriginal)
+	{
+		if (ranOriginal)
+		{
+			return false;
+		}
+		_opening = false;
+		SaveBrowser browser = panel.GetComponent<SaveBrowser>();
+		if (browser != null)
+		{
+			if (browser._root != null)
+			{
+				Destroy(browser._root.gameObject);
+				browser._root = null;
+			}
+			browser._rows.Clear();
+			browser.enabled = false;
+		}
+		FileLogger.Log("[存档界面] 存档页已被其他 Mod 接管，本 Mod 的存档界面这次不打开");
+		return true;
+	}
 
 	// 删除、存档以后游戏会刷新原来的栏位，新界面跟着刷新
 	[HarmonyPostfix]
@@ -173,6 +211,7 @@ public class SaveBrowser : MonoBehaviour
 		try
 		{
 			SaveBrowser browser = panel.GetComponent<SaveBrowser>() ?? panel.gameObject.AddComponent<SaveBrowser>();
+			browser.enabled = true;
 			browser._isLoad = load;
 			browser._panel = panel;
 			// 游戏换了语言：字体（游戏按语言换的）和文字（简繁、韩语）都要重来，整个界面重建
